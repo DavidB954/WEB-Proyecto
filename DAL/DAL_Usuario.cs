@@ -1,0 +1,184 @@
+﻿using BE;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DAL
+{
+    public class DAL_Usuario
+    {
+        DAL_Conexion conex = new DAL_Conexion();
+
+
+        public List<BE_Usuario> Usuarios()
+        {
+            List<BE_Usuario> ListaUsuarios = new List<BE_Usuario>();
+
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand cmdUsuarios = new SqlCommand("Select * from Usuario", conexion);
+
+                SqlDataReader Lector = cmdUsuarios.ExecuteReader();
+
+                while (Lector.Read())
+                {
+                    BE_Usuario Usuario = new BE_Usuario();
+                    Usuario.IdUsuario = Convert.ToInt32(Lector["IdUsuario"]);
+                    Usuario.Nombre = Lector["Nombre"].ToString();
+                    Usuario.Apellido = Lector["Apellido"].ToString();
+                    Usuario.DNI = Lector["DNI"].ToString();
+                    Usuario.Email = Lector["Email"].ToString();
+                    Usuario.HashPassword = Lector["HashPassword"].ToString();
+                    Usuario.IntentosFallidos = Convert.ToInt32(Lector["IntentosFallidos"]);
+                    Usuario.Activo = Convert.ToBoolean(Lector["Activo"]);
+                    ListaUsuarios.Add(Usuario);
+                }
+            }
+            return ListaUsuarios;
+        }
+
+        public BE_Usuario ObtenerUsuarioPorEmail(string email)
+        {
+
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand cmdUsuEmail = new SqlCommand("Select * From Usuario Where Email=@email", conexion);
+
+                cmdUsuEmail.Parameters.Add("@email", SqlDbType.VarChar, 30).Value = email;
+
+                SqlDataReader Lector = cmdUsuEmail.ExecuteReader();
+
+
+                if (!Lector.Read())
+                {
+                    return null;
+                }
+
+                else
+                    return new BE_Usuario
+                    {
+                        IdUsuario = Lector.GetInt32(0),
+                        Nombre = Lector.GetString(1),
+                        Apellido = Lector.GetString(2),
+                        DNI = Lector.GetString(3),
+                        Email = Lector.GetString(4),
+                        HashPassword = Lector.GetString(5),
+                        Activo = Lector.GetBoolean(7),
+                        IntentosFallidos = Lector.GetInt32(6)
+                    };
+            }
+        }
+
+        //Updateamos los intentos fallidos en caso de que el login sea incorrecto, y bloqueamos el usuario si supera los 3 intentos fallidos.
+        public void ActualizarIntentosFallidos(int intentos, int IdUsuario)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand cmdActualizarIntentos = new SqlCommand("Update Usuario Set IntentosFallidos = @intentos Where IdUsuario=@id", conexion);
+
+                cmdActualizarIntentos.Parameters.Add("@intentos", SqlDbType.Int).Value = intentos;
+                cmdActualizarIntentos.Parameters.Add("@id", SqlDbType.Int).Value = IdUsuario;
+
+                cmdActualizarIntentos.ExecuteNonQuery();
+            }
+        }
+        public void BloquearUsuario(int IdUsuario)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand cmdBloquearUsuario = new SqlCommand("Update Usuario SET Activo=0 Where IdUsuario = @id", conexion);
+
+                cmdBloquearUsuario.Parameters.Add("@id", SqlDbType.Int).Value = IdUsuario;
+
+                cmdBloquearUsuario.ExecuteNonQuery();
+            }
+        }
+
+
+
+        public void AgregarUsuario(BE_Usuario Usuario)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand cmdUsuario = new SqlCommand(@"Insert into Usuario (Nombre, Apellido, DNI, Email, HashPassword, IntentosFallidos, Activo)
+                                                        VALUES (@nombre, @apellido, @dni, @email, @password, 0, 1)");
+
+                cmdUsuario.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = Usuario.Nombre;
+                cmdUsuario.Parameters.Add("@apellido", SqlDbType.VarChar, 50).Value = Usuario.Apellido;
+                cmdUsuario.Parameters.Add("@dni", SqlDbType.VarChar, 8).Value = Usuario.DNI;
+                cmdUsuario.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = Usuario.Email;
+                cmdUsuario.Parameters.Add("@password", SqlDbType.VarChar, 255).Value = Usuario.HashPassword;
+
+                cmdUsuario.ExecuteNonQuery();
+            }
+        }
+
+
+
+        public void ModificarUsuario(BE_Usuario Usuario)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand comando = new SqlCommand("Update Usuario SET Nombre=@nombre, Apellido=@apellido, Email=@email, Activo = @activo WHERE IdUsuario=@id", conexion);
+
+                comando.Parameters.AddWithValue("@id", Usuario.IdUsuario);
+                comando.Parameters.AddWithValue("@nombre", Usuario.Nombre);
+                comando.Parameters.AddWithValue("@apellido", Usuario.Apellido);
+                comando.Parameters.AddWithValue("@email", Usuario.Email);
+                comando.Parameters.Add("@activo", SqlDbType.Bit).Value = Usuario.Activo;
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        public void EliminarUsuario(int id)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+                //Primero borro todo lo de ese usuario en la bitacora
+                SqlCommand cmdBorrarUsuBitacora = new SqlCommand("Delete from Bitacora WHERE IdUsuario=@idUsuBorrado", conexion);
+
+                cmdBorrarUsuBitacora.Parameters.Add("@idUsuBorrado", SqlDbType.Int).Value = id;
+
+                cmdBorrarUsuBitacora.ExecuteNonQuery();
+
+                SqlCommand comando = new SqlCommand("Delete from Usuario WHERE IdUsuario = @id", conexion);
+
+                comando.Parameters.AddWithValue("@id", id);
+
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        public void ResetearContrasena(int id, string nuevaPass)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+                SqlCommand comando = new SqlCommand("Update Usuario SET HashPassword=@nuevoHash, IntentosFallidos = 0, Activo=1 WHERE IdUsuario=@id", conexion);
+
+                comando.Parameters.AddWithValue("@id", id);
+                comando.Parameters.AddWithValue("@nuevoHash", nuevaPass);
+
+                comando.ExecuteNonQuery();
+            }
+        }
+
+    }
+}
