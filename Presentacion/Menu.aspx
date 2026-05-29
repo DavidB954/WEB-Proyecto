@@ -2,33 +2,8 @@
 
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
-      <nav class="navbar-custom">
-        <ul>
-            <li>
-                <a href="CRUD_Usuarios.aspx">Gestión Usuarios</a>
-            </li>
-
-            <li>
-                <a href="Turnos.aspx">Turnos</a>
-            </li>
-
-            <li>
-                <a href="Medico.aspx">Médicos</a>
-            </li>
-
-            <li>
-                <a href="Bitacora.aspx">Bitácora</a>
-            </li>
-
-            <!-- Opcionales -->
-            <li>
-                <a href="Perfil.aspx">Mi Perfil</a>
-            </li>
-
-            <li>
-                <a href="CerrarSesion.aspx">Cerrar Sesión</a>
-            </li>
-        </ul>
-    </nav>
-
+  <div class="welcome-panel"> 
+      <h1>Bienvenido al Sistema Médico</h1> 
+      <p>Gestione turnos, médicos y pacientes fácilmente.</p>
+  </div>
 </asp:Content>

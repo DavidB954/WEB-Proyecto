@@ -1,20 +1,101 @@
-﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site1.master.cs" Inherits="Presentacion.Site1" %>
+﻿<%@ Master Language="C#" AutoEventWireup="true"
+    CodeBehind="Site1.master.cs"
+    Inherits="Presentacion.Site1" %>
 
 <!DOCTYPE html>
 
 <html>
 <head runat="server">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title></title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <title>Gestión Médica</title>
+
+    <link href="Styles/StyleSheet.css" rel="stylesheet" />
+
     <asp:ContentPlaceHolder ID="head" runat="server">
     </asp:ContentPlaceHolder>
+
 </head>
+
 <body>
+
     <form id="form1" runat="server">
-        <div>
-            <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+
+        <!-- NAVBAR -->
+
+        <nav class="navbar-custom">
+
+            <!-- IZQUIERDA -->
+
+            <div class="nav-left">
+
+                <ul>
+
+                    <li>
+                        <a href="Menu.aspx">Inicio</a>
+                    </li>
+
+                    <li>
+                        <a href="CRUD_Usuarios.aspx">Usuarios</a>
+                    </li>
+
+                    <li>
+                        <a href="Turnos.aspx">Turnos</a>
+                    </li>
+
+                    <li>
+                        <a href="Medicos.aspx">Médicos</a>
+                    </li>
+
+                    <li>
+                        <a href="Bitacora.aspx">Bitácora</a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <!-- DERECHA -->
+
+            <div class="nav-right">
+
+                <span class="usuario-logueado">
+
+                    Bienvenido,
+
+                    <asp:Label
+                        ID="lblUsuario"
+                        runat="server">
+                    </asp:Label>
+
+                </span>
+
+                <a class="logout-link"
+                    href="CerrarSesion.aspx">
+
+                    Cerrar Sesión
+
+                </a>
+
+            </div>
+
+        </nav>
+
+        <!-- CONTENIDO -->
+
+        <main class="contenido-principal">
+
+            <asp:ContentPlaceHolder
+                ID="ContentPlaceHolder1"
+                runat="server">
             </asp:ContentPlaceHolder>
-        </div>
+
+        </main>
+
     </form>
+
 </body>
+
 </html>
+```

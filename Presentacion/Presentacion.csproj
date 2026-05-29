@@ -70,6 +70,7 @@
     <Content Include="Bitacora.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="Menu.aspx" />
+    <Content Include="Styles\StyleSheet.css" />
     <Content Include="Turnos.aspx" />
     <Content Include="Web.config" />
     <Content Include="CRUD_Usuarios.aspx" />

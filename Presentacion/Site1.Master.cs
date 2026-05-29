@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BE;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -11,7 +12,14 @@ namespace Presentacion
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-
+            if (!IsPostBack)
+            {
+                if (Session["Usuario"]!= null)
+                {
+                    BE_Usuario usuario = (BE_Usuario)Session["Usuario"];
+                    lblUsuario.Text = usuario.Nombre;
+                }
+            }
         }
     }
 }

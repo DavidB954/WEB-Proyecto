@@ -21,7 +21,7 @@ namespace Presentacion
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Calendar fechaDesde;
+        protected global::System.Web.UI.WebControls.TextBox fechaDesde;
 
         /// <summary>
         /// Control fechaHasta.
@@ -30,7 +30,7 @@ namespace Presentacion
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Calendar fechaHasta;
+        protected global::System.Web.UI.WebControls.TextBox fechaHasta;
 
         /// <summary>
         /// Control ddlUsuarios.

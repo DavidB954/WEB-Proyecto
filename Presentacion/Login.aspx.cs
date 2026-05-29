@@ -29,7 +29,7 @@ namespace Presentacion
                     Session["Usuario"] = Obj_Usuario.Usuario;
 
 
-                    Response.Redirect("CRUD_Usuarios.aspx");
+                    Response.Redirect("Menu.aspx");
                 }
                 else
                 {

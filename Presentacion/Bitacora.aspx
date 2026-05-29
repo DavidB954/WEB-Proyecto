@@ -7,23 +7,62 @@
     <!-- TODO TU CONTENIDO -->
 
 
-        <div >
+        <div class="bitacora">
             Bitacora de Eventos
             <br />
-            <div class="filtros-bitacora">
-                <asp:Label runat="server" Text="Fecha Desde: "></asp:Label>
-                <asp:Calendar runat="server" ID="fechaDesde"></asp:Calendar>
-                <asp:Label runat="server" Text="Fecha Hasta: "></asp:Label>
-                <asp:Calendar runat="server" ID="fechaHasta"></asp:Calendar>
-                <asp:Label runat="server" Text="Usuario"></asp:Label>
-                <asp:DropDownList runat="server" ID="ddlUsuarios"></asp:DropDownList>
-                <asp:Label runat="server" Text="Modulo"></asp:Label>
-                <asp:DropDownList runat="server" ID="ddlModulos"></asp:DropDownList>
-                <asp:Label runat="server" Text="IP"></asp:Label>
-                <asp:TextBox runat="server" ID="txtIP"></asp:TextBox>
-                <asp:Button runat="server" Text="Filtrar" ID="btnFiltrar" />
-                <asp:Button runat="server" Text="Limpiar Filtros" ID="btnLimpiar" />
-            </div>
+     
+<div class="filtros-bitacora">
+
+    <div class="campo-filtro">
+        <asp:Label runat="server" Text="Fecha Desde"></asp:Label>
+        <asp:TextBox runat="server" CssClass="input-crud" ID="fechaDesde" TextMode="Date"></asp:TextBox>
+    </div>
+
+    <div class="campo-filtro">
+        <asp:Label runat="server" Text="Fecha Hasta"></asp:Label>
+        <asp:TextBox runat="server" CssClass="input-crud" ID="fechaHasta" TextMode="Date"></asp:TextBox>
+    </div>
+
+    <div class="campo-filtro">
+        <asp:Label runat="server" Text="Usuario"></asp:Label>
+        <asp:DropDownList runat="server" ID="ddlUsuarios"
+            CssClass="input-crud">
+        </asp:DropDownList>
+    </div>
+
+    <div class="campo-filtro">
+        <asp:Label runat="server" Text="Módulo"></asp:Label>
+        <asp:DropDownList runat="server" ID="ddlModulos"
+            CssClass="input-crud">
+        </asp:DropDownList>
+    </div>
+
+    <div class="campo-filtro">
+        <asp:Label runat="server" Text="IP"></asp:Label>
+        <asp:TextBox runat="server" ID="txtIP"
+            CssClass="input-crud">
+        </asp:TextBox>
+    </div>
+
+</div>
+
+<div class="acciones-filtro">
+
+    <asp:Button
+        runat="server"
+        Text="Filtrar"
+        ID="btnFiltrar"
+        CssClass="btn-crud" />
+
+    <asp:Button
+        runat="server"
+        Text="Limpiar Filtros"
+        ID="btnLimpiar"
+        CssClass="btn-cancelar" />
+
+</div>
+```
+
 
             <div class="datos-bitacora">
                 <asp:GridView ID="gvBitacora" runat="server" AutoGenerateColumns="false"  CssClass="grid-crud">

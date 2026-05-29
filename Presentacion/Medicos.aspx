@@ -12,7 +12,7 @@
 
   </asp:GridView>
 
- <div id="AtencionMedica">
+ <div id="AtencionMedica" Visible="false">
      Motivo de la consulta:
      <br />
      <asp:TextBox ID="txtMotivoConsulta" CssClass="input-crud" runat="server" TextMode="MultiLine"></asp:TextBox>
@@ -21,7 +21,8 @@
      <asp:TextBox ID="txtDiagnostico" CssClass="input-crud" runat="server" TextMode="MultiLine"></asp:TextBox>
      <br />
      Observaciones:
-     <asp:TextBox ID="txtObservacione" CssClass="input-crud" runat="server" TextMode="MultiLine"></asp:TextBox>
+     <asp:TextBox ID="txtObservaciones" CssClass="input-crud" runat="server" TextMode="MultiLine"></asp:TextBox>
+     <br />
      <div id="Receta">
          Receta:
          <br />
