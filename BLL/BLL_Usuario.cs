@@ -85,7 +85,7 @@ namespace BLL
             return dal_usuario.Usuarios();
         }
 
-        public void AgregarUsuario(BE.BE_Usuario usuario)
+        public void AgregarUsuario(BE_Usuario usuario)
         {
             usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
             dal_usuario.AgregarUsuario(usuario);

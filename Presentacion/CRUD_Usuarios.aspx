@@ -5,8 +5,6 @@
     ContentPlaceHolderID="ContentPlaceHolder1"
     runat="server">
 
-    <!-- TODO TU CONTENIDO -->
-
 
         <div class="form-cred">
             <h2 class="form-title">Gestión de Usuarios</h2>
