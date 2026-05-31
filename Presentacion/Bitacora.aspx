@@ -39,8 +39,8 @@
         </div>
         
         <div class="acciones-filtro">
-            <asp:Button runat="server" Text="Filtrar" ID="btnFiltrar" CssClass="btn-base btn-primary" />
-            <asp:Button runat="server" Text="Limpiar Filtros" ID="btnLimpiar" CssClass="btn-base btn-danger" />
+            <asp:Button runat="server" Text="Filtrar" ID="btnFiltrar" CssClass="btn-base btn-primary" OnClick="btnFiltrar_Click" />
+            <asp:Button runat="server" Text="Limpiar Filtros" ID="btnLimpiar" CssClass="btn-base btn-danger" OnClick="btnLimpiar_Click" />
         </div>
         <div class="grid-container datos-bitacora">
             <asp:GridView ID="gvBitacora" runat="server" AutoGenerateColumns="false"  CssClass="grid-crud">

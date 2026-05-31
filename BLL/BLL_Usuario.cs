@@ -19,6 +19,7 @@ namespace BLL
         //Obtenemos el objeto usuario con el mail 
         public BE_LoginResultado ObtenerUsuarioPorEmail(string Email, string Password)
         {
+           
             if (string.IsNullOrEmpty(Password))
             {
                 return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Debe ingresar contraseña" };
@@ -90,7 +91,7 @@ namespace BLL
             return dal_usuario.Usuarios();
         }
 
-        public void AgregarUsuario(BE_Usuario usuario)
+        public void AgregarUsuario(BE_Usuario UsuarioLogueado, BE_Usuario usuario)
         {
             usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
 
@@ -100,9 +101,10 @@ namespace BLL
 
             //Mandamos a bitacora la creacion del nuevo usuario
 
-           //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_ALTA, "USUARIO", $"Se crea un nuevo usuario: {usuario.Nombre}, {usuario.Apellido}, creado por {Sesion.Instancia().UsuarioActual.Nombre}");*/
+
+           bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_ALTA, "USUARIO", $"Se crea un nuevo usuario: {usuario.Nombre}, {usuario.Apellido}, creado por {UsuarioLogueado.NombreApellido}");
         }
-        public void ModificarUsuario(BE_Usuario usuario)
+        public void ModificarUsuario(BE_Usuario UsuarioLogueado, BE_Usuario usuario)
         {
             usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
 
@@ -112,15 +114,15 @@ namespace BLL
 
             //Mandamos a bitacora la modificacion del usuario
 
-            //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_MODIFICACION, "USUARIO", $"Se modifica al usuario: {usuario.Nombre}, ID: {usuario.IdUsuario}. Modificado por: {Sesion.Instancia().UsuarioActual.Nombre}");
+            bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_MODIFICACION, "USUARIO", $"Se modifica al usuario: {usuario.Nombre}, ID: {usuario.IdUsuario}. Modificado por: {UsuarioLogueado.NombreApellido}");
         }
 
-        public void EliminarUsuario(int id)
+        public void EliminarUsuario(BE_Usuario UsuarioLogueado, int id)
         {
             dal_usuario.EliminarUsuario(id);
 
             //Mandamos a bitacora la eliminacion del usuario
-            //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_BAJA, "USUARIO", $"El Usuario {Sesion.Instancia().UsuarioActual.Nombre}, da de baja al Usuario con ID: {id}");
+            bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_BAJA, "USUARIO", $"El Usuario {UsuarioLogueado.NombreApellido}, da de baja al Usuario con ID: {id}");
         }
 
         public void ResetearPassword(int id, string nuevoPass)
@@ -130,7 +132,7 @@ namespace BLL
             dal_usuario.ResetearContrasena(id, nuevoPass);
 
             //Mandamos a bitacora el reseteo de contraseña
-            //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_RESTABLECIMIENTO_PASSWORD, "USUARIO", $"El Usuario {Sesion.Instancia().UsuarioActual.Nombre}, resetea la contraseña del Usuario con ID: {id}");
+           //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_RESTABLECIMIENTO_PASSWORD, "USUARIO", $"El Usuario {Sesion.Instancia().UsuarioActual.Nombre}, resetea la contraseña del Usuario con ID: {id}");
         }
     }
 }

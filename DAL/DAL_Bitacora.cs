@@ -82,28 +82,37 @@ namespace DAL
 
         public DataTable FiltrarBitacora(DateTime? Desde, DateTime? Hasta, int? idUsuario, string Modulo, string Ip)
         {
-            using (SqlConnection conexion = conex.ObtenerConexion())
+            try
             {
-                conexion.Open();
-                SqlCommand cmdFiltrado = new SqlCommand("dbo.FiltrarBitacora", conexion);
-
-                cmdFiltrado.CommandType = CommandType.StoredProcedure;
-
-                cmdFiltrado.Parameters.AddWithValue("@Desde", (object)Desde ?? DBNull.Value);
-                cmdFiltrado.Parameters.AddWithValue("@Hasta", (object)Hasta ?? DBNull.Value);
-                cmdFiltrado.Parameters.AddWithValue("@IdUsuario", (object)idUsuario ?? DBNull.Value);
-                cmdFiltrado.Parameters.AddWithValue("@Modulo", (object)Modulo ?? DBNull.Value);
-                cmdFiltrado.Parameters.AddWithValue("@IP", (object)Ip ?? DBNull.Value);
-
-                using (SqlDataAdapter adaptador = new SqlDataAdapter(cmdFiltrado))
+                using (SqlConnection conexion = conex.ObtenerConexion())
                 {
-                    DataTable dt = new DataTable();
-                    adaptador.Fill(dt);
+                    conexion.Open();
+                    SqlCommand cmdFiltrado = new SqlCommand("dbo.FiltrarBitacora", conexion);
 
-                    return dt;
+                    cmdFiltrado.CommandType = CommandType.StoredProcedure;
+
+                    cmdFiltrado.Parameters.AddWithValue("@Desde", (object)Desde ?? DBNull.Value);
+                    cmdFiltrado.Parameters.AddWithValue("@Hasta", (object)Hasta ?? DBNull.Value);
+                    cmdFiltrado.Parameters.AddWithValue("@IdUsuario", (object)idUsuario ?? DBNull.Value);
+                    cmdFiltrado.Parameters.AddWithValue("@Modulo", (object)Modulo ?? DBNull.Value);
+                    cmdFiltrado.Parameters.AddWithValue("@IP", (object)Ip ?? DBNull.Value);
+
+                    using (SqlDataAdapter adaptador = new SqlDataAdapter(cmdFiltrado))
+                    {
+                        DataTable dt = new DataTable();
+                        adaptador.Fill(dt);
+
+                        return dt;
+                    }
+
                 }
-
             }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
+         
         }
     }
 }

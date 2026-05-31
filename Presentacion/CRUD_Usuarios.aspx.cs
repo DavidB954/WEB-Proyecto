@@ -125,7 +125,10 @@ namespace Presentacion
 
                 usuario.DVH = datosConcatenados;
 
-                bll_usuario.AgregarUsuario(usuario);
+                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+
+
+                bll_usuario.AgregarUsuario(usuarioLogueado, usuario);
 
                 CargarGrilla();
             }
@@ -175,8 +178,10 @@ namespace Presentacion
                 string datosConcatenados = $"{usuario.Nombre}|{usuario.Apellido}|{usuario.Email}|{usuario.HashPassword}|{usuario.DNI}|{usuario.IntentosFallidos}|{(usuario.Activo ? 1 : 0)}";
 
                 usuario.DVH = datosConcatenados;
-                
-                bll_usuario.ModificarUsuario(usuario);
+
+                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+
+                bll_usuario.ModificarUsuario(usuarioLogueado ,usuario);
 
                 CargarGrilla();
             }
@@ -205,8 +210,9 @@ namespace Presentacion
             try
             {
                 int id = int.Parse(hiddenIdUsuario.Value);
+                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
 
-                bll_usuario.EliminarUsuario(id);
+                bll_usuario.EliminarUsuario( usuarioLogueado ,id);
 
                 CargarGrilla();
             }
