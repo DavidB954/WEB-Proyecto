@@ -433,6 +433,43 @@ body {
 }
 
 
+/*=======================================
+    CHECK BOX ACTIVO
+=========================================*/
+.btn-toggle {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Estado Activo (verde) */
+.btn-activo {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-activo:hover {
+    background-color: #45a049;
+    transform: scale(1.05);
+}
+
+/* Estado Inactivo (rojo) */
+.btn-inactivo {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-inactivo:hover {
+    background-color: #d32f2f;
+    transform: scale(1.05);
+}
+
+
+
 /* ========================================
    HORA Y DIA DE FORMULARIO TURNOS 
 =========================================== */

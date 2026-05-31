@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Bitacora.aspx" />
+    <Content Include="CerrarSesion.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="Menu.aspx" />
     <Content Include="Recetas.aspx" />
@@ -84,6 +85,13 @@
     </Compile>
     <Compile Include="Bitacora.aspx.designer.cs">
       <DependentUpon>Bitacora.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="CerrarSesion.aspx.cs">
+      <DependentUpon>CerrarSesion.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="CerrarSesion.aspx.designer.cs">
+      <DependentUpon>CerrarSesion.aspx</DependentUpon>
     </Compile>
     <Compile Include="Login.aspx.cs">
       <DependentUpon>Login.aspx</DependentUpon>
@@ -154,6 +162,10 @@
     <ProjectReference Include="..\BLL\BLL.csproj">
       <Project>{81c6d991-f6c8-483b-97fc-4dd256cfe7ae}</Project>
       <Name>BLL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SERVICIOS\SERVICIOS.csproj">
+      <Project>{94141066-4416-496b-93a7-91fe28124555}</Project>
+      <Name>SERVICIOS</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

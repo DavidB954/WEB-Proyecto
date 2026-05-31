@@ -34,6 +34,7 @@ namespace DAL
                     Usuario.Apellido = Lector["Apellido"].ToString();
                     Usuario.DNI = Lector["DNI"].ToString();
                     Usuario.Email = Lector["Email"].ToString();
+                    Usuario.DVH = Lector["DVH"].ToString();
                     Usuario.HashPassword = Lector["HashPassword"].ToString();
                     Usuario.IntentosFallidos = Convert.ToInt32(Lector["IntentosFallidos"]);
                     Usuario.Activo = Convert.ToBoolean(Lector["Activo"]);
@@ -68,11 +69,12 @@ namespace DAL
                         IdUsuario = Lector.GetInt32(0),
                         Nombre = Lector.GetString(1),
                         Apellido = Lector.GetString(2),
-                        DNI = Lector.GetString(3),
-                        Email = Lector.GetString(4),
-                        HashPassword = Lector.GetString(5),
-                        Activo = Lector.GetBoolean(7),
-                        IntentosFallidos = Lector.GetInt32(6)
+                        Email = Lector.GetString(3),
+                        HashPassword = Lector.GetString(4),
+                        DNI = Lector.GetString(5),
+                        DVH = Lector.GetString(6),
+                        IntentosFallidos = Lector.GetInt32(7),
+                        Activo = Lector.GetBoolean(8)
                     };
             }
         }
@@ -110,21 +112,32 @@ namespace DAL
 
         public void AgregarUsuario(BE_Usuario Usuario)
         {
-            using (SqlConnection conexion = conex.ObtenerConexion())
+            try
             {
-                conexion.Open();
+                using (SqlConnection conexion = conex.ObtenerConexion())
+                {
+                    conexion.Open();
 
-                SqlCommand cmdUsuario = new SqlCommand(@"Insert into Usuario (Nombre, Apellido, DNI, Email, HashPassword, IntentosFallidos, Activo)
-                                                        VALUES (@nombre, @apellido, @dni, @email, @password, 0, 1)");
+                    SqlCommand cmdUsuario = new SqlCommand(@"Insert into Usuario (Nombre, Apellido, Email, HashPassword, DNI, DVH, IntentosFallidos, Activo)
+                                                        VALUES (@nombre, @apellido, @email, @password, @dni, @dvh, @intentos, @activo)", conexion);
 
-                cmdUsuario.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = Usuario.Nombre;
-                cmdUsuario.Parameters.Add("@apellido", SqlDbType.VarChar, 50).Value = Usuario.Apellido;
-                cmdUsuario.Parameters.Add("@dni", SqlDbType.VarChar, 8).Value = Usuario.DNI;
-                cmdUsuario.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = Usuario.Email;
-                cmdUsuario.Parameters.Add("@password", SqlDbType.VarChar, 255).Value = Usuario.HashPassword;
+                    cmdUsuario.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = Usuario.Nombre;
+                    cmdUsuario.Parameters.Add("@apellido", SqlDbType.VarChar, 50).Value = Usuario.Apellido;
+                    cmdUsuario.Parameters.Add("@dni", SqlDbType.VarChar, 8).Value = Usuario.DNI;
+                    cmdUsuario.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = Usuario.Email;
+                    cmdUsuario.Parameters.Add("@password", SqlDbType.VarChar, 255).Value = Usuario.HashPassword;
+                    cmdUsuario.Parameters.Add("@dvh", SqlDbType.VarChar, 255).Value = Usuario.DVH;
+                    cmdUsuario.Parameters.Add("@intentos", SqlDbType.Int).Value = Usuario.IntentosFallidos;
+                    cmdUsuario.Parameters.Add("@activo", SqlDbType.Bit).Value = Usuario.Activo;
 
-                cmdUsuario.ExecuteNonQuery();
+                    cmdUsuario.ExecuteNonQuery();
+                }
             }
+            catch (Exception ex)
+            {
+            Console.WriteLine(ex.Message);    
+            }
+           
         }
 
 
@@ -135,13 +148,18 @@ namespace DAL
             {
                 conexion.Open();
 
-                SqlCommand comando = new SqlCommand("Update Usuario SET Nombre=@nombre, Apellido=@apellido, Email=@email, Activo = @activo WHERE IdUsuario=@id", conexion);
+                SqlCommand comando = new SqlCommand("Update Usuario SET Nombre=@nombre, Apellido=@apellido, Email=@email, HashPassword=@password, DNI=@dni, DVH=@dvh, IntentosFallidos=@intentos, Activo=@activo WHERE IdUsuario=@id", conexion);
 
                 comando.Parameters.AddWithValue("@id", Usuario.IdUsuario);
                 comando.Parameters.AddWithValue("@nombre", Usuario.Nombre);
                 comando.Parameters.AddWithValue("@apellido", Usuario.Apellido);
                 comando.Parameters.AddWithValue("@email", Usuario.Email);
-                comando.Parameters.Add("@activo", SqlDbType.Bit).Value = Usuario.Activo;
+                comando.Parameters.AddWithValue("@password", Usuario.HashPassword);
+                comando.Parameters.AddWithValue("@dni", Usuario.DNI);
+                comando.Parameters.AddWithValue("@dvh", Usuario.DVH);
+                comando.Parameters.AddWithValue("@intentos", Usuario.IntentosFallidos);
+                comando.Parameters.AddWithValue("@activo", Usuario.Activo);
+
                 comando.ExecuteNonQuery();
             }
         }

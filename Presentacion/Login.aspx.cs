@@ -21,6 +21,7 @@ namespace Presentacion
         {
             try
             {
+
                 Obj_Usuario = bll_Usu.ObtenerUsuarioPorEmail(txtEmail.Text, txtPassword.Text);
 
                 if (Obj_Usuario.Usuario != null)

@@ -21,6 +21,8 @@
                 <asp:TextBox ID="txtEmail" CssClass="input-base" runat="server"></asp:TextBox>
                 <asp:Label CssClass="label-base" runat="server">Contraseña: </asp:Label>
                 <asp:TextBox ID="txtPassword" CssClass="input-base" runat="server" TextMode="Password"></asp:TextBox>
+                <asp:Label CssClass="label-base" runat="server">Activo: </asp:Label>
+                <asp:Button ID="btnActivo" runat="server" Text="Inactivo" CssClass="btn-toggle btn-inactivo" OnClick="btnActivo_Click" />
 
             </div>
 
@@ -68,16 +70,17 @@
                     <asp:TextBox ID="txtHoraFin" class="input-base" runat="server" Visible="false"></asp:TextBox>
              </div>
           <div class="form-actions">
-            <asp:Button ID="btnGuardar" CssClass="btn-base btn-success" runat="server" Text="Guardar"/>
-            <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar"/>
-            <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar"/>
+              <asp:HiddenField ID="hiddenIdUsuario" runat="server" />
+            <asp:Button ID="btnGuardar" CssClass="btn-base btn-success" runat="server" Text="Guardar" OnClick="btnGuardar_Click"/>
+            <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar" OnClick="btnModificar_Click"/>
+            <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" OnClick="btnEliminar_Click"/>
            </div>
 
         </div>
     
 
     <div class="grid-container">   
-          <asp:GridView CssClass="grid-crud" ID="gvUsuarios" runat="server" AutoGenerateColumns="false">
+          <asp:GridView CssClass="grid-crud" ID="gvUsuarios" runat="server" AutoGenerateColumns="false" OnSelectedIndexChanged="gvUsuarios_SelectedIndexChanged">
                   <Columns>
                       <asp:CommandField ShowSelectButton="true" SelectText="Seleccionar" />
                       <asp:BoundField DataField="IdUsuario" HeaderText="ID" ReadOnly="True" />
@@ -85,13 +88,14 @@
                       <asp:BoundField DataField="Apellido" HeaderText="Apellido" />
                       <asp:BoundField DataField="DNI" HeaderText="DNI" />
                       <asp:BoundField DataField="Email" HeaderText="Email" />
-                      <asp:BoundField DataField="HashPassword" HeaderText="Contraseña" />
+                      <asp:BoundField DataField="HashPassword" HeaderText="Contraseña" Visible="false"/>
                       <asp:BoundField DataField="IntentosFallidos" HeaderText="Intentos Fallidos" />
                       <asp:CheckBoxField DataField="Activo" HeaderText="Activo" />
                   
                   </Columns>
             </asp:GridView>
     </div>
+    <asp:Label ID="lblMensaje" runat="server" CssClass="label-base"></asp:Label>
 
           
       

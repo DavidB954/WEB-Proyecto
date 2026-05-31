@@ -41,34 +41,43 @@ namespace DAL
 
         public List<BE_Bitacora> ObtenerBitacora()
         {
-            List<BE_Bitacora> ListaBitacora = new List<BE_Bitacora>();
-
-            using (SqlConnection conexion = conex.ObtenerConexion())
+            try
             {
+                List<BE_Bitacora> ListaBitacora = new List<BE_Bitacora>();
 
-                conexion.Open();
-
-                SqlCommand cmdBitacora = new SqlCommand("Select * From Bitacora", conexion);
-
-                SqlDataReader Lector = cmdBitacora.ExecuteReader();
-
-                while (Lector.Read())
+                using (SqlConnection conexion = conex.ObtenerConexion())
                 {
-                    BE_Bitacora Bitacora = new BE_Bitacora();
-                    Bitacora.IdBitacora = Lector.GetInt32(0);
-                    Bitacora.IdUsuario = Lector.IsDBNull(1) ? (int?)null : Lector.GetInt32(1);
-                    Bitacora.FechaHora = Lector.GetDateTime(2);
-                    Bitacora.Accion = (AccionBitacora)Enum.Parse(typeof(AccionBitacora), Lector.GetString(3));
-                    Bitacora.Descripcion = Lector.GetString(4);
-                    Bitacora.IP = Lector.GetString(5);
-                    Bitacora.Modulo = Lector.GetString(6);
-                    Bitacora.NombreMaquina = Lector.GetString(7);
 
-                    ListaBitacora.Add(Bitacora);
+                    conexion.Open();
+
+                    SqlCommand cmdBitacora = new SqlCommand("Select * From Bitacora", conexion);
+
+                    SqlDataReader Lector = cmdBitacora.ExecuteReader();
+
+                    while (Lector.Read())
+                    {
+                        BE_Bitacora Bitacora = new BE_Bitacora();
+                        Bitacora.IdBitacora = Lector.GetInt32(0);
+                        Bitacora.IdUsuario = Lector.IsDBNull(1) ? (int?)null : Lector.GetInt32(1);
+                        Bitacora.FechaHora = Lector.GetDateTime(2);
+                        Bitacora.Accion = (AccionBitacora)Enum.Parse(typeof(AccionBitacora), Lector.GetString(3));
+                        Bitacora.Descripcion = Lector.GetString(4);
+                        Bitacora.IP = Lector.GetString(5);
+                        Bitacora.DVH = Lector.IsDBNull(6) ? null : Lector.GetString(6);
+                        Bitacora.Modulo = Lector.GetString(7);
+                        Bitacora.NombreMaquina = Lector.GetString(8);
+
+                        ListaBitacora.Add(Bitacora);
+                    }
                 }
-            }
 
-            return ListaBitacora;
+                return ListaBitacora;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+           
         }
 
         public DataTable FiltrarBitacora(DateTime? Desde, DateTime? Hasta, int? idUsuario, string Modulo, string Ip)

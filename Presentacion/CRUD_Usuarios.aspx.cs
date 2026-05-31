@@ -1,4 +1,6 @@
-﻿using BLL;
+﻿using BE;
+using BLL;
+using SERVICIOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,8 +23,6 @@ namespace Presentacion
             }
             
         }
-
-
         public void CargarTipos()
         {
             ddlTipo.Items.Add(new ListItem("MEDICO", "1"));
@@ -80,6 +80,139 @@ namespace Presentacion
 
                 lblTelefono.Visible = true;
                 txtTelefono.Visible = true;
+            }
+        }
+
+        public void CargarGrilla()
+        {
+            gvUsuarios.DataSource = bll_usuario.Usuarios();
+            gvUsuarios.DataBind();
+
+            txtNombre.Text = string.Empty;
+            txtApellido.Text = string.Empty;
+            txtDNI.Text = string.Empty;
+            txtEmail.Text = string.Empty;
+            txtPassword.Text = string.Empty;
+        }
+
+        protected void btnGuardar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BE_Usuario usuario = new BE_Usuario();
+
+                usuario.Nombre = txtNombre.Text;
+                usuario.Apellido = txtApellido.Text;
+                usuario.Email = txtEmail.Text;
+
+                usuario.HashPassword = txtPassword.Text;
+
+                usuario.DNI = txtDNI.Text;
+
+                usuario.IntentosFallidos = 0;
+
+                if (btnActivo.Text=="Activo")
+                {
+                    usuario.Activo = true;
+                }
+
+                else
+                {
+                    usuario.Activo = false;
+                }
+
+                string datosConcatenados = $"{usuario.Nombre}|{usuario.Apellido}|{usuario.Email}|{usuario.HashPassword}|{usuario.DNI}|{usuario.IntentosFallidos}|{(usuario.Activo ? 1 : 0)}";
+
+                usuario.DVH = datosConcatenados;
+
+                bll_usuario.AgregarUsuario(usuario);
+
+                CargarGrilla();
+            }
+            catch (Exception ex)
+            {
+                ScriptManager.RegisterStartupScript(this, GetType(), "errorAlert", $"alert('Error: {ex.Message}');", true);
+            }
+           
+
+
+        }
+
+        protected void gvUsuarios_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            GridViewRow fila = gvUsuarios.SelectedRow;
+
+            hiddenIdUsuario.Value = fila.Cells[1].Text; 
+            txtNombre.Text = fila.Cells[2].Text;
+            txtApellido.Text = fila.Cells[3].Text;
+            txtDNI.Text = fila.Cells[4].Text;
+            txtEmail.Text = fila.Cells[5].Text;
+        }
+
+        protected void btnModificar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BE_Usuario usuario = new BE_Usuario();
+
+                usuario.IdUsuario = int.Parse(hiddenIdUsuario.Value);
+                usuario.Nombre = txtNombre.Text;
+                usuario.Apellido = txtApellido.Text;
+                usuario.Email = txtEmail.Text;
+                usuario.HashPassword = txtPassword.Text;
+                usuario.DNI = txtDNI.Text;
+
+                if (btnActivo.Text == "Activo")
+                {
+                    usuario.Activo = true;
+                }
+
+                else
+                {
+                    usuario.Activo = false;
+                }
+
+                string datosConcatenados = $"{usuario.Nombre}|{usuario.Apellido}|{usuario.Email}|{usuario.HashPassword}|{usuario.DNI}|{usuario.IntentosFallidos}|{(usuario.Activo ? 1 : 0)}";
+
+                usuario.DVH = datosConcatenados;
+                
+                bll_usuario.ModificarUsuario(usuario);
+
+                CargarGrilla();
+            }
+            catch (Exception ex)
+            {
+                lblMensaje.Text = ex.Message;
+            }
+        }
+
+        protected void btnActivo_Click(object sender, EventArgs e)
+        {
+            if (btnActivo.Text == "Inactivo")
+            {
+                btnActivo.Text = "Activo";
+                btnActivo.CssClass = "btn-toggle btn-activo";
+            }
+            else
+            {
+                btnActivo.Text = "Inactivo";
+                btnActivo.CssClass = "btn-toggle btn-inactivo";
+            }
+        }
+
+        protected void btnEliminar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int id = int.Parse(hiddenIdUsuario.Value);
+
+                bll_usuario.EliminarUsuario(id);
+
+                CargarGrilla();
+            }
+            catch (Exception ex)
+            {
+                lblMensaje.Text = ex.Message;
             }
         }
     }

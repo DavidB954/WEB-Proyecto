@@ -30,5 +30,7 @@ namespace BE
         public int IntentosFallidos { get; set; }
 
         public bool Activo { get; set; }
+
+        public string DVH { get; set; }
     }
 }

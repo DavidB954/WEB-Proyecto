@@ -47,5 +47,10 @@ namespace BE
         {
             get; set;
         }
+
+        public string DVH
+        {
+            get; set;
+        }
     }
 }

@@ -19,7 +19,12 @@ namespace BLL
         //Obtenemos el objeto usuario con el mail 
         public BE_LoginResultado ObtenerUsuarioPorEmail(string Email, string Password)
         {
-            //Password = HashHelper.GenerarHash(Password);
+            if (string.IsNullOrEmpty(Password))
+            {
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Debe ingresar contraseña" };
+            }
+
+            Password = HashHelper.GenerarHash(Password);
 
             //Obtenemos el objeto Usuario con el mail
             BE_Usuario Usuario = dal_usuario.ObtenerUsuarioPorEmail(Email);
@@ -37,7 +42,7 @@ namespace BLL
             if (!Usuario.Activo)
             {
                 //Existe el usuario pero no esta activo. Entonces mandamos a Bitacora el intento de login. 
-                bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_INTENTO, "LOGIN", $"Intento de sesion del usuario bloqueado: {Usuario.Nombre}, con IdUsuario = {Usuario.IdUsuario}");
+                bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_INTENTO, "LOGIN", $"Intento de sesion del usuario bloqueado: {Usuario.NombreApellido}, con IdUsuario = {Usuario.IdUsuario}");
 
                 return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario bloqueado. Contactese con el Administrador" };
             }
@@ -52,7 +57,7 @@ namespace BLL
                     dal_usuario.BloquearUsuario(Usuario.IdUsuario);
                     //Mandamos a bitacora que se bloquea el usuario por superar intentos fallidos.
 
-                    bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_BLOQUEADO, "LOGIN", $"Se bloquea al usuario: {Usuario.Nombre}, ID: {Usuario.IdUsuario}, por superar la cantidad de intentos permitidos");
+                    bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_BLOQUEADO, "LOGIN", $"Se bloquea al usuario: {Usuario.NombreApellido}, ID: {Usuario.IdUsuario}, por superar la cantidad de intentos permitidos");
 
                     return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario Bloqueado. Contacte Administrador" };
                 }
@@ -60,7 +65,7 @@ namespace BLL
                 {
                     //Mandamos a bitacora el intento de login por contraseña incorrecta
 
-                    bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_INCORRECTO, "LOGIN", $"Intento de inicio de sesion con el usuario: {Usuario.Nombre}, ID: {Usuario.IdUsuario} con contraseña incorrecta");
+                    bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_INCORRECTO, "LOGIN", $"Intento de inicio de sesion con el usuario: {Usuario.NombreApellido}, ID: {Usuario.IdUsuario} con contraseña incorrecta");
 
                     dal_usuario.ActualizarIntentosFallidos(Usuario.IntentosFallidos, Usuario.IdUsuario);
                     return new BE_LoginResultado { ExitoLogin = false, Mensaje = $"Contraseña Incorrecta. Intentos fallidos: {Usuario.IntentosFallidos}" };
@@ -74,7 +79,7 @@ namespace BLL
 
                 //Mandamos a bitacora el login exitoso
 
-                bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_OK, "LOGIN", $"Login correcto del usuario: {Usuario.Nombre}, ID: {Usuario.IdUsuario}");
+                bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_OK, "LOGIN", $"Login correcto del usuario: {Usuario.NombreApellido}, ID: {Usuario.IdUsuario}");
 
                 return new BE_LoginResultado { ExitoLogin = true, Usuario = Usuario, Mensaje = "Login exitoso" };
             }
@@ -88,14 +93,21 @@ namespace BLL
         public void AgregarUsuario(BE_Usuario usuario)
         {
             usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
+
+            usuario.DVH = HashHelper.GenerarHash(usuario.DVH);
+
             dal_usuario.AgregarUsuario(usuario);
 
             //Mandamos a bitacora la creacion del nuevo usuario
 
-           /* bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_ALTA, "USUARIO", $"Se crea un nuevo usuario: {usuario.Nombre}, {usuario.Apellido}, creado por {Sesion.Instancia().UsuarioActual.Nombre}");*/
+           //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_ALTA, "USUARIO", $"Se crea un nuevo usuario: {usuario.Nombre}, {usuario.Apellido}, creado por {Sesion.Instancia().UsuarioActual.Nombre}");*/
         }
         public void ModificarUsuario(BE_Usuario usuario)
         {
+            usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
+
+            usuario.DVH = HashHelper.GenerarHash(usuario.DVH);
+
             dal_usuario.ModificarUsuario(usuario);
 
             //Mandamos a bitacora la modificacion del usuario
