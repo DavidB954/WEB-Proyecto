@@ -108,8 +108,6 @@ namespace DAL
             }
         }
 
-
-
         public void AgregarUsuario(BE_Usuario Usuario)
         {
             try
@@ -139,7 +137,6 @@ namespace DAL
             }
            
         }
-
 
 
         public void ModificarUsuario(BE_Usuario Usuario)

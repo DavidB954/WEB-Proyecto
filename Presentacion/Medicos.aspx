@@ -10,7 +10,7 @@
             <asp:GridView ID="gvTurnosMedicos" runat="server" AutoGenerateColumns="false"  CssClass="grid-crud">
               <Columns >
                   <asp:CommandField ShowSelectButton="true" SelectText="Seleccionar" />
-                  <asp:BoundField DataField="IdPaciente" HeaderText="Paciente" ReadOnly="True" />
+                  <asp:BoundField DataField="Paciente" HeaderText="Paciente" ReadOnly="True" />
                   <asp:BoundField DataField="Fecha" HeaderText="Fecha" />
                   <asp:BoundField DataField="Hora" HeaderText="Hora" DataFormatString="{0:HH:mm:ss}" />           
                </Columns>
