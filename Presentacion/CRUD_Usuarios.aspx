@@ -5,49 +5,51 @@
     ContentPlaceHolderID="ContentPlaceHolder1"
     runat="server">
 
-
-        <div class="form-cred">
+     
+        <div class="form-container form-cred">
+           
             <h2 class="form-title">Gestión de Usuarios</h2>
 
-            <div>                
-                <asp:Label CssClass="lbl-crud" runat="server">Nombre: </asp:Label>
-                <asp:TextBox ID="txtNombre" CssClass="input-crud" runat="server"></asp:TextBox>
-                <asp:Label CssClass="lbl-crud" runat="server">Apellido: </asp:Label>
-                <asp:TextBox ID="txtApellido" CssClass="input-crud" runat="server"></asp:TextBox>
-                <asp:Label CssClass="lbl-crud" runat="server">DNI: </asp:Label>
-                <asp:TextBox ID="txtDNI" CssClass="input-crud" runat="server"></asp:TextBox>
-                <asp:Label CssClass="lbl-crud" runat="server">Email: </asp:Label>
-                <asp:TextBox ID="txtEmail" CssClass="input-crud" runat="server"></asp:TextBox>
-                <asp:Label CssClass="lbl-crud" runat="server">Contraseña: </asp:Label>
-                <asp:TextBox ID="txtPassword" CssClass="input-crud" runat="server" TextMode="Password"></asp:TextBox>
+            <div class="form-col">                
+                <asp:Label CssClass="label-base" runat="server">Nombre: </asp:Label>
+                <asp:TextBox ID="txtNombre" CssClass="input-base" runat="server"></asp:TextBox>
+                <asp:Label CssClass="label-base" runat="server">Apellido: </asp:Label>
+                <asp:TextBox ID="txtApellido" CssClass="input-base" runat="server"></asp:TextBox>
+                <asp:Label CssClass="label-base" runat="server">DNI: </asp:Label>
+                <asp:TextBox ID="txtDNI" CssClass="input-base" runat="server"></asp:TextBox>
+                <asp:Label CssClass="label-base" runat="server">Email: </asp:Label>
+                <asp:TextBox ID="txtEmail" CssClass="input-base" runat="server"></asp:TextBox>
+                <asp:Label CssClass="label-base" runat="server">Contraseña: </asp:Label>
+                <asp:TextBox ID="txtPassword" CssClass="input-base" runat="server" TextMode="Password"></asp:TextBox>
 
             </div>
 
-             <div>
-                 <asp:Label CssClass="lbl-crud" runat="server">Tipo de Usuario: </asp:Label>
-                  <asp:DropDownList CssClass="ddl-crud" runat="server" ID="ddlTipo"> </asp:DropDownList>
+             <div class="form-col">
+                 <asp:Label CssClass="label-base" runat="server">Tipo de Usuario: </asp:Label>
+                  <asp:DropDownList CssClass="ddl-base" runat="server" ID="ddlTipo"> </asp:DropDownList>
 
                    <!--Si es un paciente -->
-                     <div id="divPaciente" runat="server" Visible="false" class="section-group">
-                        <asp:Label ID="lblHistoriaClinica" class="section-group" runat="server" Visible="false">Numero de Historia Clínica: </asp:Label>
-                        <asp:TextBox ID="txtHistoriaClinica" class="section-group" runat="server" Visible="false"></asp:TextBox>
+                     <div id="divPaciente" runat="server" Visible="false" class="section-card">
+                        <asp:Label ID="lblHistoriaClinica" class="label-base" runat="server" Visible="false">Numero de Historia Clínica: </asp:Label>
+                        <asp:TextBox ID="txtHistoriaClinica" class="input-base" runat="server" Visible="false"></asp:TextBox>
 
-                        <asp:Label ID="lblFechaNacimiento" class="section-group" runat="server" Visible="false">Fecha de Nacimiento: </asp:Label>
-                        <asp:TextBox ID="txtFechaNac" class="section-group" runat="server" TextMode="Date" Visible="false" ></asp:TextBox>
+                        <asp:Label ID="lblFechaNacimiento" class="label-base" runat="server" Visible="false">Fecha de Nacimiento: </asp:Label>
+                        <asp:TextBox ID="txtFechaNac" class="input-base" runat="server" TextMode="Date" Visible="false" ></asp:TextBox>
 
-                        <asp:Label ID="lblTelefono" class="section-group" runat="server" Visible="false">Telefono: </asp:Label>
-                        <asp:TextBox ID="txtTelefono" class="section-group" runat="server" Visible="false"></asp:TextBox>
+                        <asp:Label ID="lblTelefono" class="label-base" runat="server" Visible="false">Telefono: </asp:Label>
+                        <asp:TextBox ID="txtTelefono" class="input-base" runat="server" Visible="false"></asp:TextBox>
                     </div>
+
                     <!--Si es un Medico -->
 
-                 <div id="divMedico" runat="server" Visible="false" class="section-group">
-                    <asp:Label ID="lblMatricula" class="section-group" runat="server" Visible="false">Matricula: </asp:Label>
-                    <asp:TextBox ID="txtMatricula" class="section-group" runat="server" Visible="false"></asp:TextBox>
+                 <div id="divMedico" runat="server" Visible="false" class="section-card">
+                    <asp:Label ID="lblMatricula" class="label-base" runat="server" Visible="false">Matricula: </asp:Label>
+                    <asp:TextBox ID="txtMatricula" class="input-base" runat="server" Visible="false"></asp:TextBox>
 
-                     <asp:Label ID="lblEspecialidad" class="section-group" runat="server" Visible="false">Especialidad: </asp:Label>
-                    <asp:TextBox ID="txtEspecialidad" class="section-group" runat="server" Visible="false"></asp:TextBox>
+                     <asp:Label ID="lblEspecialidad" class="label-base" runat="server" Visible="false">Especialidad: </asp:Label>
+                    <asp:TextBox ID="txtEspecialidad" class="input-base" runat="server" Visible="false"></asp:TextBox>
 
-                    <asp:CheckBoxList ID="chkDias" class="section-group" runat="server" Visible="false">
+                    <asp:CheckBoxList ID="chkDias" class="section-card" runat="server" Visible="false">
                         <asp:ListItem Value="Lunes">Lunes</asp:ListItem>
                         <asp:ListItem Value="Martes">Martes</asp:ListItem>
                         <asp:ListItem Value="Miercoles">Miércoles</asp:ListItem>
@@ -58,23 +60,23 @@
                      </div>
 
                     <!-- Hora de inicio-->
-                    <asp:Label ID="lblHoraInicio" class="section-group" runat="server" Visible="false">Hora Inicio: </asp:Label>
-                    <asp:TextBox ID="txtHoraInicio" class="section-group" runat="server" Visible="false"></asp:TextBox>
+                    <asp:Label ID="lblHoraInicio" class="label-base" runat="server" Visible="false">Hora Inicio: </asp:Label>
+                    <asp:TextBox ID="txtHoraInicio" class="input-base" runat="server" Visible="false"></asp:TextBox>
 
                     <!-- Hora de fin-->
-                    <asp:Label ID="lblHoraFin" class="section-group" runat="server" Visible="false">Hora Fin: </asp:Label>
-                    <asp:TextBox ID="txtHoraFin" class="section-group" runat="server" Visible="false"></asp:TextBox>
+                    <asp:Label ID="lblHoraFin" class="label-base" runat="server" Visible="false">Hora Fin: </asp:Label>
+                    <asp:TextBox ID="txtHoraFin" class="input-base" runat="server" Visible="false"></asp:TextBox>
              </div>
           <div class="form-actions">
-            <asp:Button ID="btnGuardar" CssClass="btn-crud" runat="server" Text="Guardar"/>
-            <asp:Button ID="btnModificar" CssClass="btn-crud" runat="server" Text="Modificar"/>
-            <asp:Button ID="btnEliminar" CssClass="btn-crud" runat="server" Text="Eliminar"/>
+            <asp:Button ID="btnGuardar" CssClass="btn-base btn-success" runat="server" Text="Guardar"/>
+            <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar"/>
+            <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar"/>
            </div>
 
         </div>
     
 
-    <div>   
+    <div class="grid-container">   
           <asp:GridView CssClass="grid-crud" ID="gvUsuarios" runat="server" AutoGenerateColumns="false">
                   <Columns>
                       <asp:CommandField ShowSelectButton="true" SelectText="Seleccionar" />

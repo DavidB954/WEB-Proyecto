@@ -4,41 +4,42 @@
 
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
-
     
-    <div class="CrearTurnos">
-        <h2>Crear turno medico</h2>
-            Seleccione Especialidad:
+        <div class="form-container CrearTurnos">
+            <h2>Crear turno medico</h2>
+            <asp:Label  runat="server" CssClass="label-base" Text="Seleccione Especialidad"></asp:Label>
+            <asp:DropDownList ID="ddlEspecialidades" CssClass="ddl-base" runat="server"></asp:DropDownList>
             <br />
-            <asp:DropDownList ID="ddlEspecialidades" CssClass="ddl-turnos" runat="server"></asp:DropDownList>
-            <br />
-            Seleccione el Medico:
-            <br />
-            <asp:DropDownList ID="ddlMedico" CssClass="ddl-turnos" runat="server"></asp:DropDownList>
-            <br>
+            <asp:Label  runat="server" CssClass="label-base" Text="Seleccione el medico"></asp:Label>
+            <asp:DropDownList ID="ddlMedico" CssClass="ddl-base" runat="server"></asp:DropDownList>
             <div class="horario-turno">
-                <label for="ddlDias">Día:</label>
-                <asp:DropDownList ID="ddlDias" CssClass="ddl-turnos" runat="server"></asp:DropDownList>
+                <asp:label runat="server" for="ddlDias" CssClass="label-base">Día:</asp:label>
+                <asp:DropDownList ID="ddlDias" CssClass="ddl-base" runat="server"></asp:DropDownList>
+                <asp:label runat="server" for="ddlHoras" CssClass="label-base">Hora:</asp:label>
+                <asp:DropDownList ID="ddlHoras" CssClass="ddl-base" runat="server"></asp:DropDownList>
 
-                <label for="ddlHoras">Hora:</label>
-                <asp:DropDownList ID="ddlHoras" CssClass="ddl-turnos" runat="server"></asp:DropDownList>
             </div>
-            <asp:Button ID="btnAgendar" CssClass="btn-crud" runat="server" Text="Agendar Turno" />
-            <asp:Button ID="btnCancelar" CssClass="btn-crud" runat="server" Text="Cancelar"/>
-       </div>
 
-    <div class="misTurnos">
-        <h2>Mis Turnos</h2>
-        <asp:GridView ID="gvTurnos" runat="server" AutoGenerateColumns="False" CssClass="grid-crud">
-            <Columns>
-                <asp:BoundField DataField="Especialidad" HeaderText="Especialidad" />
-                <asp:BoundField DataField="Medico" HeaderText="Médico" />
-                <asp:BoundField DataField="Dia" HeaderText="Día" />
-                <asp:BoundField DataField="Hora" HeaderText="Hora" />
-                <asp:ButtonField ButtonType="Button" CommandName="CancelarTurno" Text="Cancelar Turno" />
 
-            </Columns>
-         </asp:GridView>
-    </div>
+            <asp:Button ID="btnAgendar" CssClass="btn-base btn-success" runat="server" Text="Agendar Turno" />
+            <asp:Button ID="btnCancelar" CssClass="btn-base btn-danger" runat="server" Text="Cancelar"/>
+
+        </div>
+        <div class="grid-container misTurnos">
+            <h2>Mis Turnos</h2>
+            <asp:GridView ID="gvTurnos" runat="server" AutoGenerateColumns="False" CssClass="grid-crud">
+                <Columns>
+                    <asp:BoundField DataField="Especialidad" HeaderText="Especialidad" />
+                    <asp:BoundField DataField="Medico" HeaderText="Médico" />
+                    <asp:BoundField DataField="Dia" HeaderText="Día" />
+                    <asp:BoundField DataField="Hora" HeaderText="Hora" />
+                    <asp:ButtonField ButtonType="Button" CommandName="CancelarTurno" Text="Cancelar Turno" />
+
+                </Columns>
+
+            </asp:GridView>
+
+        </div>
+
 
 </asp:Content>

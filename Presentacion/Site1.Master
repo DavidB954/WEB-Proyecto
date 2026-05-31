@@ -45,6 +45,10 @@
                     </li>
 
                     <li>
+                        <a href="Recetas.aspx">Mis Recetas</a>
+                    </li>
+
+                    <li>
                         <a href="Medicos.aspx">Médicos</a>
                     </li>
 
