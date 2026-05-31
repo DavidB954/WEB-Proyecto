@@ -26,7 +26,7 @@
 
              <div class="form-col">
                  <asp:Label CssClass="label-base" runat="server">Tipo de Usuario: </asp:Label>
-                  <asp:DropDownList CssClass="ddl-base" runat="server" ID="ddlTipo"> </asp:DropDownList>
+                  <asp:DropDownList CssClass="ddl-base" runat="server" ID="ddlTipo" AutoPostBack="true" OnSelectedIndexChanged="ddlTipo_SelectedIndexChanged"> </asp:DropDownList>
 
                    <!--Si es un paciente -->
                      <div id="divPaciente" runat="server" Visible="false" class="section-card">

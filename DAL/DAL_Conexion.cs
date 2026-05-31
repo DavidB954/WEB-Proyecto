@@ -9,7 +9,7 @@ namespace DAL
 {
     public class DAL_Conexion
     {
-        private static string connetionString = " Data Source=localhost;Initial Catalog=GestionTurnosMedicosWEB;Integrated Security=True;";
+        private static string connetionString = " Data Source=localhost;Initial Catalog=GestionWEB;Integrated Security=True;";
     
 
     public SqlConnection ObtenerConexion()

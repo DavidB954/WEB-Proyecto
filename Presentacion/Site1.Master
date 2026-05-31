@@ -24,7 +24,7 @@
 
         <!-- NAVBAR -->
 
-        <nav class="navbar-custom">
+        <nav class="navbar-custom" role="navigation">
 
             <!-- IZQUIERDA -->
 
@@ -61,26 +61,19 @@
             </div>
 
             <!-- DERECHA -->
+            
+            <div class="user-info">
+                <div class="nav-right">
+                    <span class="usuario-logueado">
+                        Bienvenido,
+                        <asp:Label ID="lblUsuario" runat="server">
 
-            <div class="nav-right">
+                        </asp:Label>
 
-                <span class="usuario-logueado">
+                    </span>
+                    <a class="logout-link" href="CerrarSesion.aspx"> Cerrar Sesión </a>
 
-                    Bienvenido,
-
-                    <asp:Label
-                        ID="lblUsuario"
-                        runat="server">
-                    </asp:Label>
-
-                </span>
-
-                <a class="logout-link"
-                    href="CerrarSesion.aspx">
-
-                    Cerrar Sesión
-
-                </a>
+                </div>
 
             </div>
 
