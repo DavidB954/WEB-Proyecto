@@ -76,7 +76,7 @@
                 </asp:RegularExpressionValidator>
 
                 <asp:Label CssClass="label-base" runat="server">Activo: </asp:Label>
-                <asp:Button ID="btnActivo" runat="server" Text="Inactivo" CssClass="btn-toggle btn-inactivo" OnClick="btnActivo_Click" />
+                <asp:Button ID="btnActivo" runat="server" Text="Activo" CssClass="btn-toggle btn-activo" OnClick="btnActivo_Click" />
 
             </div>
 

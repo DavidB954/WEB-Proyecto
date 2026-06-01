@@ -101,9 +101,21 @@ namespace Presentacion
         }
 
         protected void btnGuardar_Click(object sender, EventArgs e)
-        {
+        {            
             try
             {
+                if (string.IsNullOrWhiteSpace(txtNombre.Text) ||
+                string.IsNullOrWhiteSpace(txtApellido.Text) ||
+                string.IsNullOrWhiteSpace(txtDNI.Text) ||
+                string.IsNullOrWhiteSpace(txtEmail.Text) ||
+                string.IsNullOrWhiteSpace(txtPassword.Text))
+                {
+                    lblMensaje.Text = "Debe completar todos los campos antes de guardar.";
+                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    return; // corta la ejecución, no guarda
+                }
+
+
                 BE_Usuario usuario = new BE_Usuario();
 
                 usuario.Nombre = txtNombre.Text;
