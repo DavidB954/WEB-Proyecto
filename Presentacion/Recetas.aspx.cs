@@ -15,6 +15,10 @@ namespace Presentacion
             if (!IsPostBack)
             {
                 CargarRecetas();
+                if (Session["Usuario"] == null)
+                {
+                    Response.Redirect("Login.aspx");
+                }
             }
         }
 

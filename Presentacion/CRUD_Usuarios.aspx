@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" MasterPageFile="~/Site1.Master" AutoEventWireup="true" CodeBehind="CRUD_Usuarios.aspx.cs" Inherits="Presentacion.WebForm1" %>
+﻿<%@ Page Language="C#" MasterPageFile="~/Site1.Master" AutoEventWireup="true" CodeBehind="CRUD_Usuarios.aspx.cs" Inherits="Presentacion.WebForm1" UnobtrusiveValidationMode="none"%>
 
 <asp:Content 
     ID="Content1"
@@ -13,14 +13,68 @@
             <div class="form-col">                
                 <asp:Label CssClass="label-base" runat="server">Nombre: </asp:Label>
                 <asp:TextBox ID="txtNombre" CssClass="input-base" runat="server"></asp:TextBox>
+                <!-- Validacion del Nombre-->
+                <asp:RegularExpressionValidator
+                    ID="valNombre"
+                    runat="server"
+                    ControlToValidate="txtNombre"
+                    ErrorMessage="El nombre debe contener solo letras y espacios."
+                    ValidationExpression="^[a-zA-Z\s]+$"
+                    ForeColor="Red">
+                </asp:RegularExpressionValidator>
+
                 <asp:Label CssClass="label-base" runat="server">Apellido: </asp:Label>
                 <asp:TextBox ID="txtApellido" CssClass="input-base" runat="server"></asp:TextBox>
+                <!-- Validacion del Apellido-->
+                <asp:RegularExpressionValidator
+                    ID="valApellido"
+                    runat="server"
+                    ControlToValidate="txtApellido"
+                    ErrorMessage="El apellido debe contener solo letras y espacios"
+                    ValidationExpression="^[a-zA-Z\s]+$"
+                    ForeColor="Red">
+
+                </asp:RegularExpressionValidator>
+
                 <asp:Label CssClass="label-base" runat="server">DNI: </asp:Label>
                 <asp:TextBox ID="txtDNI" CssClass="input-base" runat="server"></asp:TextBox>
+                <!-- Validacion del DNI-->
+                <asp:RegularExpressionValidator
+                    ID="valDNI"
+                    runat="server"
+                    ControlToValidate="txtDNI"
+                    ErrorMessage="El DNI debe contener solo numeros sin punto."
+                    ValidationExpression="^\d{7,8}$"
+                    ForeColor="Red">
+                </asp:RegularExpressionValidator>
+
                 <asp:Label CssClass="label-base" runat="server">Email: </asp:Label>
                 <asp:TextBox ID="txtEmail" CssClass="input-base" runat="server"></asp:TextBox>
+                <!-- Validacion del email-->
+                <asp:RegularExpressionValidator
+                    ID="valEmail"
+                    runat="server"
+                    ControlToValidate="txtEmail"
+                    ErrorMessage="Formato de correo invalido. Ejemplo: usuario@gmail.com"
+                    ValidationExpression="^[^@\s]+@[^@\s]+\.[^@\s]+$"
+                    ForeColor="Red">
+                    </asp:RegularExpressionValidator>
+
+
                 <asp:Label CssClass="label-base" runat="server">Contraseña: </asp:Label>
                 <asp:TextBox ID="txtPassword" CssClass="input-base" runat="server" TextMode="Password"></asp:TextBox>
+
+                <!-- Validacion de password -->
+                <asp:RegularExpressionValidator
+                    ID="valPassword"
+                    runat="server"
+                    ControlToValidate="txtPassword"
+                    ErrorMessage="La contraseña debe tener al menos 8 caracteres, una mayuscula, una minuscula, un numero y un simbolo."
+                    ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$"
+                    ForeColor="Red">
+
+                </asp:RegularExpressionValidator>
+
                 <asp:Label CssClass="label-base" runat="server">Activo: </asp:Label>
                 <asp:Button ID="btnActivo" runat="server" Text="Inactivo" CssClass="btn-toggle btn-inactivo" OnClick="btnActivo_Click" />
 

@@ -16,6 +16,10 @@ namespace Presentacion
             {
                 gvTurnos.DataSource = GetTurnosDummy();
                 gvTurnos.DataBind();
+                if (Session["Usuario"] == null)
+                {
+                    Response.Redirect("Login.aspx");
+                }
             }
         }
 

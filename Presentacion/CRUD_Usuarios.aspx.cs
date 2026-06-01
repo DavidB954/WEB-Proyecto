@@ -20,8 +20,13 @@ namespace Presentacion
                 gvUsuarios.DataSource = bll_usuario.Usuarios();
                 CargarTipos();
                 gvUsuarios.DataBind();
+                if (Session["Usuario"] == null)
+                {
+                    Response.Redirect("Login.aspx");
+                }
             }
-            
+           
+
         }
         public void CargarTipos()
         {

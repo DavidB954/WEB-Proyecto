@@ -12,8 +12,16 @@ namespace Presentacion
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            gvTurnosMedicos.DataSource = GetTurnosDummy();
-            gvTurnosMedicos.DataBind();
+            if (!IsPostBack)
+            {
+                gvTurnosMedicos.DataSource = GetTurnosDummy();
+                gvTurnosMedicos.DataBind();
+                if (Session["Usuario"] == null)
+                {
+                    Response.Redirect("Login.aspx");
+                }
+            }
+            
         }
 
 

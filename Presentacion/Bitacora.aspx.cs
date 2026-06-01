@@ -21,6 +21,10 @@ namespace Presentacion
                 CargarModulos();
                 gvBitacora.DataSource = bll_bitacora.ObtenerBitacora();
                 gvBitacora.DataBind();
+                if (Session["Usuario"] == null)
+                {
+                    Response.Redirect("Login.aspx");
+                }
             }
         }
 

@@ -16,6 +16,16 @@
     <asp:ContentPlaceHolder ID="head" runat="server">
     </asp:ContentPlaceHolder>
 
+    <script type="text/javascript">
+    // Tiempo de sesión en minutos (coincidir con Web.config)
+    var timeout = 1 * 60 * 1000; // 1 minuto en milisegundos
+
+    setTimeout(function () {
+        alert("Su sesión ha expirado por inactividad. Será redirigido al login.");
+        window.location.href = 'Login.aspx';
+    }, timeout);
+</script>
+
 </head>
 
 <body>
