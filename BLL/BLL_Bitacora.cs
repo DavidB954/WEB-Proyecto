@@ -1,5 +1,6 @@
 ﻿using BE;
 using DAL;
+using SERVICIOS;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -13,6 +14,7 @@ namespace BLL
     public class BLL_Bitacora
     {
         DAL_Bitacora dal_bitacora = new DAL_Bitacora();
+        DAL_DVV dal_dvv = new DAL_DVV();
 
         public void RegistrarEvento(int? IdUsuario, AccionBitacora accion, string modulo, string descripcion)
         {
@@ -27,7 +29,33 @@ namespace BLL
                 Descripcion = descripcion
             };
 
+            //DVH con encriptación reversible: permite, ante una corrupción, desencriptar y comparar contra los valores actuales de la fila.
+            objBitacora.DVH = EncryptionHelper.Encriptar(CadenaBitacora(objBitacora));
+
             dal_bitacora.RegistrarEvento(objBitacora);
+
+            //Bitacora es una tabla que crece con cada evento (incluido este mismo insert, y el propio log de error de integridad): hay que refrescar su DVV en cada alta, si no cualquier acción legítima (o el propio chequeo fallido de otra tabla) haría que el próximo chequeo de Bitacora fallara igual.
+            RefrescarDVVBitacora();
+        }
+
+        //La fórmula tiene que ser idéntica a BLL_DVV.CalcularDVV("Bitacora"): DV de fila con cifrado reversible, resumen final con hash (largo fijo de 64, entra en la columna DVV).
+        private void RefrescarDVVBitacora()
+        {
+            List<string> hashesFila = dal_bitacora.ObtenerBitacora().Select(b => EncryptionHelper.Encriptar(CadenaBitacora(b))).ToList();
+
+            StringBuilder concatenacion = new StringBuilder();
+            foreach (var hash in hashesFila)
+            {
+                concatenacion.Append(hash);
+            }
+
+            dal_dvv.ActualizarDVV(HashHelper.GenerarHash(concatenacion.ToString()), "Bitacora");
+        }
+
+        //Tiene que ser idéntica a BLL_DVV.CadenaBitacora.
+        private string CadenaBitacora(BE_Bitacora bitacora)
+        {
+            return $"{bitacora.IdUsuario}|{bitacora.FechaHora}|{bitacora.Accion}|{bitacora.Modulo}|{bitacora.IP}|{bitacora.Descripcion}|{bitacora.NombreMaquina}";
         }
 
         private string ObtenerIP()

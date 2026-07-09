@@ -51,7 +51,11 @@ namespace DAL
             {
                 conexion.Open();
 
-                SqlCommand cmdUsuEmail = new SqlCommand("Select * From Usuario Where Email=@email", conexion);
+                SqlCommand cmdUsuEmail = new SqlCommand(@"Select u.*, r.IdRol, r.Nombre As NombreRol
+                                                        From Usuario u
+                                                        Left Join UsuarioRol ur On ur.IdUsuario = u.IdUsuario
+                                                        Left Join Rol r On r.IdRol = ur.IdRol
+                                                        Where u.Email=@email", conexion);
 
                 cmdUsuEmail.Parameters.Add("@email", SqlDbType.VarChar, 30).Value = email;
 
@@ -74,7 +78,9 @@ namespace DAL
                         DNI = Lector.GetString(5),
                         DVH = Lector.GetString(6),
                         IntentosFallidos = Lector.GetInt32(7),
-                        Activo = Lector.GetBoolean(8)
+                        Activo = Lector.GetBoolean(8),
+                        IdRol = Lector.IsDBNull(9) ? 0 : Lector.GetInt32(9),
+                        NombreRol = Lector.IsDBNull(10) ? null : Lector.GetString(10)
                     };
             }
         }
@@ -117,7 +123,8 @@ namespace DAL
                     conexion.Open();
 
                     SqlCommand cmdUsuario = new SqlCommand(@"Insert into Usuario (Nombre, Apellido, Email, HashPassword, DNI, DVH, IntentosFallidos, Activo)
-                                                        VALUES (@nombre, @apellido, @email, @password, @dni, @dvh, @intentos, @activo)", conexion);
+                                                        VALUES (@nombre, @apellido, @email, @password, @dni, @dvh, @intentos, @activo);
+                                                        SELECT CAST(SCOPE_IDENTITY() AS INT);", conexion);
 
                     cmdUsuario.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = Usuario.Nombre;
                     cmdUsuario.Parameters.Add("@apellido", SqlDbType.VarChar, 50).Value = Usuario.Apellido;
@@ -128,7 +135,8 @@ namespace DAL
                     cmdUsuario.Parameters.Add("@intentos", SqlDbType.Int).Value = Usuario.IntentosFallidos;
                     cmdUsuario.Parameters.Add("@activo", SqlDbType.Bit).Value = Usuario.Activo;
 
-                    cmdUsuario.ExecuteNonQuery();
+                    //Recuperamos el ID generado para poder loguear en bitácora a qué usuario corresponde el alta.
+                    Usuario.IdUsuario = (int)cmdUsuario.ExecuteScalar();
                 }
             }
             catch (Exception ex)
@@ -176,6 +184,21 @@ namespace DAL
                 SqlCommand comando = new SqlCommand("Delete from Usuario WHERE IdUsuario = @id", conexion);
 
                 comando.Parameters.AddWithValue("@id", id);
+
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        public void ActualizarDVH(int idUsuario, string dvh)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand comando = new SqlCommand("Update Usuario Set DVH=@dvh Where IdUsuario=@id", conexion);
+
+                comando.Parameters.Add("@dvh", SqlDbType.VarChar, 255).Value = dvh;
+                comando.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
 
                 comando.ExecuteNonQuery();
             }

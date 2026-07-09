@@ -46,26 +46,28 @@
                         <a href="Menu.aspx">Inicio</a>
                     </li>
 
-                    <li>
+                    <li id="liUsuarios" runat="server">
                         <a href="CRUD_Usuarios.aspx">Usuarios</a>
                     </li>
 
-                    <li>
+                    <li id="liTurnos" runat="server">
                         <a href="Turnos.aspx">Turnos</a>
                     </li>
 
-                    <li>
+                    <li id="liRecetas" runat="server">
                         <a href="Recetas.aspx">Mis Recetas</a>
                     </li>
 
-                    <li>
+                    <li id="liMedicos" runat="server">
                         <a href="Medicos.aspx">Médicos</a>
                     </li>
 
-                    <li>
+                    <li id="liBitacora" runat="server">
                         <a href="Bitacora.aspx">Bitácora</a>
                     </li>
-
+                     <li id="liSeguridad" runat="server">
+                         <a href="Seguridad.aspx">Seguridad</a>
+                     </li>
                 </ul>
 
             </div>

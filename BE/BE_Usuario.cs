@@ -32,5 +32,9 @@ namespace BE
         public bool Activo { get; set; }
 
         public string DVH { get; set; }
+
+        public int IdRol { get; set; }
+
+        public string NombreRol { get; set; }
     }
 }

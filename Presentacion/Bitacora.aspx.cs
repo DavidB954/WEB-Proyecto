@@ -1,4 +1,6 @@
-﻿using BLL;
+﻿using BE;
+using BLL;
+using SERVICIOS;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -17,14 +19,18 @@ namespace Presentacion
         {
             if (!IsPostBack)
             {
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+
+                if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "WEBMASTER", "ADMINISTRADOR"))
+                {
+                    Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
+                    return;
+                }
+
                 CargarUsuarios();
                 CargarModulos();
                 gvBitacora.DataSource = bll_bitacora.ObtenerBitacora();
                 gvBitacora.DataBind();
-                if (Session["Usuario"] == null)
-                {
-                    Response.Redirect("Login.aspx");
-                }
             }
         }
 

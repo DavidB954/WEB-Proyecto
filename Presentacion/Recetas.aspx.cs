@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BE;
+using SERVICIOS;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -14,11 +16,15 @@ namespace Presentacion
         {
             if (!IsPostBack)
             {
-                CargarRecetas();
-                if (Session["Usuario"] == null)
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+
+                if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "PACIENTE"))
                 {
-                    Response.Redirect("Login.aspx");
+                    Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
+                    return;
                 }
+
+                CargarRecetas();
             }
         }
 

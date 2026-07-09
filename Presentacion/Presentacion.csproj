@@ -67,11 +67,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AccesoDenegado.aspx" />
     <Content Include="Bitacora.aspx" />
     <Content Include="CerrarSesion.aspx" />
     <Content Include="Login.aspx" />
+    <Content Include="LoginWebmaster.aspx" />
     <Content Include="Menu.aspx" />
     <Content Include="Recetas.aspx" />
+    <Content Include="Seguridad.aspx" />
     <Content Include="Styles\StyleSheet.css" />
     <Content Include="Turnos.aspx" />
     <Content Include="Web.config" />
@@ -79,6 +82,13 @@
     <Content Include="Medicos.aspx" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccesoDenegado.aspx.cs">
+      <DependentUpon>AccesoDenegado.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AccesoDenegado.aspx.designer.cs">
+      <DependentUpon>AccesoDenegado.aspx</DependentUpon>
+    </Compile>
     <Compile Include="Bitacora.aspx.cs">
       <DependentUpon>Bitacora.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -99,6 +109,13 @@
     </Compile>
     <Compile Include="Login.aspx.designer.cs">
       <DependentUpon>Login.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="LoginWebmaster.aspx.cs">
+      <DependentUpon>LoginWebmaster.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="LoginWebmaster.aspx.designer.cs">
+      <DependentUpon>LoginWebmaster.aspx</DependentUpon>
     </Compile>
     <Compile Include="Menu.aspx.cs">
       <DependentUpon>Menu.aspx</DependentUpon>
@@ -121,6 +138,13 @@
     </Compile>
     <Compile Include="Recetas.aspx.designer.cs">
       <DependentUpon>Recetas.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Seguridad.aspx.cs">
+      <DependentUpon>Seguridad.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Seguridad.aspx.designer.cs">
+      <DependentUpon>Seguridad.aspx</DependentUpon>
     </Compile>
     <Compile Include="Site1.Master.cs">
       <DependentUpon>Site1.Master</DependentUpon>

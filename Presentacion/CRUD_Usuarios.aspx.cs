@@ -13,25 +13,43 @@ namespace Presentacion
     public partial class WebForm1 : System.Web.UI.Page
     {
         BLL_Usuario bll_usuario = new BLL_Usuario();
+        BLL_Rol bll_rol = new BLL_Rol();
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+
+                if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "ADMINISTRADOR"))
+                {
+                    Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
+                    return;
+                }
+
                 gvUsuarios.DataSource = bll_usuario.Usuarios();
                 CargarTipos();
+                CargarUsuarios();
                 gvUsuarios.DataBind();
-                if (Session["Usuario"] == null)
-                {
-                    Response.Redirect("Login.aspx");
-                }
             }
-           
+
 
         }
+
+
+        public void CargarUsuarios()
+        {
+            ddlUsuario.DataSource = bll_usuario.Usuarios();
+            ddlUsuario.DataTextField = "NombreApellido";
+            ddlUsuario.DataValueField = "IdUsuario";
+            ddlUsuario.DataBind();
+        }
+
         public void CargarTipos()
         {
             ddlTipo.Items.Add(new ListItem("MEDICO", "1"));
             ddlTipo.Items.Add(new ListItem("PACIENTE", "2"));
+            ddlTipo.Items.Add(new ListItem("WEBMASTER", "3"));
+            ddlTipo.Items.Add(new ListItem("ADMINISTRADOR", "4"));
         }
 
         protected void ddlTipo_SelectedIndexChanged(object sender, EventArgs e)
@@ -236,6 +254,69 @@ namespace Presentacion
             catch (Exception ex)
             {
                 lblMensaje.Text = ex.Message;
+            }
+        }
+
+        protected void btnGuardarRol_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int idUsuarioDestino = int.Parse(ddlUsuario.SelectedValue);
+                int idRol = int.Parse(ddlTipo.SelectedValue);
+
+                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+
+                bll_rol.AsignarRol(usuarioLogueado, idUsuarioDestino, idRol);
+
+                lblMensaje.Text = "Rol asignado correctamente.";
+                lblMensaje.ForeColor = System.Drawing.Color.Green;
+            }
+            catch (Exception ex)
+            {
+                lblMensaje.Text = ex.Message;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
+            }
+        }
+
+        protected void btnModificarRol_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int idUsuarioDestino = int.Parse(ddlUsuario.SelectedValue);
+                int idRol = int.Parse(ddlTipo.SelectedValue);
+
+                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+
+                bll_rol.ModificarRol(usuarioLogueado, idUsuarioDestino, idRol);
+
+                lblMensaje.Text = "Rol modificado correctamente.";
+                lblMensaje.ForeColor = System.Drawing.Color.Green;
+            }
+            catch (Exception ex)
+            {
+                lblMensaje.Text = ex.Message;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
+            }
+        }
+
+        protected void btnEliminarRol_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int idUsuarioDestino = int.Parse(ddlUsuario.SelectedValue);
+                int idRol = int.Parse(ddlTipo.SelectedValue);
+
+                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+
+                bll_rol.EliminarRol(usuarioLogueado, idUsuarioDestino, idRol);
+
+                lblMensaje.Text = "Rol eliminado correctamente.";
+                lblMensaje.ForeColor = System.Drawing.Color.Green;
+            }
+            catch (Exception ex)
+            {
+                lblMensaje.Text = ex.Message;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
     }

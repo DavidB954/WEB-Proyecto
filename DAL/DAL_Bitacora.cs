@@ -21,7 +21,7 @@ namespace DAL
             {
                 conexion.Open();
 
-                SqlCommand cmdBitacora = new SqlCommand("Insert into Bitacora (IdUsuario, FechaHora, Accion, Descripcion, DireccionIP, Modulo, NombreMaquina) VALUES (@idUsuario, @fechaHora, @accion, @descripcion, @ip, @modulo, @nombremaquina)", conexion);
+                SqlCommand cmdBitacora = new SqlCommand("Insert into Bitacora (IdUsuario, FechaHora, Accion, Descripcion, DireccionIP, Modulo, NombreMaquina, DVH) VALUES (@idUsuario, @fechaHora, @accion, @descripcion, @ip, @modulo, @nombremaquina, @dvh)", conexion);
 
 
                 //Se utiliza el ADD con el SqlDbType en vez de AddWithValue ya que AddWithValue lo que hace es adivinar el tipo de parametro previsto. Esto puede generar probelmas de rendimiento cuando se debe convertir el valor de la columna a un tipo de dato diferente. Al especificar el tipo de dato con SqlDbType, se evita esta conversión y se mejora el rendimiento de la consulta.
@@ -33,10 +33,26 @@ namespace DAL
                 cmdBitacora.Parameters.Add("@ip", SqlDbType.VarChar, 45).Value = Bitacora.IP;
                 cmdBitacora.Parameters.Add("@modulo", SqlDbType.VarChar, 30).Value = Bitacora.Modulo;
                 cmdBitacora.Parameters.Add("@nombremaquina", SqlDbType.VarChar, 100).Value = Bitacora.NombreMaquina;
+                cmdBitacora.Parameters.Add("@dvh", SqlDbType.VarChar, 1000).Value = (object)Bitacora.DVH ?? DBNull.Value;
 
                 cmdBitacora.ExecuteNonQuery();
             }
 
+        }
+
+        public void ActualizarDVH(int idBitacora, string dvh)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand comando = new SqlCommand("Update Bitacora Set DVH=@dvh Where IdBitacora=@id", conexion);
+
+                comando.Parameters.Add("@dvh", SqlDbType.VarChar, 1000).Value = dvh;
+                comando.Parameters.Add("@id", SqlDbType.Int).Value = idBitacora;
+
+                comando.ExecuteNonQuery();
+            }
         }
 
         public List<BE_Bitacora> ObtenerBitacora()

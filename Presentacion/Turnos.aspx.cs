@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BE;
+using SERVICIOS;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -14,12 +16,16 @@ namespace Presentacion
         {
             if (!IsPostBack)
             {
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+
+                if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "MEDICO", "PACIENTE"))
+                {
+                    Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
+                    return;
+                }
+
                 gvTurnos.DataSource = GetTurnosDummy();
                 gvTurnos.DataBind();
-                if (Session["Usuario"] == null)
-                {
-                    Response.Redirect("Login.aspx");
-                }
             }
         }
 

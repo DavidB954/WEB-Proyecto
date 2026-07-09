@@ -79,42 +79,6 @@
                 <asp:Button ID="btnActivo" runat="server" Text="Activo" CssClass="btn-toggle btn-activo" OnClick="btnActivo_Click" />
 
             </div>
-
-             <div class="form-col">
-                 <asp:Label CssClass="label-base" runat="server">Tipo de Usuario: </asp:Label>
-                  <asp:DropDownList CssClass="ddl-base" runat="server" ID="ddlTipo" AutoPostBack="true" OnSelectedIndexChanged="ddlTipo_SelectedIndexChanged"> </asp:DropDownList>
-
-                   <!--Si es un paciente -->
-                     <div id="divPaciente" runat="server" Visible="false" class="section-card">
-                        <asp:Label ID="lblHistoriaClinica" class="label-base" runat="server" Visible="false">Numero de Historia Clínica: </asp:Label>
-                        <asp:TextBox ID="txtHistoriaClinica" class="input-base" runat="server" Visible="false"></asp:TextBox>
-
-                        <asp:Label ID="lblFechaNacimiento" class="label-base" runat="server" Visible="false">Fecha de Nacimiento: </asp:Label>
-                        <asp:TextBox ID="txtFechaNac" class="input-base" runat="server" TextMode="Date" Visible="false" ></asp:TextBox>
-
-                        <asp:Label ID="lblTelefono" class="label-base" runat="server" Visible="false">Telefono: </asp:Label>
-                        <asp:TextBox ID="txtTelefono" class="input-base" runat="server" Visible="false"></asp:TextBox>
-                    </div>
-
-                    <!--Si es un Medico -->
-
-                 <div id="divMedico" runat="server" Visible="false" class="section-card">
-                    <asp:Label ID="lblMatricula" class="label-base" runat="server" Visible="false">Matricula: </asp:Label>
-                    <asp:TextBox ID="txtMatricula" class="input-base" runat="server" Visible="false"></asp:TextBox>
-
-                     <asp:Label ID="lblEspecialidad" class="label-base" runat="server" Visible="false">Especialidad: </asp:Label>
-                    <asp:TextBox ID="txtEspecialidad" class="input-base" runat="server" Visible="false"></asp:TextBox>
-
-                    <asp:CheckBoxList ID="chkDias" class="section-card" runat="server" Visible="false">
-                        <asp:ListItem Value="Lunes">Lunes</asp:ListItem>
-                        <asp:ListItem Value="Martes">Martes</asp:ListItem>
-                        <asp:ListItem Value="Miercoles">Miércoles</asp:ListItem>
-                        <asp:ListItem value="Jueves">Jueves</asp:ListItem>  
-                        <asp:ListItem Value="Viernes">Viernes</asp:ListItem>
-                        <asp:ListItem Value="Sabado">Sábado</asp:ListItem>
-                    </asp:CheckBoxList>
-                     </div>
-
                     <!-- Hora de inicio-->
                     <asp:Label ID="lblHoraInicio" class="label-base" runat="server" Visible="false">Hora Inicio: </asp:Label>
                     <asp:TextBox ID="txtHoraInicio" class="input-base" runat="server" Visible="false"></asp:TextBox>
@@ -123,15 +87,18 @@
                     <asp:Label ID="lblHoraFin" class="label-base" runat="server" Visible="false">Hora Fin: </asp:Label>
                     <asp:TextBox ID="txtHoraFin" class="input-base" runat="server" Visible="false"></asp:TextBox>
              </div>
-          <div class="form-actions">
-              <asp:HiddenField ID="hiddenIdUsuario" runat="server" />
-            <asp:Button ID="btnGuardar" CssClass="btn-base btn-success" runat="server" Text="Guardar" OnClick="btnGuardar_Click"/>
-            <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar" OnClick="btnModificar_Click"/>
-            <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" OnClick="btnEliminar_Click"/>
-           </div>
+              <div class="form-actions">
+                  <asp:HiddenField ID="hiddenIdUsuario" runat="server" />
+                <asp:Button ID="btnGuardar" CssClass="btn-base btn-success" runat="server" Text="Guardar" OnClick="btnGuardar_Click"/>
+                <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar" OnClick="btnModificar_Click"/>
+                <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" OnClick="btnEliminar_Click"/>
+               </div>
+    </div>
 
-        </div>
-    
+
+   
+
+
 
     <div class="grid-container">   
           <asp:GridView CssClass="grid-crud" ID="gvUsuarios" runat="server" AutoGenerateColumns="false" OnSelectedIndexChanged="gvUsuarios_SelectedIndexChanged">
@@ -152,5 +119,55 @@
     <asp:Label ID="lblMensaje" runat="server" CssClass="label-base"></asp:Label>
 
           
-      
+        <div class="form-container form-cred"> 
+      <div class="form-col">       
+          <asp:Label CssClass="label-base" runat="server">Usuario: </asp:Label>
+          <asp:DropDownList CssClass="ddl-base" runat="server" ID="ddlUsuario" AutoPostBack="true"> </asp:DropDownList>
+
+
+      <div class="form-col">       
+          <asp:Label CssClass="label-base" runat="server">Tipo de Usuario: </asp:Label>
+          <asp:DropDownList CssClass="ddl-base" runat="server" ID="ddlTipo" AutoPostBack="true"> </asp:DropDownList>
+
+    <!--Si es un paciente -->
+      <div id="divPaciente" runat="server" Visible="false" class="section-card">
+         <asp:Label ID="lblHistoriaClinica" class="label-base" runat="server" Visible="false">Numero de Historia Clínica: </asp:Label>
+         <asp:TextBox ID="txtHistoriaClinica" class="input-base" runat="server" Visible="false"></asp:TextBox>
+
+         <asp:Label ID="lblFechaNacimiento" class="label-base" runat="server" Visible="false">Fecha de Nacimiento: </asp:Label>
+         <asp:TextBox ID="txtFechaNac" class="input-base" runat="server" TextMode="Date" Visible="false" ></asp:TextBox>
+
+         <asp:Label ID="lblTelefono" class="label-base" runat="server" Visible="false">Telefono: </asp:Label>
+         <asp:TextBox ID="txtTelefono" class="input-base" runat="server" Visible="false"></asp:TextBox>
+     </div>
+
+     <!--Si es un Medico -->
+
+  <div id="divMedico" runat="server" Visible="false" class="section-card">
+     <asp:Label ID="lblMatricula" class="label-base" runat="server" Visible="false">Matricula: </asp:Label>
+     <asp:TextBox ID="txtMatricula" class="input-base" runat="server" Visible="false"></asp:TextBox>
+
+      <asp:Label ID="lblEspecialidad" class="label-base" runat="server" Visible="false">Especialidad: </asp:Label>
+     <asp:TextBox ID="txtEspecialidad" class="input-base" runat="server" Visible="false"></asp:TextBox>
+
+     <asp:CheckBoxList ID="chkDias" class="section-card" runat="server" Visible="false">
+         <asp:ListItem Value="Lunes">Lunes</asp:ListItem>
+         <asp:ListItem Value="Martes">Martes</asp:ListItem>
+         <asp:ListItem Value="Miercoles">Miércoles</asp:ListItem>
+         <asp:ListItem value="Jueves">Jueves</asp:ListItem>  
+         <asp:ListItem Value="Viernes">Viernes</asp:ListItem>
+         <asp:ListItem Value="Sabado">Sábado</asp:ListItem>
+     </asp:CheckBoxList>
+      </div>
+
+
+
+         <div class="form-actions">
+             <asp:HiddenField ID="HiddenRol" runat="server" />
+             <asp:Button ID="btnGuardarRol" CssClass="btn-base btn-success" runat="server" Text="Asignar Rol" OnClick="btnGuardarRol_Click"/>
+             <asp:Button ID="btnModificarRol" CssClass="btn-base btn-primary" runat="server" Text="Modificar Rol" OnClick="btnModificarRol_Click"/>
+             <asp:Button ID="btnEliminarRol" CssClass="btn-base btn-danger" runat="server" Text="Eliminar Rol" OnClick="btnEliminarRol_Click"/>
+         </div>
+
+  </div>
     </asp:Content>
