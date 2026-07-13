@@ -102,9 +102,87 @@ namespace BLL
 
         }
 
+        //Login exclusivo del Webmaster para cuando la base está comprometida.
+        //Solo valida: que el usuario exista, que su contraseña sea correcta y que tenga el rol WEBMASTER.
+        public BE_LoginResultado ValidarWebmaster(string Email, string Password)
+        {
+            if (string.IsNullOrEmpty(Password))
+            {
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Debe ingresar contraseña" };
+            }
+
+            BE_Usuario usuario = dal_usuario.ObtenerUsuarioPorEmail(Email);
+
+            if (usuario == null)
+            {
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+            }
+
+            if (usuario.NombreRol != "WEBMASTER")
+            {
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Solo el Webmaster puede ingresar en este momento." };
+            }
+
+            if (usuario.HashPassword != HashHelper.GenerarHash(Password))
+            {
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+            }
+
+            return new BE_LoginResultado { ExitoLogin = true, Usuario = usuario, Mensaje = "Login de Webmaster correcto" };
+        }
+
+        //Credenciales de emergencia hardcodeadas: permiten ingresar al sistema si se eliminó al único WEBMASTER o al único ADMINISTRADOR.
+
+        private const string EMAIL_EMERGENCIA_WEBMASTER = "webmaster@system.com";
+        private const string EMAIL_EMERGENCIA_ADMIN = "admin@system.com";
+        private const string HASH_PASSWORD_EMERGENCIA = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3";
+
+        public BE_LoginResultado LoginEmergencia(string Email, string Password)
+        {
+            string rol;
+
+            if (Email == EMAIL_EMERGENCIA_WEBMASTER)
+            {
+                rol = "WEBMASTER";
+            }
+            else if (Email == EMAIL_EMERGENCIA_ADMIN)
+            {
+                rol = "ADMINISTRADOR";
+            }
+            else
+            {
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+            }
+
+            if (string.IsNullOrEmpty(Password) || HashHelper.GenerarHash(Password) != HASH_PASSWORD_EMERGENCIA)
+            {
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+            }
+
+            BE_Usuario usuarioEmergencia = new BE_Usuario
+            {
+                IdUsuario = 0,
+                Nombre = rol == "WEBMASTER" ? "Webmaster" : "Administrador",
+                Apellido = "de Emergencia",
+                Email = Email,
+                NombreRol = rol,
+                Activo = true
+            };
+
+            //Mandamos a bitacora el ingreso por emergencia. IdUsuario null porque este usuario no existe en la tabla Usuario.
+            bll_bitacora.RegistrarEvento(null, AccionBitacora.LOGIN_OK, "LOGIN", $"Login de EMERGENCIA con rol {rol} usando el email: {Email}");
+
+            return new BE_LoginResultado { ExitoLogin = true, Usuario = usuarioEmergencia, Mensaje = "Login de emergencia exitoso" };
+        }
+
         public List<BE_Usuario> Usuarios()
         {
             return dal_usuario.Usuarios();
+        }
+
+        public List<BE_Usuario> UsuariosConRol()
+        {
+            return dal_usuario.UsuariosConRol();
         }
 
         public void AgregarUsuario(BE_Usuario UsuarioLogueado, BE_Usuario usuario)
@@ -113,7 +191,9 @@ namespace BLL
             {
                 usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
 
-                usuario.DVH = HashHelper.GenerarHash(usuario.DVH);
+                //El DVH se calcula DESPUÉS de hashear la contraseña, con la misma fórmula que usa la verificación (BLL_DVV.CadenaUsuario).
+                //Si se calculara antes (con la contraseña en texto plano), no coincidiría al verificar y marcaría la fila como modificada siempre.
+                usuario.DVH = HashHelper.GenerarHash(CadenaUsuario(usuario));
 
                 dal_usuario.AgregarUsuario(usuario);
 
@@ -135,7 +215,8 @@ namespace BLL
             {
                 usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
 
-                usuario.DVH = HashHelper.GenerarHash(usuario.DVH);
+                //Igual que en el alta: el DVH se calcula con la contraseña ya hasheada, para que coincida con la verificación.
+                usuario.DVH = HashHelper.GenerarHash(CadenaUsuario(usuario));
 
                 dal_usuario.ModificarUsuario(usuario);
 
@@ -185,9 +266,6 @@ namespace BLL
            //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_RESTABLECIMIENTO_PASSWORD, "USUARIO", $"El Usuario {Sesion.Instancia().UsuarioActual.Nombre}, resetea la contraseña del Usuario con ID: {id}");
         }
 
-        //Cualquier escritura sobre Usuario (alta, modificación, intentos fallidos, bloqueo, reseteo de password) tiene que refrescar el DVH de esa fila y el DVV de la tabla.
-        //Si no, el próximo chequeo de integridad (BLL_DVV) la marca como "modificada" aunque el cambio haya sido legítimo, hecho por la propia app.
-        //La fórmula de CadenaUsuario tiene que ser idéntica a la de BLL_DVV.CadenaUsuario.
         private void RefrescarDVH(BE_Usuario usuario)
         {
             dal_usuario.ActualizarDVH(usuario.IdUsuario, HashHelper.GenerarHash(CadenaUsuario(usuario)));

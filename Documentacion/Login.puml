@@ -1,0 +1,234 @@
+@startuml Login
+title Diagrama de Secuencia - Login (integridad DVV, credenciales normales, bloqueo y emergencia)
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 220
+skinparam wrapWidth 220
+
+actor Usuario
+boundary "Login.aspx" as Login
+boundary "LoginWebmaster.aspx" as LoginWM
+control "BLL_DVV" as BLL_DVV
+control "BLL_Usuario" as BLL_Usuario
+control "BLL_Bitacora" as BLL_Bitacora
+entity "DAL_DVV" as DAL_DVV
+entity "DAL_Usuario" as DAL_Usuario
+entity "DAL_Bitacora" as DAL_Bitacora
+entity "DAL_Rol" as DAL_Rol
+control "HashHelper" as HashHelper
+database "Base de Datos" as BD
+
+== Page_Load: verificacion de integridad (DVV) sobre Usuario, Rol y Bitacora ==
+
+Usuario -> Login : GET Login.aspx
+activate Login
+
+loop para cada tabla en {"Usuario","Rol","Bitacora"}
+    Login -> BLL_DVV : VerificarIntegridad(tabla)
+    activate BLL_DVV
+        BLL_DVV -> DAL_DVV : ObtenerDVV(tabla)
+        activate DAL_DVV
+            DAL_DVV -> BD : SELECT Valor FROM DVV WHERE Tabla=@tabla
+            BD --> DAL_DVV : dvvAlmacenado
+        DAL_DVV --> BLL_DVV : dvvAlmacenado : string
+        deactivate DAL_DVV
+
+        BLL_DVV -> BLL_DVV : CalcularDVV(tabla)
+        activate BLL_DVV
+            BLL_DVV -> DAL_Usuario : Usuarios() / DAL_Bitacora.ObtenerBitacora() / DAL_Rol.ObtenerRoles()
+            DAL_Usuario -> BD : SELECT *
+            BD --> DAL_Usuario : filas
+            DAL_Usuario --> BLL_DVV : List<BE_Usuario> | List<BE_Bitacora> | List<BE_Rol>
+            BLL_DVV -> HashHelper : GenerarHash(cadenaFila) (por cada fila)
+            HashHelper --> BLL_DVV : hash fila
+            BLL_DVV -> HashHelper : GenerarHash(concatenacion total)
+            HashHelper --> BLL_DVV : dvvRecalculado
+        BLL_DVV --> BLL_DVV : return dvvRecalculado : string
+        deactivate BLL_DVV
+
+        alt dvvAlmacenado != dvvRecalculado (integridad rota)
+            BLL_DVV -> BLL_Bitacora : RegistrarEvento(null, INTEGRIDAD_ERROR, "SEGURIDAD", "Fallo de integridad del DVV en la tabla '...'")
+            BLL_Bitacora --> BLL_DVV : (void)
+        end
+    BLL_DVV --> Login : return integro : bool
+    deactivate BLL_DVV
+
+    alt !integro
+        Login -> BLL_DVV : DetectarCambios(tabla)
+        activate BLL_DVV
+            BLL_DVV -> DAL_Usuario : Usuarios() / DAL_Bitacora.ObtenerBitacora() / DAL_Rol.ObtenerRoles()
+            DAL_Usuario --> BLL_DVV : filas actuales
+            BLL_DVV -> BLL_DVV : compara DVH esperado vs almacenado por fila\n(si no hay diferencias por fila, deduce fila eliminada)
+        BLL_DVV --> Login : return List<string> mensajes
+        deactivate BLL_DVV
+    end
+end
+
+alt mensajes.Count > 0 (alguna tabla fue manipulada por fuera del sistema)
+    Login -> Login : Session["MensajesIntegridad"] = mensajes
+    Login --> Usuario : Redirect("LoginWebmaster.aspx")
+else integridad OK
+    alt Session["MensajeLogout"] != null
+        Login -> Login : MostrarToast(mensaje)
+        Login --> Usuario : return 200 OK (formulario + toast "volve a loguearte")
+    else
+        Login --> Usuario : return 200 OK (formulario de Login)
+    end
+end
+deactivate Login
+
+== btnLogin_Click: intento de inicio de sesion normal ==
+
+Usuario -> Login : click btnLogin(txtEmail, txtPassword)
+activate Login
+
+Login -> BLL_Usuario : ObtenerUsuarioPorEmail(email, password)
+activate BLL_Usuario
+
+alt password vacio
+    BLL_Usuario --> Login : return { ExitoLogin=false, Mensaje="Debe ingresar contraseña" }
+else
+    BLL_Usuario -> HashHelper : GenerarHash(password)
+    HashHelper --> BLL_Usuario : hashPassword
+
+    BLL_Usuario -> DAL_Usuario : ObtenerUsuarioPorEmail(email)
+    activate DAL_Usuario
+        DAL_Usuario -> BD : SELECT u.*, r.NombreRol ... WHERE Email=@email
+        BD --> DAL_Usuario : fila | ninguna fila
+    DAL_Usuario --> BLL_Usuario : return BE_Usuario | null
+    deactivate DAL_Usuario
+
+    alt Usuario == null
+        BLL_Usuario -> BLL_Bitacora : RegistrarEvento(null, LOGIN_INTENTO, "LOGIN", "Intento de Login usando el email: ...")
+        BLL_Bitacora --> BLL_Usuario : (void)
+        BLL_Usuario --> Login : return { ExitoLogin=false, Mensaje="Usuario o Contraseña Incorrecto" }
+    else !Usuario.Activo
+        BLL_Usuario -> BLL_Bitacora : RegistrarEvento(IdUsuario, LOGIN_INTENTO, "LOGIN", "Intento de sesion del usuario bloqueado: ...")
+        BLL_Bitacora --> BLL_Usuario : (void)
+        BLL_Usuario --> Login : return { ExitoLogin=false, Mensaje="Usuario bloqueado. Contactese con el Administrador" }
+    else Usuario.HashPassword != hashPassword (contraseña incorrecta)
+        BLL_Usuario -> BLL_Usuario : IntentosFallidos++
+        alt IntentosFallidos > 3
+            BLL_Usuario -> DAL_Usuario : BloquearUsuario(IdUsuario)
+            DAL_Usuario -> BD : UPDATE Usuario SET Activo=0 WHERE IdUsuario=@id
+            DAL_Usuario --> BLL_Usuario : (void)
+
+            BLL_Usuario -> BLL_Usuario : RefrescarDVH(usuario)
+            activate BLL_Usuario
+                BLL_Usuario -> DAL_Usuario : ActualizarDVH(id, hash)
+                DAL_Usuario -> BD : UPDATE Usuario SET DVH=@dvh WHERE IdUsuario=@id
+                DAL_Usuario --> BLL_Usuario : (void)
+                BLL_Usuario -> BLL_Usuario : RefrescarDVVUsuario()
+                BLL_Usuario -> DAL_Usuario : Usuarios()
+                DAL_Usuario --> BLL_Usuario : List<BE_Usuario>
+                BLL_Usuario -> DAL_DVV : ActualizarDVV(hash, "Usuario")
+                DAL_DVV -> BD : UPDATE DVV SET Valor=@dvv WHERE Tabla='Usuario'
+                DAL_DVV --> BLL_Usuario : (void)
+            deactivate BLL_Usuario
+
+            BLL_Usuario -> BLL_Bitacora : RegistrarEvento(IdUsuario, LOGIN_BLOQUEADO, "LOGIN", "Se bloquea al usuario ... por superar intentos")
+            BLL_Bitacora --> BLL_Usuario : (void)
+            BLL_Usuario --> Login : return { ExitoLogin=false, Mensaje="Usuario Bloqueado. Contacte Administrador" }
+        else IntentosFallidos <= 3
+            BLL_Usuario -> BLL_Bitacora : RegistrarEvento(IdUsuario, LOGIN_INCORRECTO, "LOGIN", "Intento con contraseña incorrecta")
+            BLL_Bitacora --> BLL_Usuario : (void)
+            BLL_Usuario -> DAL_Usuario : ActualizarIntentosFallidos(intentos, id)
+            DAL_Usuario -> BD : UPDATE Usuario SET IntentosFallidos=@intentos
+            DAL_Usuario --> BLL_Usuario : (void)
+            BLL_Usuario -> BLL_Usuario : RefrescarDVH(usuario)
+            note right: mismo detalle que arriba (ActualizarDVH + RefrescarDVVUsuario)
+            BLL_Usuario --> Login : return { ExitoLogin=false, Mensaje="Contraseña Incorrecta. Intentos fallidos: N" }
+        end
+    else login correcto (credenciales validas)
+        BLL_Usuario -> BLL_Usuario : IntentosFallidos = 0
+        BLL_Usuario -> DAL_Usuario : ActualizarIntentosFallidos(0, id)
+        DAL_Usuario -> BD : UPDATE Usuario SET IntentosFallidos=0
+        DAL_Usuario --> BLL_Usuario : (void)
+        BLL_Usuario -> BLL_Usuario : RefrescarDVH(usuario)
+        note right: mismo detalle que arriba (ActualizarDVH + RefrescarDVVUsuario)
+        BLL_Usuario -> BLL_Bitacora : RegistrarEvento(IdUsuario, LOGIN_OK, "LOGIN", "Login correcto del usuario: ...")
+        BLL_Bitacora --> BLL_Usuario : (void)
+        BLL_Usuario --> Login : return { ExitoLogin=true, Usuario=Usuario, Mensaje="Login exitoso" }
+    end
+end
+deactivate BLL_Usuario
+
+alt Obj_Usuario.Usuario == null (fallo el login normal)
+    Login -> BLL_Usuario : LoginEmergencia(email, password)
+    activate BLL_Usuario
+        alt email no coincide con las cuentas de emergencia (webmaster@system.com / admin@system.com)
+            BLL_Usuario --> Login : return { ExitoLogin=false, Mensaje="Usuario o Contraseña Incorrecto" }
+        else password vacio o hash != HASH_PASSWORD_EMERGENCIA
+            BLL_Usuario -> HashHelper : GenerarHash(password)
+            HashHelper --> BLL_Usuario : hash
+            BLL_Usuario --> Login : return { ExitoLogin=false, Mensaje="Usuario o Contraseña Incorrecto" }
+        else credenciales de emergencia validas
+            BLL_Usuario -> BLL_Usuario : construye BE_Usuario en memoria (IdUsuario=0, NombreRol=rol)
+            BLL_Usuario -> BLL_Bitacora : RegistrarEvento(null, LOGIN_OK, "LOGIN", "Login de EMERGENCIA con rol ... usando el email: ...")
+            BLL_Bitacora --> BLL_Usuario : (void)
+            BLL_Usuario --> Login : return { ExitoLogin=true, Usuario=usuarioEmergencia, Mensaje="Login de emergencia exitoso" }
+        end
+    deactivate BLL_Usuario
+    alt emergencia.Usuario != null
+        Login -> Login : Obj_Usuario = emergencia
+    end
+end
+
+alt Obj_Usuario.Usuario != null (login exitoso, normal o de emergencia)
+    Login -> Login : Session["Usuario"] = Obj_Usuario.Usuario
+    Login --> Usuario : Redirect("Menu.aspx")
+else
+    Login -> Login : lblMensaje.Text = Obj_Usuario.Mensaje
+    Login --> Usuario : return 200 OK (formulario con mensaje de error)
+end
+deactivate Login
+
+== Camino alternativo: integridad comprometida -> LoginWebmaster.aspx ==
+
+Usuario -> LoginWM : click btnLogin(txtEmail, txtPassword)
+activate LoginWM
+
+LoginWM -> BLL_Usuario : ValidarWebmaster(email, password)
+activate BLL_Usuario
+    alt password vacio
+        BLL_Usuario --> LoginWM : return { ExitoLogin=false, Mensaje="Debe ingresar contraseña" }
+    else
+        BLL_Usuario -> DAL_Usuario : ObtenerUsuarioPorEmail(email)
+        DAL_Usuario -> BD : SELECT ...
+        BD --> DAL_Usuario : fila | ninguna
+        DAL_Usuario --> BLL_Usuario : return BE_Usuario | null
+        alt usuario == null
+            BLL_Usuario --> LoginWM : return { ExitoLogin=false, Mensaje="Usuario o Contraseña Incorrecto" }
+        else usuario.NombreRol != "WEBMASTER"
+            BLL_Usuario --> LoginWM : return { ExitoLogin=false, Mensaje="Solo el Webmaster puede ingresar en este momento." }
+        else usuario.HashPassword != GenerarHash(password)
+            BLL_Usuario -> HashHelper : GenerarHash(password)
+            HashHelper --> BLL_Usuario : hash
+            BLL_Usuario --> LoginWM : return { ExitoLogin=false, Mensaje="Usuario o Contraseña Incorrecto" }
+        else credenciales validas y rol WEBMASTER
+            BLL_Usuario --> LoginWM : return { ExitoLogin=true, Usuario=usuario, Mensaje="Login de Webmaster correcto" }
+        end
+    end
+deactivate BLL_Usuario
+
+alt resultado.Usuario == null (webmaster invalido)
+    LoginWM -> BLL_Usuario : LoginEmergencia(email, password)
+    note right: mismo flujo interno detallado arriba en Login.aspx
+    BLL_Usuario --> LoginWM : return BE_LoginResultado
+    alt emergencia.Usuario != null
+        LoginWM -> LoginWM : resultado = emergencia
+    end
+end
+
+alt resultado.Usuario == null
+    LoginWM -> LoginWM : lblMensaje.Text = resultado.Mensaje
+    LoginWM --> Usuario : return 200 OK (formulario con mensaje de error)
+else resultado.Usuario.NombreRol != "WEBMASTER"
+    LoginWM -> LoginWM : lblMensaje.Text = "La base de datos tiene un problema de integridad. Solo Webmaster puede ingresar en este momento."
+    LoginWM --> Usuario : return 200 OK (formulario con mensaje de error)
+else valido y es WEBMASTER
+    LoginWM -> LoginWM : Session["Usuario"] = resultado.Usuario
+    LoginWM --> Usuario : Redirect("Seguridad.aspx")
+end
+deactivate LoginWM
+
+@enduml

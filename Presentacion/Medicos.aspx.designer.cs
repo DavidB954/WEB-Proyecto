@@ -24,6 +24,15 @@ namespace Presentacion
         protected global::System.Web.UI.WebControls.GridView gvTurnosMedicos;
 
         /// <summary>
+        /// Control lblPacienteSeleccionado.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblPacienteSeleccionado;
+
+        /// <summary>
         /// Control txtMotivoConsulta.
         /// </summary>
         /// <remarks>
@@ -76,5 +85,14 @@ namespace Presentacion
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnGuardarAtencion;
+
+        /// <summary>
+        /// Control lblMensajeAtencion.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblMensajeAtencion;
     }
 }

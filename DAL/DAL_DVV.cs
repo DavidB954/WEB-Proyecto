@@ -64,58 +64,49 @@ namespace DAL
 
         public void GenerarBackUp(string rutaBackup)
         {
-            try
-            {
-                using (SqlConnection conexion = conex.ObtenerConexion())
-                {
-                    conexion.Open();
-
-                    SqlCommand cmd = new SqlCommand($"BACKUP DATABASE GestionWEB TO DISK = '{rutaBackup}'", conexion);
-
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
           
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                //Ruta parametrizada (evita inyección) y timeout amplio: un backup puede tardar.
+                SqlCommand cmd = new SqlCommand("BACKUP DATABASE GestionWEB TO DISK = @ruta", conexion);
+                cmd.Parameters.AddWithValue("@ruta", rutaBackup);
+                cmd.CommandTimeout = 120;
+
+                cmd.ExecuteNonQuery();
+            }
         }
 
         public void RestaurarBackup(string rutaBackup)
         {
-            try
+            SqlConnection.ClearAllPools();
+
+            string masterConnectionString = "Data Source=.;Initial Catalog=master;Integrated Security=True";
+
+            using (SqlConnection conexion = new SqlConnection(masterConnectionString))
             {
-                SqlConnection.ClearAllPools();
+                conexion.Open();
 
-                string masterConnectionString = "Data Source=.;Initial Catalog=master;Integrated Security=True";
+                //Cerramos las conexiones existentes
+                SqlCommand cmdSingleUser = new SqlCommand("ALTER DATABASE GestionWEB SET SINGLE_USER WITH ROLLBACK IMMEDIATE", conexion);
+                cmdSingleUser.ExecuteNonQuery();
 
-                using (SqlConnection conexion = new SqlConnection(masterConnectionString))
+                try
                 {
-                    conexion.Open();
-
-                    //Cerramos las conexiones existentes
-                    SqlCommand cmdSingleUser = new SqlCommand("ALTER DATABASE GestionWEB SET SINGLE_USER WITH ROLLBACK IMMEDIATE", conexion);
-
-                    cmdSingleUser.ExecuteNonQuery();
-
-                    //Restauramos con REPLACE
-
-                    SqlCommand cmdRestauracion = new SqlCommand($"RESTORE DATABASE GestionWEB FROM DISK = '{rutaBackup}' WITH REPLACE", conexion);
-
+                    //Restauramos con REPLACE (ruta parametrizada)
+                    SqlCommand cmdRestauracion = new SqlCommand("RESTORE DATABASE GestionWEB FROM DISK = @ruta WITH REPLACE", conexion);
+                    cmdRestauracion.Parameters.AddWithValue("@ruta", rutaBackup);
+                    cmdRestauracion.CommandTimeout = 120;
                     cmdRestauracion.ExecuteNonQuery();
-
-                    //Volvemos a multiuser
+                }
+                finally
+                {
+                    //Pase lo que pase (incluso si el RESTORE falla), devolvemos la base a multiusuario para no dejarla bloqueada.
                     SqlCommand cmdMultiUser = new SqlCommand("ALTER DATABASE GestionWEB SET MULTI_USER", conexion);
-
                     cmdMultiUser.ExecuteNonQuery();
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-           
         }
     }
 }

@@ -25,8 +25,14 @@
             </div>
             
             <div class="campo-filtro">
-                <asp:Label class="label-base" runat="server" Text="Módulo"></asp:Label>
+                <asp:Label class="label-base" runat="server" Text="Modulo"></asp:Label>
                 <asp:DropDownList runat="server" ID="ddlModulos" CssClass="ddl-base">
+                </asp:DropDownList>
+            </div>
+
+            <div class="campo-filtro">
+                <asp:Label class="label-base" runat="server" Text="Criticidad"></asp:Label>
+                <asp:DropDownList runat="server" ID="ddlCriticidad" CssClass="ddl-base">
                 </asp:DropDownList>
             </div>
 
@@ -43,12 +49,21 @@
             <asp:Button runat="server" Text="Limpiar Filtros" ID="btnLimpiar" CssClass="btn-base btn-danger" OnClick="btnLimpiar_Click" />
         </div>
         <div class="grid-container datos-bitacora">
-            <asp:GridView ID="gvBitacora" runat="server" AutoGenerateColumns="false"  CssClass="grid-crud">
+            <asp:Label ID="lblPaginas" runat="server" CssClass="info-paginas"></asp:Label>
+            <asp:GridView ID="gvBitacora" runat="server" AutoGenerateColumns="false" CssClass="grid-crud"
+                AllowPaging="true" PageSize="10" OnPageIndexChanging="gvBitacora_PageIndexChanging"
+                OnRowDataBound="gvBitacora_RowDataBound">
+                <PagerSettings Mode="NextPreviousFirstLast"
+                    FirstPageText="« Primera" PreviousPageText="‹ Anterior"
+                    NextPageText="Siguiente ›" LastPageText="Última »"
+                    Position="Bottom" />
+                <PagerStyle HorizontalAlign="Center" CssClass="grid-pager" />
                 <Columns >
-                    <asp:BoundField DataField="IdBitacora" HeaderText="ID" ReadOnly="True" />
+                    <asp:BoundField DataField="IdBitacora" HeaderText="ID" ReadOnly="True" Visible="false" />
                     <asp:BoundField DataField="IdUsuario" HeaderText="ID Usuario" />
                     <asp:BoundField DataField="FechaHora" HeaderText="Fecha y Hora" DataFormatString="{0:dd/MM/yyyy HH:mm:ss}" />
                     <asp:BoundField DataField="Accion" HeaderText="Accion" />
+                    <asp:BoundField DataField="Criticidad" HeaderText="Criticidad" />
                     <asp:BoundField DataField="Modulo" HeaderText="Módulo" />
                     <asp:BoundField DataField="IP" HeaderText="IP" />
                     <asp:BoundField DataField="Descripcion" HeaderText="Descripcion" />

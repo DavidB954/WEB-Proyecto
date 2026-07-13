@@ -21,7 +21,7 @@ namespace DAL
             {
                 conexion.Open();
 
-                SqlCommand cmdBitacora = new SqlCommand("Insert into Bitacora (IdUsuario, FechaHora, Accion, Descripcion, DireccionIP, Modulo, NombreMaquina, DVH) VALUES (@idUsuario, @fechaHora, @accion, @descripcion, @ip, @modulo, @nombremaquina, @dvh)", conexion);
+                SqlCommand cmdBitacora = new SqlCommand("Insert into Bitacora (IdUsuario, FechaHora, Accion, Descripcion, DireccionIP, Modulo, NombreMaquina, Criticidad, DVH) VALUES (@idUsuario, @fechaHora, @accion, @descripcion, @ip, @modulo, @nombremaquina, @criticidad, @dvh)", conexion);
 
 
                 //Se utiliza el ADD con el SqlDbType en vez de AddWithValue ya que AddWithValue lo que hace es adivinar el tipo de parametro previsto. Esto puede generar probelmas de rendimiento cuando se debe convertir el valor de la columna a un tipo de dato diferente. Al especificar el tipo de dato con SqlDbType, se evita esta conversión y se mejora el rendimiento de la consulta.
@@ -33,6 +33,7 @@ namespace DAL
                 cmdBitacora.Parameters.Add("@ip", SqlDbType.VarChar, 45).Value = Bitacora.IP;
                 cmdBitacora.Parameters.Add("@modulo", SqlDbType.VarChar, 30).Value = Bitacora.Modulo;
                 cmdBitacora.Parameters.Add("@nombremaquina", SqlDbType.VarChar, 100).Value = Bitacora.NombreMaquina;
+                cmdBitacora.Parameters.Add("@criticidad", SqlDbType.VarChar, 10).Value = Bitacora.Criticidad;
                 cmdBitacora.Parameters.Add("@dvh", SqlDbType.VarChar, 1000).Value = (object)Bitacora.DVH ?? DBNull.Value;
 
                 cmdBitacora.ExecuteNonQuery();
@@ -66,7 +67,8 @@ namespace DAL
 
                     conexion.Open();
 
-                    SqlCommand cmdBitacora = new SqlCommand("Select * From Bitacora", conexion);
+                    //Columnas explícitas (en vez de Select *) para que los índices del lector no dependan del orden físico de la tabla.
+                    SqlCommand cmdBitacora = new SqlCommand("Select IdBitacora, IdUsuario, FechaHora, Accion, Descripcion, DireccionIP, DVH, Modulo, NombreMaquina, Criticidad From Bitacora", conexion);
 
                     SqlDataReader Lector = cmdBitacora.ExecuteReader();
 
@@ -82,6 +84,7 @@ namespace DAL
                         Bitacora.DVH = Lector.IsDBNull(6) ? null : Lector.GetString(6);
                         Bitacora.Modulo = Lector.GetString(7);
                         Bitacora.NombreMaquina = Lector.GetString(8);
+                        Bitacora.Criticidad = Lector.GetString(9);
 
                         ListaBitacora.Add(Bitacora);
                     }
@@ -96,7 +99,7 @@ namespace DAL
            
         }
 
-        public DataTable FiltrarBitacora(DateTime? Desde, DateTime? Hasta, int? idUsuario, string Modulo, string Ip)
+        public DataTable FiltrarBitacora(DateTime? Desde, DateTime? Hasta, int? idUsuario, string Modulo, string Ip, string Criticidad)
         {
             try
             {
@@ -112,6 +115,7 @@ namespace DAL
                     cmdFiltrado.Parameters.AddWithValue("@IdUsuario", (object)idUsuario ?? DBNull.Value);
                     cmdFiltrado.Parameters.AddWithValue("@Modulo", (object)Modulo ?? DBNull.Value);
                     cmdFiltrado.Parameters.AddWithValue("@IP", (object)Ip ?? DBNull.Value);
+                    cmdFiltrado.Parameters.AddWithValue("@Criticidad", (object)Criticidad ?? DBNull.Value);
 
                     using (SqlDataAdapter adaptador = new SqlDataAdapter(cmdFiltrado))
                     {

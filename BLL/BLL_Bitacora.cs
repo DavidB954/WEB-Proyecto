@@ -18,6 +18,12 @@ namespace BLL
 
         public void RegistrarEvento(int? IdUsuario, AccionBitacora accion, string modulo, string descripcion)
         {
+            
+            if (IdUsuario == 0)
+            {
+                IdUsuario = null;
+            }
+
             BE_Bitacora objBitacora = new BE_Bitacora()
             {
                 IdUsuario = IdUsuario,
@@ -26,7 +32,8 @@ namespace BLL
                 Modulo = modulo,
                 IP = ObtenerIP(),
                 NombreMaquina = Dns.GetHostName(),
-                Descripcion = descripcion
+                Descripcion = descripcion,
+                Criticidad = CriticidadBitacora.Obtener(accion)
             };
 
             //DVH con encriptación reversible: permite, ante una corrupción, desencriptar y comparar contra los valores actuales de la fila.
@@ -38,7 +45,6 @@ namespace BLL
             RefrescarDVVBitacora();
         }
 
-        //La fórmula tiene que ser idéntica a BLL_DVV.CalcularDVV("Bitacora"): DV de fila con cifrado reversible, resumen final con hash (largo fijo de 64, entra en la columna DVV).
         private void RefrescarDVVBitacora()
         {
             List<string> hashesFila = dal_bitacora.ObtenerBitacora().Select(b => EncryptionHelper.Encriptar(CadenaBitacora(b))).ToList();
@@ -55,7 +61,7 @@ namespace BLL
         //Tiene que ser idéntica a BLL_DVV.CadenaBitacora.
         private string CadenaBitacora(BE_Bitacora bitacora)
         {
-            return $"{bitacora.IdUsuario}|{bitacora.FechaHora}|{bitacora.Accion}|{bitacora.Modulo}|{bitacora.IP}|{bitacora.Descripcion}|{bitacora.NombreMaquina}";
+            return $"{bitacora.IdUsuario}|{bitacora.FechaHora}|{bitacora.Accion}|{bitacora.Modulo}|{bitacora.IP}|{bitacora.Descripcion}|{bitacora.NombreMaquina}|{bitacora.Criticidad}";
         }
 
         private string ObtenerIP()
@@ -84,9 +90,9 @@ namespace BLL
             return dal_bitacora.ObtenerBitacora();
         }
 
-        public DataTable FiltrarBitacora(DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip)
+        public DataTable FiltrarBitacora(DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
         {
-            return dal_bitacora.FiltrarBitacora(desde, hasta, idUsuario, modulo, ip);
+            return dal_bitacora.FiltrarBitacora(desde, hasta, idUsuario, modulo, ip, criticidad);
         }
     }
 }

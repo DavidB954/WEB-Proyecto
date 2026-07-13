@@ -16,7 +16,7 @@
         <div class="loginBody" runat="server">
             <div class="form-container">
             <div class="loginContainer" runat="server" >
-                <h2>Se detectó un problema de integridad en la base de datos</h2>
+                <h2>Se detecto un problema de integridad en la base de datos</h2>
                 <p>Solo el Webmaster puede ingresar mientras la base esté comprometida.</p>
                 <asp:TextBox
                     ID="txtEmail"
@@ -35,7 +35,7 @@
                     Class="btn"
                     ID="btnLogin"
                     runat="server"
-                    Text="Iniciar Sesión"
+                    Text="Iniciar Sesion"
                     OnClick="btnLogin_Click" />
                 <br /><br />
                 <asp:Label ID="lblMensaje" runat="server"></asp:Label>

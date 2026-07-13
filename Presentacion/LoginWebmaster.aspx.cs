@@ -21,7 +21,19 @@ namespace Presentacion
         {
             try
             {
-                BE_LoginResultado resultado = bll_Usu.ObtenerUsuarioPorEmail(txtEmail.Text, txtPassword.Text);
+                //Login acotado para el estado comprometido: valida existencia + contraseña + rol WEBMASTER, sin refrescar el DVV (no "cura" la manipulación).
+                BE_LoginResultado resultado = bll_Usu.ValidarWebmaster(txtEmail.Text, txtPassword.Text);
+
+                //Si el login normal falla, probamos las credenciales de emergencia: es el caso en que el atacante borró al único Webmaster y nadie más puede recuperar el sistema.
+                if (resultado.Usuario == null)
+                {
+                    BE_LoginResultado emergencia = bll_Usu.LoginEmergencia(txtEmail.Text, txtPassword.Text);
+
+                    if (emergencia.Usuario != null)
+                    {
+                        resultado = emergencia;
+                    }
+                }
 
                 if (resultado.Usuario == null)
                 {

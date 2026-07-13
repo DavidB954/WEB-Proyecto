@@ -100,56 +100,86 @@ body {
 ========================= */
 
 
-/* Contenedor principal */
+/* Contenedor principal: ocupa toda la pantalla y centra la caja del login. */
 .loginBody {
-    height: 100vh; /* ocupa toda la pantalla */
+    min-height: 100vh;
     display: flex;
     justify-content: center; /* centra horizontal */
     align-items: center; /* centra vertical */
     background: linear-gradient(135deg, #2563eb, #1e40af); /* fondo solo para login */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* En el login, el .form-container es solo un envoltorio: la tarjeta real es .loginContainer.
+   Anulamos su fondo/sombra para no tener "una tarjeta dentro de otra". */
+.loginBody .form-container {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    max-width: none;
 }
 
 /* Caja del login */
 .loginContainer {
     background: #fff;
-    padding: 40px 30px;
-    border-radius: 12px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    padding: 50px 45px;
+    border-radius: 16px;
+    box-shadow: 0 14px 36px rgba(0,0,0,0.28);
     text-align: center;
+    width: 100%;
+    max-width: 460px;
+    box-sizing: border-box;
+}
+
+/* El espaciado se controla con los márgenes de cada campo, no con los <br> del markup. */
+.loginContainer br {
+    display: none;
 }
 
 /* Título */
- .loginContainer h2 {
-    margin-bottom: 25px;
+.loginContainer h2 {
+    margin: 0 0 8px 0;
     color: #1e3a8a;
-    font-size: 24px;
+    font-size: 30px;
     font-weight: 700;
 }
 
-/* Inputs */
-.loginContainer input[type="text"],
-.loginContainer input[type="password"] {
-    width: 100%;
-    padding: 12px;  
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+/* Texto informativo (ej. aviso del Login del Webmaster) */
+.loginContainer p {
+    margin: 0 0 22px 0;
+    color: #64748b;
     font-size: 14px;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    line-height: 1.4;
 }
 
+/* Inputs: todos iguales, ancho completo y separación pareja. */
+.loginContainer input[type="text"],
+.loginContainer input[type="password"] {
+    display: block;
+    width: 100%;
+    padding: 12px 14px;
+    margin: 0 0 16px 0;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
 
 .loginContainer input[type="text"]:focus,
 .loginContainer input[type="password"]:focus {
     border-color: #2563eb;
-    box-shadow: 0 0 6px rgba(37,99,235,0.4);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.25);
     outline: none;
 }
 
-/* Botón */
+/* Botón: ancho completo, alineado con los inputs. */
 .loginContainer .btn {
     width: 100%;
     padding: 12px;
+    margin-top: 6px;
     background: #2563eb;
     color: #fff;
     border: none;
@@ -157,18 +187,20 @@ body {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background 0.3s, transform 0.2s;
 }
 
 .loginContainer .btn:hover {
     background: #1e40af;
+    transform: translateY(-1px);
 }
 
 /* Mensaje de error o info */
 #lblMensaje {
     display: block;
-    margin-top: 15px;
+    margin-top: 18px;
     font-size: 14px;
+    font-weight: 600;
     color: #dc2626; /* rojo para errores */
 }
 
@@ -506,6 +538,23 @@ body {
    FILTROS FORMULARIO BITACORA
 =========================================== */
 
+/* La bitácora tiene muchas columnas: su tarjeta necesita más ancho que el form-container estándar. */
+.form-container.bitacora {
+    max-width: 1150px;
+}
+
+/* El contenedor de la grilla no debe comportarse como otra tarjeta (más ancha que el form y con su propia sombra):
+   ocupa el ancho disponible dentro del form y, si la tabla no entra, hace scroll horizontal en vez de salirse. */
+.datos-bitacora {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow-x: auto;
+}
+
 .filtros-bitacora {
     display: flex;
     flex-wrap: wrap;
@@ -516,6 +565,468 @@ body {
 
 .campo-filtro {
     flex: 1 1 180px; /* cada filtro ocupa mínimo 180px */
+}
+
+/* Texto de ayuda debajo de un campo. */
+.ayuda-campo {
+    display: block;
+    margin: -6px 0 14px 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* Indicador "Página X de Y" arriba de la grilla de la bitácora. */
+.info-paginas {
+    display: block;
+    text-align: right;
+    color: #1e3a8a;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+/* Botones Filtrar / Limpiar: centrados y con separación pareja. */
+.acciones-filtro {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+
+/* ========================================
+   ABM DE USUARIOS / ASIGNACION DE ROLES (CRUD_Usuarios)
+=========================================== */
+
+/* Dos columnas: izquierda Roles, derecha ABM de usuarios. En pantallas chicas se apilan. */
+.crud-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    align-items: start;
+    max-width: 1250px;
+    margin: 30px auto;
+    padding: 0 15px;
+}
+
+/* Cada tarjeta dentro de la grilla ocupa el ancho de su columna (sin el centrado/ancho propio de .form-container). */
+.crud-col {
+    max-width: none;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+    .crud-2col {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* Campos en dos columnas parejas; en pantallas chicas pasa a una sola. */
+.abm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 30px;
+}
+
+.abm-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 6px;
+}
+
+/* El estado (activo) ocupa el ancho completo y separa el título del control. */
+.abm-field-activo {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+    .abm-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Botones de acción alineados a la derecha, con separación pareja. */
+.abm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+/* Checkbox "Usuario activo" convertido en interruptor (toggle).
+   El asp:CheckBox se renderiza como <span class="chk-activo"><input type="checkbox"><label>...</label></span>. */
+.chk-activo {
+    display: inline-block;
+    margin-top: 4px;
+}
+
+/* Ocultamos el checkbox nativo pero lo dejamos accesible (el label lo dispara por su atributo "for"). */
+.chk-activo input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* El label es a la vez el texto y el interruptor. */
+.chk-activo label {
+    position: relative;
+    display: inline-block;
+    padding-left: 60px;
+    line-height: 28px;
+    color: #1e3a8a;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Riel del interruptor (apagado = gris). */
+.chk-activo label::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 50px;
+    height: 28px;
+    background: #cbd5e1;
+    border-radius: 14px;
+    transition: background 0.3s;
+}
+
+/* Perilla. */
+.chk-activo label::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
+}
+
+/* Encendido = riel verde y perilla desplazada a la derecha. */
+.chk-activo input[type="checkbox"]:checked + label::before {
+    background: #22c55e;
+}
+
+.chk-activo input[type="checkbox"]:checked + label::after {
+    transform: translateX(22px);
+}
+
+/* Foco de teclado visible. */
+.chk-activo input[type="checkbox"]:focus + label::before {
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.3);
+}
+
+/* Mensaje debajo del formulario (no rojo por defecto; el code-behind fija el color según el caso). */
+.msg-form {
+    display: block;
+    margin-top: 14px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Toast: mensaje flotante que aparece arriba a la derecha y se cierra solo (lo inyecta el code-behind). */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    padding: 14px 22px;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.28);
+    opacity: 1;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.toast-exito {
+    background: #22c55e;
+}
+
+.toast-error {
+    background: #dc2626;
+}
+
+.toast-hide {
+    opacity: 0;
+    transform: translateY(-12px);
+}
+
+/* La grilla puede tener muchas columnas: permitimos scroll horizontal en pantallas chicas sin romper el layout. */
+.grid-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+
+/* ========================================
+   PAGINADOR DE LA BITACORA (PagerStyle)
+=========================================== */
+
+/* Fila del paginador dentro del GridView de la bitácora. */
+.grid-pager {
+    background: #f0f4f8;
+    padding: 14px;
+}
+
+/* Anulamos el borde inferior que heredan las celdas de la grilla. */
+.grid-pager td {
+    border: none;
+}
+
+/* Separación pareja entre los botones de página. */
+.grid-pager table {
+    margin: 0 auto;
+    border-collapse: separate;
+    border-spacing: 8px 0;
+}
+
+/* Botones activos (« Primera, ‹ Anterior, Siguiente ›, Última »). */
+.grid-pager a {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #2563eb;
+    color: #fff !important;
+    border-radius: 6px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.grid-pager a:hover {
+    background: #1e40af;
+    transform: scale(1.05);
+}
+
+/* Botones no disponibles (ej. "Anterior" estando en la primera página): se ven apagados. */
+.grid-pager span {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #e5e7eb;
+    color: #9ca3af;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: default;
+}
+
+
+/* ========================================
+   PORTAL DEL PACIENTE Y DEL MEDICO
+   (Turnos.aspx, Recetas.aspx, Medicos.aspx)
+=========================================== */
+
+/* Turnos: formulario de alta a la izquierda y "Mis Turnos" a la derecha. */
+.turnos-layout {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 25px;
+    align-items: start;
+    max-width: 1250px;
+    margin: 30px auto;
+    padding: 0 15px;
+}
+
+/* Médicos: agenda del día a la izquierda y formulario de atención a la derecha. */
+.medicos-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 25px;
+    align-items: start;
+    max-width: 1300px;
+    margin: 30px auto;
+    padding: 0 15px;
+}
+
+/* Dentro de estos layouts las tarjetas ocupan su columna (sin el centrado propio de .form-container). */
+.turnos-layout .form-container,
+.turnos-layout .grid-container,
+.medicos-layout .form-container,
+.medicos-layout .grid-container {
+    max-width: none;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* En pantallas chicas las columnas se apilan. */
+@media (max-width: 950px) {
+    .turnos-layout,
+    .medicos-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Títulos de las tarjetas de estas pantallas, consistentes con .form-container h2. */
+.turnos-dia h2,
+.mis-turnos h2,
+.misRecetas h2 {
+    text-align: center;
+    color: #1e3a8a;
+    margin-top: 0;
+}
+
+/* Botones de acción centrados (Agendar / Limpiar / Guardar Atención). */
+.acciones-turno {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+/* Chips de estado dentro de las grillas (Confirmado, Pendiente, Atendido, etc.). */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.badge-confirmado {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-pendiente,
+.badge-en-espera {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.badge-atendido,
+.badge-vigente {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.badge-finalizada {
+    background: #e5e7eb;
+    color: #4b5563;
+}
+
+/* Celda de Criticidad en la bitácora (la clase la asigna gvBitacora_RowDataBound). */
+.grid-crud td.criticidad-alta {
+    background: #fee2e2;
+    color: #b91c1c;
+    font-weight: 700;
+}
+
+.grid-crud td.criticidad-media {
+    background: #fef3c7;
+    color: #b45309;
+    font-weight: 700;
+}
+
+.grid-crud td.criticidad-baja {
+    background: #dcfce7;
+    color: #15803d;
+    font-weight: 700;
+}
+
+/* Aviso con el paciente que el médico está atendiendo. */
+.paciente-seleccionado {
+    display: block;
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+    padding: 10px 14px;
+    border-radius: 6px;
+    color: #1e3a8a;
+    font-weight: 600;
+    margin-bottom: 18px;
+}
+
+/* Fila seleccionada en la agenda del médico. */
+.grid-crud .fila-seleccionada,
+.grid-crud tr.fila-seleccionada:hover {
+    background: #dbeafe;
+}
+
+/* Colores del mensaje bajo los formularios (el code-behind elige la clase). */
+.msg-exito {
+    color: #15803d;
+}
+
+.msg-error {
+    color: #dc2626;
+}
+
+/* Texto que muestran las grillas cuando no hay datos. */
+.sin-datos {
+    text-align: center;
+    color: #64748b;
+    padding: 25px 10px;
+    font-size: 15px;
+}
+
+/* Título del bloque Receta dentro de la atención médica. */
+.section-card h3 {
+    margin: 0 0 12px 0;
+    color: #1e3a8a;
+}
+
+
+/* ========================================
+   PAGINA DE ACCESO DENEGADO
+=========================================== */
+
+.acceso-denegado {
+    max-width: 480px;
+    margin: 70px auto;
+    padding: 45px 35px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    text-align: center;
+}
+
+.acceso-denegado-icono {
+    font-size: 52px;
+    margin-bottom: 12px;
+}
+
+.acceso-denegado h2 {
+    margin: 0 0 10px 0;
+    color: #dc2626;
+    font-size: 26px;
+}
+
+.acceso-denegado p {
+    margin: 0 0 26px 0;
+    color: #64748b;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+/* Link con aspecto de botón, consistente con .btn-base. */
+.btn-volver {
+    display: inline-block;
+    padding: 12px 26px;
+    background: #2563eb;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.btn-volver:hover {
+    background: #1e40af;
+    transform: translateY(-1px);
 }
 
 
