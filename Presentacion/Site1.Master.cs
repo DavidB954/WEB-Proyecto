@@ -21,7 +21,7 @@ namespace Presentacion
 
                     //Cada link del navbar se muestra solo para los roles a los que les sirve esa pantalla.
                     liUsuarios.Visible = usuario.NombreRol == "ADMINISTRADOR";
-                    liTurnos.Visible = usuario.NombreRol == "MEDICO" || usuario.NombreRol == "PACIENTE";
+                    liTurnos.Visible = usuario.NombreRol == "PACIENTE";
                     liRecetas.Visible = usuario.NombreRol == "PACIENTE";
                     liMedicos.Visible = usuario.NombreRol == "MEDICO";
                     liBitacora.Visible = usuario.NombreRol == "WEBMASTER" || usuario.NombreRol == "ADMINISTRADOR";

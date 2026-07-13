@@ -16,9 +16,10 @@
         <div class="loginBody" runat="server">
             <div class="form-container">
             <div class="loginContainer" runat="server" >
-                <h2>Iniciar Sesión</h2>
-                <asp:TextBox 
-                    ID="txtEmail" 
+                <h2>Bienvenido</h2>
+                <p>Iniciá sesión para continuar</p>
+                <asp:TextBox
+                    ID="txtEmail"
                     runat="server"
                     Placeholder="Email">                   
                 </asp:TextBox>

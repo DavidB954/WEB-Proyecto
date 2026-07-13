@@ -4,10 +4,11 @@
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 
-    <div class="form-container form-cred">
-        <h2 class="form-title">Acceso Denegado</h2>
-        <p>No tenés permiso para acceder a esta sección con tu rol actual.</p>
-        <a href="Menu.aspx">Volver al Menú</a>
+    <div class="acceso-denegado">
+        <div class="acceso-denegado-icono">&#128274;</div>
+        <h2>Acceso Denegado</h2>
+        <p>No tenes permiso para acceder a esta seccion con tu rol actual.</p>
+        <a class="btn-volver" href="Menu.aspx">Volver al Menu</a>
     </div>
 
 </asp:Content>

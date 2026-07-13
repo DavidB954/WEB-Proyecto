@@ -47,6 +47,7 @@
     <Compile Include="BE_RegistrosCorruptos.cs" />
     <Compile Include="BE_Rol.cs" />
     <Compile Include="BE_Usuario.cs" />
+    <Compile Include="CriticidadBitacora.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

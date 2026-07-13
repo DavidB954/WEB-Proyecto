@@ -33,6 +33,12 @@ namespace BE
             get; set;
         }
 
+        
+        public string Criticidad
+        {
+            get; set;
+        }
+
         public string IP
         {
             get; set;

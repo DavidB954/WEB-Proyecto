@@ -14,6 +14,17 @@ namespace BLL
         DAL_Usuario dal_usuario = new DAL_Usuario();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
+        public List<BE_Rol> ObtenerRoles()
+        {
+            return dal_rol.ObtenerRoles();
+        }
+
+        //Rol actual del usuario (null si no tiene ninguno asignado). Se usa para evitar reasignar el mismo rol.
+        public BE_Rol ObtenerRolDeUsuario(int idUsuario)
+        {
+            return dal_rol.ObtenerRolPorUsuario(idUsuario);
+        }
+
         public void AsignarRol(BE_Usuario usuarioLogueado, int idUsuarioDestino, int idRol)
         {
             try
@@ -31,7 +42,7 @@ namespace BLL
             }
         }
 
-        //Un usuario tiene un solo rol activo a la vez: modificar es asignar uno nuevo (AsignarRol ya reemplaza el anterior en DAL_Rol).
+        //Un usuario tiene un solo rol activo a la vez: modificar es asignar uno nuevo (AsignarRol ya reemplaza el anterior en DAL_Rol). A cambiar mas adelante si un usuario puede tener varios roles.
         public void ModificarRol(BE_Usuario usuarioLogueado, int idUsuarioDestino, int idRol)
         {
             AsignarRol(usuarioLogueado, idUsuarioDestino, idRol);

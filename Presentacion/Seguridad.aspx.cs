@@ -27,7 +27,19 @@ namespace Presentacion
                 }
 
                 MostrarMensajesIntegridad();
+                ConfigurarDisponibilidadBackup();
             }
+        }
+
+        //Si alguna tabla protegida está corrupta, "Generar BackUp" se oculta: no tiene sentido respaldar datos comprometidos.
+        //Solo quedan disponibles "Restaurar BD" (volver a un backup sano) y "Recalcular DV" (aceptar el estado actual como válido).
+        private void ConfigurarDisponibilidadBackup()
+        {
+            bool baseCorrupta = !bll_dvv.EstaIntegra("Usuario")
+                             || !bll_dvv.EstaIntegra("Rol")
+                             || !bll_dvv.EstaIntegra("Bitacora");
+
+            btnBackUp.Visible = !baseCorrupta;
         }
 
         private void MostrarMensajesIntegridad()
@@ -72,9 +84,9 @@ namespace Presentacion
             {
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
-                bll_dvv.GenerarBackUp(usuarioLogueado, txtRutaBackup.Text);
+                string rutaGenerada = bll_dvv.GenerarBackUp(usuarioLogueado, txtRutaBackup.Text);
 
-                CerrarSesionYVolverALogin("Se generó el backup correctamente. Tenés que volver a iniciar sesión.");
+                CerrarSesionYVolverALogin($"Backup generado en: {rutaGenerada}. Tenés que volver a iniciar sesión.");
             }
             catch (Exception ex)
             {
@@ -100,7 +112,7 @@ namespace Presentacion
             }
         }
 
-        //Estas 3 acciones cambian el estado de la base o su línea base de integridad: forzamos a volver a pasar por el login normal (que vuelve a verificar integridad) en vez de dejar la sesión de Webmaster abierta.
+        
         private void CerrarSesionYVolverALogin(string mensaje)
         {
             Session.Clear();

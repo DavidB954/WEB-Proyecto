@@ -1,48 +1,59 @@
-﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Site1.Master" AutoEventWireup="true" CodeBehind="Turnos.aspx.cs" Inherits="Presentacion.Turnos" %>
+<%@ Page Title="" Language="C#" MasterPageFile="~/Site1.Master" AutoEventWireup="true" CodeBehind="Turnos.aspx.cs" Inherits="Presentacion.Turnos" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
-    
-
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
-    
-        <div class="form-container CrearTurnos">
-            <h2>Crear turno medico</h2>
-            <asp:Label  runat="server" CssClass="label-base" Text="Seleccione Especialidad"></asp:Label>
-            <asp:DropDownList ID="ddlEspecialidades" CssClass="ddl-base" runat="server"></asp:DropDownList>
 
-            <br />
-            <asp:Label  runat="server" CssClass="label-base" Text="Seleccione el medico"></asp:Label>
+    <div class="turnos-layout">
+
+        <div class="form-container crear-turno">
+            <h2>Crear turno medico</h2>
+
+            <asp:Label runat="server" CssClass="label-base" Text="Especialidad"></asp:Label>
+            <asp:DropDownList ID="ddlEspecialidades" CssClass="ddl-base" runat="server"
+                AutoPostBack="true" OnSelectedIndexChanged="ddlEspecialidades_SelectedIndexChanged">
+            </asp:DropDownList>
+
+            <asp:Label runat="server" CssClass="label-base" Text="Medico"></asp:Label>
             <asp:DropDownList ID="ddlMedico" CssClass="ddl-base" runat="server"></asp:DropDownList>
 
             <div class="horario-turno">
-                <asp:label runat="server" for="ddlDias" CssClass="label-base">Día:</asp:label>
+                <asp:Label runat="server" CssClass="label-base" Text="Dia:"></asp:Label>
                 <asp:DropDownList ID="ddlDias" CssClass="ddl-base" runat="server"></asp:DropDownList>
 
-                <asp:label runat="server" for="ddlHoras" CssClass="label-base">Hora:</asp:label>
+                <asp:Label runat="server" CssClass="label-base" Text="Hora:"></asp:Label>
                 <asp:DropDownList ID="ddlHoras" CssClass="ddl-base" runat="server"></asp:DropDownList>
-
             </div>
 
+            <div class="acciones-turno">
+                <asp:Button ID="btnAgendar" CssClass="btn-base btn-success" runat="server" Text="Agendar Turno" OnClick="btnAgendar_Click" />
+                <asp:Button ID="btnCancelar" CssClass="btn-base btn-danger" runat="server" Text="Limpiar" OnClick="btnCancelar_Click" />
+            </div>
 
-            <asp:Button ID="btnAgendar" CssClass="btn-base btn-success" runat="server" Text="Agendar Turno" />
-            <asp:Button ID="btnCancelar" CssClass="btn-base btn-danger" runat="server" Text="Cancelar"/>
-
+            <asp:Label ID="lblMensajeTurno" runat="server" CssClass="msg-form" EnableViewState="false"></asp:Label>
         </div>
-        <div class="grid-container misTurnos">
+
+        <div class="grid-container mis-turnos">
             <h2>Mis Turnos</h2>
-            <asp:GridView ID="gvTurnos" runat="server" AutoGenerateColumns="False" CssClass="grid-crud">
+            <asp:GridView ID="gvTurnos" runat="server" AutoGenerateColumns="False" CssClass="grid-crud"
+                OnRowCommand="gvTurnos_RowCommand">
                 <Columns>
                     <asp:BoundField DataField="Especialidad" HeaderText="Especialidad" />
-                    <asp:BoundField DataField="Medico" HeaderText="Médico" />
-                    <asp:BoundField DataField="Dia" HeaderText="Día" />
+                    <asp:BoundField DataField="Medico" HeaderText="Medico" />
+                    <asp:BoundField DataField="Dia" HeaderText="Dia" />
                     <asp:BoundField DataField="Hora" HeaderText="Hora" />
+                    <asp:TemplateField HeaderText="Estado">
+                        <ItemTemplate>
+                            <span class='<%# "badge badge-" + Eval("Estado").ToString().ToLower() %>'><%# Eval("Estado") %></span>
+                        </ItemTemplate>
+                    </asp:TemplateField>
                     <asp:ButtonField ButtonType="Button" CommandName="CancelarTurno" Text="Cancelar Turno" />
-
                 </Columns>
-
+                <EmptyDataTemplate>
+                    <div class="sin-datos">No tenes turnos agendados. Crea uno desde el formulario.</div>
+                </EmptyDataTemplate>
             </asp:GridView>
-
         </div>
 
+    </div>
 
 </asp:Content>

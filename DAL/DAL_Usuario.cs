@@ -44,6 +44,39 @@ namespace DAL
             return ListaUsuarios;
         }
 
+        //Trae todos los usuarios junto con el nombre de su rol (LEFT JOIN para que aparezcan también los que todavía no tienen rol asignado).
+        public List<BE_Usuario> UsuariosConRol()
+        {
+            List<BE_Usuario> ListaUsuarios = new List<BE_Usuario>();
+
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand cmd = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.DNI, u.Email, u.IntentosFallidos, u.Activo, r.Nombre As NombreRol
+                                                From Usuario u
+                                                Left Join UsuarioRol ur On ur.IdUsuario = u.IdUsuario
+                                                Left Join Rol r On r.IdRol = ur.IdRol", conexion);
+
+                SqlDataReader Lector = cmd.ExecuteReader();
+
+                while (Lector.Read())
+                {
+                    BE_Usuario Usuario = new BE_Usuario();
+                    Usuario.IdUsuario = Convert.ToInt32(Lector["IdUsuario"]);
+                    Usuario.Nombre = Lector["Nombre"].ToString();
+                    Usuario.Apellido = Lector["Apellido"].ToString();
+                    Usuario.DNI = Lector["DNI"].ToString();
+                    Usuario.Email = Lector["Email"].ToString();
+                    Usuario.IntentosFallidos = Convert.ToInt32(Lector["IntentosFallidos"]);
+                    Usuario.Activo = Convert.ToBoolean(Lector["Activo"]);
+                    Usuario.NombreRol = Lector["NombreRol"] == DBNull.Value ? "(sin rol)" : Lector["NombreRol"].ToString();
+                    ListaUsuarios.Add(Usuario);
+                }
+            }
+            return ListaUsuarios;
+        }
+
         public BE_Usuario ObtenerUsuarioPorEmail(string email)
         {
 

@@ -29,9 +29,6 @@ namespace BE
         ROL_QUITADO_USUARIO,
         PERMISO_ALTA,
         PERMISO_BAJA,
-        IDIOMA_ALTA,
-        IDIOMA_BAJA,
         MODULO_GENERAL
-
     }
 }

@@ -66,6 +66,13 @@ namespace BLL
 
         }
 
+        //Chequeo de integridad de SOLO LECTURA: compara el DVV guardado contra el recalculado, sin registrar nada en bitácora.
+        //Se usa para decisiones de UI (ej. deshabilitar "Generar BackUp" si la base está comprometida).
+        public bool EstaIntegra(string nombreTabla)
+        {
+            return dal_dvv.ObtenerDVV(nombreTabla) == CalcularDVV(nombreTabla);
+        }
+
         //Calcula el DV de tabla (DVV): calcula el DV de cada fila (hash para Usuario/Rol, cifrado reversible para Bitacora) y luego hashea el total.
         //El resumen final es siempre hash: da un largo fijo de 64 caracteres que entra en la columna DVV (el cifrado AES de la concatenación de todas las filas crecería sin límite y se truncaría al guardarse).
         public string CalcularDVV(string nombreTabla)
@@ -122,7 +129,7 @@ namespace BLL
 
         private string CadenaBitacora(BE_Bitacora bitacora)
         {
-            return $"{bitacora.IdUsuario}|{bitacora.FechaHora}|{bitacora.Accion}|{bitacora.Modulo}|{bitacora.IP}|{bitacora.Descripcion}|{bitacora.NombreMaquina}";
+            return $"{bitacora.IdUsuario}|{bitacora.FechaHora}|{bitacora.Accion}|{bitacora.Modulo}|{bitacora.IP}|{bitacora.Descripcion}|{bitacora.NombreMaquina}|{bitacora.Criticidad}";
         }
 
         //Mensajes de qué se modificó/eliminó en una tabla, para mostrarle al Webmaster cuando VerificarIntegridad da false.
@@ -165,7 +172,6 @@ namespace BLL
             {
                 string dvhEsperado = HashHelper.GenerarHash(CadenaUsuario(usuario));
 
-                //DVH null = todavía no se calculó línea base (falta "Recalcular DV"), no es corrupción.
                 if (usuario.DVH != null && usuario.DVH != dvhEsperado)
                 {
                     mensajes.Add($"Se modificó el usuario {usuario.NombreApellido} (ID {usuario.IdUsuario}).");
@@ -236,7 +242,7 @@ namespace BLL
             }
         }
 
-        //Recalcula y persiste el DVH fila por fila con los valores actuales. Se usa desde "Recalcular DV" para fijar una nueva línea base (p.ej. después de un restore o de aceptar un cambio).
+        //Recalcula y persiste el DVH fila por fila con los valores actuales.
         public void RecalcularDVHFilas(string nombreTabla)
         {
             switch (nombreTabla)
@@ -280,20 +286,70 @@ namespace BLL
                     mensajes.Add($"Se modificó el registro de bitácora ID {evento.IdBitacora}.");
                 }
             }
+
+            //Si ninguna fila quedó marcada como modificada pero el DVV falló, es porque se borraron filas enteras.
+            //Como el IdBitacora es autoincremental, los registros borrados dejan "huecos" en la secuencia: los detectamos por ahí.
+            if (mensajes.Count == 0)
+            {
+                DetectarBitacoraEliminada(eventos, mensajes);
+            }
         }
 
-        public void GenerarBackUp(BE_Usuario usuarioLogueado, string rutaBackup)
+        //Detecta IDs faltantes en la secuencia de la bitácora (registros borrados) buscando huecos entre 1 y el ID máximo existente.
+        private void DetectarBitacoraEliminada(List<BE_Bitacora> eventos, List<string> mensajes)
+        {
+            if (eventos.Count == 0)
+            {
+                return;
+            }
+
+            var idsExistentes = new HashSet<int>(eventos.Select(e => e.IdBitacora));
+            int idMaximo = eventos.Max(e => e.IdBitacora);
+
+            var faltantes = new List<int>();
+            for (int id = 1; id <= idMaximo; id++)
+            {
+                if (!idsExistentes.Contains(id))
+                {
+                    faltantes.Add(id);
+                }
+            }
+
+            if (faltantes.Count > 0)
+            {
+                mensajes.Add($"Faltan {faltantes.Count} registro(s) en la bitácora (IDs: {string.Join(", ", faltantes)}).");
+            }
+        }
+
+        //Recibe la CARPETA donde guardar el backup y arma automáticamente el nombre del archivo con fecha/hora.
+        //Devuelve la ruta completa del .bak generado, para poder mostrársela al usuario.
+        public string GenerarBackUp(BE_Usuario usuarioLogueado, string carpetaBackup)
         {
             try
             {
-                dal_dvv.GenerarBackUp(rutaBackup);
+                if (string.IsNullOrWhiteSpace(carpetaBackup))
+                {
+                    throw new Exception("Debe indicar la carpeta donde generar el backup.");
+                }
+
+                if (!System.IO.Directory.Exists(carpetaBackup))
+                {
+                    System.IO.Directory.CreateDirectory(carpetaBackup);
+                }
+
+                string nombreArchivo = $"GestionWEB_{DateTime.Now:yyyyMMdd_HHmmss}.bak";
+                string rutaCompleta = System.IO.Path.Combine(carpetaBackup, nombreArchivo);
+
+                dal_dvv.GenerarBackUp(rutaCompleta);
 
                 bll_bitacora.RegistrarEvento(
                    usuarioLogueado?.IdUsuario,
                     AccionBitacora.BACKUP_GENERADO,
                     "SEGURIDAD",
-                    $"Se generó un backup de la base de datos en: {rutaBackup}"
+                    $"Se generó un backup de la base de datos en: {rutaCompleta}"
                 );
+
+                return rutaCompleta;
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // <generado automáticamente>
 //     Este código fue generado por una herramienta.
 //
@@ -105,49 +105,13 @@ namespace Presentacion
         protected global::System.Web.UI.WebControls.RegularExpressionValidator valPassword;
 
         /// <summary>
-        /// Control btnActivo.
+        /// Control chkActivo.
         /// </summary>
         /// <remarks>
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Button btnActivo;
-
-        /// <summary>
-        /// Control lblHoraInicio.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblHoraInicio;
-
-        /// <summary>
-        /// Control txtHoraInicio.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtHoraInicio;
-
-        /// <summary>
-        /// Control lblHoraFin.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblHoraFin;
-
-        /// <summary>
-        /// Control txtHoraFin.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtHoraFin;
+        protected global::System.Web.UI.WebControls.CheckBox chkActivo;
 
         /// <summary>
         /// Control hiddenIdUsuario.
@@ -186,15 +150,6 @@ namespace Presentacion
         protected global::System.Web.UI.WebControls.Button btnEliminar;
 
         /// <summary>
-        /// Control gvUsuarios.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.GridView gvUsuarios;
-
-        /// <summary>
         /// Control lblMensaje.
         /// </summary>
         /// <remarks>
@@ -204,148 +159,49 @@ namespace Presentacion
         protected global::System.Web.UI.WebControls.Label lblMensaje;
 
         /// <summary>
-        /// Control ddlUsuario.
+        /// Control gvUsuarios.
         /// </summary>
         /// <remarks>
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlUsuario;
+        protected global::System.Web.UI.WebControls.GridView gvUsuarios;
 
         /// <summary>
-        /// Control ddlTipo.
+        /// Control gvUsuariosRoles.
         /// </summary>
         /// <remarks>
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.DropDownList ddlTipo;
+        protected global::System.Web.UI.WebControls.GridView gvUsuariosRoles;
 
         /// <summary>
-        /// Control divPaciente.
+        /// Control txtUsuarioRol.
         /// </summary>
         /// <remarks>
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divPaciente;
+        protected global::System.Web.UI.WebControls.TextBox txtUsuarioRol;
 
         /// <summary>
-        /// Control lblHistoriaClinica.
+        /// Control ddlRoles.
         /// </summary>
         /// <remarks>
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblHistoriaClinica;
+        protected global::System.Web.UI.WebControls.DropDownList ddlRoles;
 
         /// <summary>
-        /// Control txtHistoriaClinica.
+        /// Control hiddenIdUsuarioRol.
         /// </summary>
         /// <remarks>
         /// Campo generado automáticamente.
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtHistoriaClinica;
-
-        /// <summary>
-        /// Control lblFechaNacimiento.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblFechaNacimiento;
-
-        /// <summary>
-        /// Control txtFechaNac.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtFechaNac;
-
-        /// <summary>
-        /// Control lblTelefono.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblTelefono;
-
-        /// <summary>
-        /// Control txtTelefono.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtTelefono;
-
-        /// <summary>
-        /// Control divMedico.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divMedico;
-
-        /// <summary>
-        /// Control lblMatricula.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblMatricula;
-
-        /// <summary>
-        /// Control txtMatricula.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtMatricula;
-
-        /// <summary>
-        /// Control lblEspecialidad.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Label lblEspecialidad;
-
-        /// <summary>
-        /// Control txtEspecialidad.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.TextBox txtEspecialidad;
-
-        /// <summary>
-        /// Control chkDias.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.CheckBoxList chkDias;
-
-        /// <summary>
-        /// Control HiddenRol.
-        /// </summary>
-        /// <remarks>
-        /// Campo generado automáticamente.
-        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.HiddenField HiddenRol;
+        protected global::System.Web.UI.WebControls.HiddenField hiddenIdUsuarioRol;
 
         /// <summary>
         /// Control btnGuardarRol.
@@ -373,5 +229,14 @@ namespace Presentacion
         /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
         /// </remarks>
         protected global::System.Web.UI.WebControls.Button btnEliminarRol;
+
+        /// <summary>
+        /// Control lblMensajeRol.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Label lblMensajeRol;
     }
 }
