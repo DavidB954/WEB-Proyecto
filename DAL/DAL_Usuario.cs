@@ -84,13 +84,18 @@ namespace DAL
             {
                 conexion.Open();
 
-                SqlCommand cmdUsuEmail = new SqlCommand(@"Select u.*, r.IdRol, r.Nombre As NombreRol
+                //Columnas explícitas (en vez de u.*) para que los índices del lector no dependan del orden físico
+                //de la tabla: agregar una columna a Usuario en cualquier posición que no sea el final ya no rompe esto.
+                SqlCommand cmdUsuEmail = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.Email, u.HashPassword, u.DNI, u.DVH, u.IntentosFallidos, u.Activo, r.IdRol, r.Nombre As NombreRol
                                                         From Usuario u
                                                         Left Join UsuarioRol ur On ur.IdUsuario = u.IdUsuario
                                                         Left Join Rol r On r.IdRol = ur.IdRol
                                                         Where u.Email=@email", conexion);
 
-                cmdUsuEmail.Parameters.Add("@email", SqlDbType.VarChar, 30).Value = email;
+                //Mismo tamaño que la columna real (ver AgregarUsuario/ModificarUsuario): si acá se usa un Size
+                //menor, SqlParameter trunca el valor en silencio y un email legítimo de más de 30 caracteres
+                //jamás matchea en el WHERE, dejando a ese usuario sin poder loguearse nunca.
+                cmdUsuEmail.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = email;
 
                 SqlDataReader Lector = cmdUsuEmail.ExecuteReader();
 
@@ -149,34 +154,28 @@ namespace DAL
 
         public void AgregarUsuario(BE_Usuario Usuario)
         {
-            try
+            using (SqlConnection conexion = conex.ObtenerConexion())
             {
-                using (SqlConnection conexion = conex.ObtenerConexion())
-                {
-                    conexion.Open();
+                conexion.Open();
 
-                    SqlCommand cmdUsuario = new SqlCommand(@"Insert into Usuario (Nombre, Apellido, Email, HashPassword, DNI, DVH, IntentosFallidos, Activo)
-                                                        VALUES (@nombre, @apellido, @email, @password, @dni, @dvh, @intentos, @activo);
-                                                        SELECT CAST(SCOPE_IDENTITY() AS INT);", conexion);
+                SqlCommand cmdUsuario = new SqlCommand(@"Insert into Usuario (Nombre, Apellido, Email, HashPassword, DNI, DVH, IntentosFallidos, Activo)
+                                                    VALUES (@nombre, @apellido, @email, @password, @dni, @dvh, @intentos, @activo);
+                                                    SELECT CAST(SCOPE_IDENTITY() AS INT);", conexion);
 
-                    cmdUsuario.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = Usuario.Nombre;
-                    cmdUsuario.Parameters.Add("@apellido", SqlDbType.VarChar, 50).Value = Usuario.Apellido;
-                    cmdUsuario.Parameters.Add("@dni", SqlDbType.VarChar, 8).Value = Usuario.DNI;
-                    cmdUsuario.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = Usuario.Email;
-                    cmdUsuario.Parameters.Add("@password", SqlDbType.VarChar, 255).Value = Usuario.HashPassword;
-                    cmdUsuario.Parameters.Add("@dvh", SqlDbType.VarChar, 255).Value = Usuario.DVH;
-                    cmdUsuario.Parameters.Add("@intentos", SqlDbType.Int).Value = Usuario.IntentosFallidos;
-                    cmdUsuario.Parameters.Add("@activo", SqlDbType.Bit).Value = Usuario.Activo;
+                cmdUsuario.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = Usuario.Nombre;
+                cmdUsuario.Parameters.Add("@apellido", SqlDbType.VarChar, 50).Value = Usuario.Apellido;
+                cmdUsuario.Parameters.Add("@dni", SqlDbType.VarChar, 8).Value = Usuario.DNI;
+                cmdUsuario.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = Usuario.Email;
+                cmdUsuario.Parameters.Add("@password", SqlDbType.VarChar, 255).Value = Usuario.HashPassword;
+                cmdUsuario.Parameters.Add("@dvh", SqlDbType.VarChar, 255).Value = Usuario.DVH;
+                cmdUsuario.Parameters.Add("@intentos", SqlDbType.Int).Value = Usuario.IntentosFallidos;
+                cmdUsuario.Parameters.Add("@activo", SqlDbType.Bit).Value = Usuario.Activo;
 
-                    //Recuperamos el ID generado para poder loguear en bitácora a qué usuario corresponde el alta.
-                    Usuario.IdUsuario = (int)cmdUsuario.ExecuteScalar();
-                }
+                //Recuperamos el ID generado para poder loguear en bitácora a qué usuario corresponde el alta.
+                //Si el Insert falla (ej. DNI/Email duplicado), la excepción debe propagarse: si no, BLL_Usuario
+                //sigue de largo y registra en bitácora un alta que en realidad nunca sucedió.
+                Usuario.IdUsuario = (int)cmdUsuario.ExecuteScalar();
             }
-            catch (Exception ex)
-            {
-            Console.WriteLine(ex.Message);    
-            }
-           
         }
 
 
@@ -207,13 +206,16 @@ namespace DAL
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
                 conexion.Open();
-                //Primero borro todo lo de ese usuario en la bitacora
-                SqlCommand cmdBorrarUsuBitacora = new SqlCommand("Delete from Bitacora WHERE IdUsuario=@idUsuBorrado", conexion);
 
-                cmdBorrarUsuBitacora.Parameters.Add("@idUsuBorrado", SqlDbType.Int).Value = id;
+                //Se borra primero la asignación de rol del usuario: si la FK de UsuarioRol hacia Usuario no tiene
+                //ON DELETE CASCADE definido en la base, el DELETE de más abajo fallaría por violación de FK
+                //mientras el usuario tenga un rol asignado (el caso normal). Es un no-op si no tenía rol.
+                SqlCommand comandoRol = new SqlCommand("Delete from UsuarioRol WHERE IdUsuario = @id", conexion);
+                comandoRol.Parameters.AddWithValue("@id", id);
+                comandoRol.ExecuteNonQuery();
 
-                cmdBorrarUsuBitacora.ExecuteNonQuery();
-
+                //Ya no se borra a mano lo del usuario en Bitacora: el FK (FK_Bitacora_Usuario) hace SET NULL
+                //en cascada, así el historial de auditoría del usuario borrado se conserva (solo pierde la referencia).
                 SqlCommand comando = new SqlCommand("Delete from Usuario WHERE IdUsuario = @id", conexion);
 
                 comando.Parameters.AddWithValue("@id", id);

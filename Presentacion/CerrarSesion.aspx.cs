@@ -20,7 +20,27 @@ namespace Presentacion
 
             if (usuarioLogueado != null)
             {
-                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.LOGOUT, "LOGIN", $"Cierre de sesión del usuario: {usuarioLogueado.NombreApellido}, ID: {usuarioLogueado.IdUsuario}");
+                try
+                {
+                    bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.LOGOUT, "LOGIN", $"Cierre de sesión del usuario: {usuarioLogueado.NombreApellido}, ID: {usuarioLogueado.IdUsuario}");
+                }
+                catch (Exception ex)
+                {
+                    //Un fallo al registrar el logout en bitácora no debe impedir que el usuario pueda salir del sistema,
+                    //pero igual dejamos rastro en el mismo log que usa Global.asax para que no pase inadvertido.
+                    try
+                    {
+                        string carpetaLogs = Server.MapPath("~/App_Data");
+                        System.IO.Directory.CreateDirectory(carpetaLogs);
+                        System.IO.File.AppendAllText(
+                            System.IO.Path.Combine(carpetaLogs, "errores.log"),
+                            $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - CerrarSesion - Fallo al registrar bitácora: {ex}{Environment.NewLine}");
+                    }
+                    catch
+                    {
+                        //Si ni el log funciona, no hay nada más para hacer acá.
+                    }
+                }
             }
 
             Session.Clear();

@@ -53,7 +53,25 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                lblMensaje.Text = ex.Message;
+                RegistrarErrorInterno("LoginWebmaster.btnLogin_Click", ex);
+                lblMensaje.Text = "No se pudo iniciar sesión. Intentá nuevamente más tarde.";
+            }
+        }
+
+        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
+        private void RegistrarErrorInterno(string origen, Exception ex)
+        {
+            try
+            {
+                string carpetaLogs = Server.MapPath("~/App_Data");
+                System.IO.Directory.CreateDirectory(carpetaLogs);
+                System.IO.File.AppendAllText(
+                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
+            }
+            catch
+            {
+                //Si ni el log funciona, no hay nada más para hacer acá.
             }
         }
     }

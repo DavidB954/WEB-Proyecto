@@ -17,20 +17,31 @@ namespace Presentacion
         BLL_Usuario bll_usuarios = new BLL_Usuario();
         protected void Page_Load(object sender, EventArgs e)
         {
+            //Se revalida en CADA carga (incluidos los postbacks de Filtrar/Limpiar/paginado), no solo la primera vez:
+            //si la sesión vence mientras el usuario está en esta pantalla, un postback no debe poder seguir
+            //trayendo datos de la bitácora sin sesión válida.
+            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+
+            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "WEBMASTER", "ADMINISTRADOR"))
+            {
+                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
+                return;
+            }
+
             if (!IsPostBack)
             {
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "WEBMASTER", "ADMINISTRADOR"))
+                try
                 {
-                    Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                    return;
+                    CargarUsuarios();
+                    CargarModulos();
+                    CargarCriticidades();
+                    CargarGrilla();
                 }
-
-                CargarUsuarios();
-                CargarModulos();
-                CargarCriticidades();
-                CargarGrilla();
+                catch (Exception ex)
+                {
+                    RegistrarErrorInterno("Bitacora.Page_Load", ex);
+                    lblPaginas.Text = "No se pudo cargar la bitácora. Intentá nuevamente más tarde.";
+                }
             }
         }
 
@@ -112,28 +123,52 @@ namespace Presentacion
 
         public void btnFiltrar_Click(object sender, EventArgs e)
         {
-            //Al cambiar el filtro se vuelve a la primera página, porque el resultado puede tener menos páginas que la actual.
-            gvBitacora.PageIndex = 0;
-            CargarGrilla();
+            try
+            {
+                //Al cambiar el filtro se vuelve a la primera página, porque el resultado puede tener menos páginas que la actual.
+                gvBitacora.PageIndex = 0;
+                CargarGrilla();
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Bitacora.btnFiltrar_Click", ex);
+                lblPaginas.Text = "No se pudo aplicar el filtro. Intentá nuevamente más tarde.";
+            }
         }
 
         protected void btnLimpiar_Click(object sender, EventArgs e)
         {
-            fechaDesde.Text = "";
-            fechaHasta.Text = "";
-            ddlUsuarios.SelectedIndex = 0;
-            ddlModulos.SelectedIndex = 0;
-            ddlCriticidad.SelectedIndex = 0;
-            txtIP.Text = "";
+            try
+            {
+                fechaDesde.Text = "";
+                fechaHasta.Text = "";
+                ddlUsuarios.SelectedIndex = 0;
+                ddlModulos.SelectedIndex = 0;
+                ddlCriticidad.SelectedIndex = 0;
+                txtIP.Text = "";
 
-            gvBitacora.PageIndex = 0;
-            CargarGrilla();
+                gvBitacora.PageIndex = 0;
+                CargarGrilla();
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Bitacora.btnLimpiar_Click", ex);
+                lblPaginas.Text = "No se pudieron limpiar los filtros. Intentá nuevamente más tarde.";
+            }
         }
 
         protected void gvBitacora_PageIndexChanging(object sender, GridViewPageEventArgs e)
         {
-            gvBitacora.PageIndex = e.NewPageIndex;
-            CargarGrilla();
+            try
+            {
+                gvBitacora.PageIndex = e.NewPageIndex;
+                CargarGrilla();
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Bitacora.gvBitacora_PageIndexChanging", ex);
+                lblPaginas.Text = "No se pudo cambiar de página. Intentá nuevamente más tarde.";
+            }
         }
 
         //Pinta la celda de Criticidad según su valor para identificar de un vistazo los eventos graves.
@@ -144,8 +179,10 @@ namespace Presentacion
                 return;
             }
 
-            //El índice 4 corresponde a la columna Criticidad (ID=0, ID Usuario=1, Fecha y Hora=2, Accion=3).
-            TableCell celda = e.Row.Cells[4];
+            //OJO: la columna "ID" (IdBitacora) tiene Visible="false" en el markup. Una columna invisible no genera
+            //celda en absoluto (GridView la excluye de Cells), así que el índice NO es "ID=0, ID Usuario=1,
+            //Fecha y Hora=2, Accion=3, Criticidad=4": es IdUsuario=0, FechaHora=1, Accion=2, Criticidad=3.
+            TableCell celda = e.Row.Cells[3];
 
             switch (celda.Text)
             {
@@ -158,6 +195,23 @@ namespace Presentacion
                 case CriticidadBitacora.BAJA:
                     celda.CssClass = "criticidad-baja";
                     break;
+            }
+        }
+
+        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
+        private void RegistrarErrorInterno(string origen, Exception ex)
+        {
+            try
+            {
+                string carpetaLogs = Server.MapPath("~/App_Data");
+                System.IO.Directory.CreateDirectory(carpetaLogs);
+                System.IO.File.AppendAllText(
+                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
+            }
+            catch
+            {
+                //Si ni el log funciona, no hay nada más para hacer acá.
             }
         }
     }

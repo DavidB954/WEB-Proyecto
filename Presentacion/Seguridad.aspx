@@ -15,15 +15,15 @@
                     <asp:BulletedList ID="lstMensajesIntegridad" runat="server" CssClass="lista-integridad"></asp:BulletedList>
                 </asp:Panel>
 
-                 <asp:Label CssClass="label-base" runat="server">Carpeta / archivo del backup: </asp:Label>
-                 <asp:TextBox ID="txtRutaBackup" CssClass="input-base" runat="server" placeholder="Ej: C:\Backups"></asp:TextBox>
-                 <small class="ayuda-campo">Para <b>Generar BackUp</b> indicá una carpeta (el nombre del archivo se arma solo con la fecha). Para <b>Restaurar BD</b> pegá la ruta completa del archivo .bak.</small>
-
                  <div class="acciones-seguridad">
                      <asp:Button ID="btnBackUp" CssClass="btn-base btn-success" runat="server" Text="Generar BackUp" OnClick="btnBackUp_Click"/>
-                     <asp:Button ID="btnRestore" CssClass="btn-base btn-success" runat="server" Text="Restaurar BD" OnClick="btnRestore_Click"/>
                      <asp:Button ID="btnRecalcular" CssClass="btn-base btn-success" runat="server" Text="Recalcular DV" OnClick="btnRecalcular_Click"/>
+                 </div>
 
+                 <div class="acciones-seguridad">
+                     <asp:Label CssClass="label-base" runat="server">Backup a restaurar: </asp:Label>
+                     <asp:DropDownList ID="ddlBackups" CssClass="ddl-base" runat="server"></asp:DropDownList>
+                     <asp:Button ID="btnRestore" CssClass="btn-base btn-success" runat="server" Text="Restaurar BD" OnClick="btnRestore_Click"/>
                  </div>
 
                  <asp:Label ID="lblMensaje" runat="server" CssClass="label-base"></asp:Label>

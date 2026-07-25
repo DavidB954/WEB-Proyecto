@@ -60,6 +60,8 @@
                     ErrorMessage="La contraseña debe tener al menos 8 caracteres, una mayuscula, una minuscula, un numero y un simbolo."
                     ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$" ForeColor="Red" Display="Dynamic">
                 </asp:RegularExpressionValidator>
+                <%-- Solo aplica a "Modificar": sin tildar, se preserva la contraseña actual y no hace falta reescribirla. En "Guardar" (alta) la contraseña siempre es obligatoria. --%>
+                <asp:CheckBox ID="chkResetearPassword" runat="server" Text="Restablecer contraseña" CssClass="chk-activo" />
             </div>
 
             <div class="abm-field abm-field-activo">

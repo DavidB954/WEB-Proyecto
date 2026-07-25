@@ -58,6 +58,11 @@ namespace BLL
                     if (Usuario.IntentosFallidos > 3)
                     {
                         Usuario.Activo = false;
+
+                        //BloquearUsuario solo toca Activo: hay que persistir también el contador de intentos fallidos
+                        //(que en este punto ya está incrementado en memoria), si no, el DVH que graba RefrescarDVH
+                        //queda calculado con un IntentosFallidos que nunca se guardó en la fila real.
+                        dal_usuario.ActualizarIntentosFallidos(Usuario.IntentosFallidos, Usuario.IdUsuario);
                         dal_usuario.BloquearUsuario(Usuario.IdUsuario);
                         RefrescarDVH(Usuario);
 
@@ -97,7 +102,7 @@ namespace BLL
             catch (Exception ex)
             {
 
-                throw new Exception( ex.Message);
+                throw new Exception($"Error al obtener usuario: {ex.Message}", ex);
             }
 
         }
@@ -209,11 +214,22 @@ namespace BLL
             }
 
         }
-        public void ModificarUsuario(BE_Usuario UsuarioLogueado, BE_Usuario usuario)
+        public void ModificarUsuario(BE_Usuario UsuarioLogueado, BE_Usuario usuario, bool actualizarPassword)
         {
             try
             {
-                usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
+                if (actualizarPassword)
+                {
+                    usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
+                }
+                else
+                {
+                    //No se restablece la contraseña: se preserva tal cual está en la base (ya hasheada). Si se
+                    //rehasheara acá el valor entrante, quedaría un hash-del-hash y el usuario no podría loguearse
+                    //nunca más con su contraseña real.
+                    BE_Usuario usuarioActual = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == usuario.IdUsuario);
+                    usuario.HashPassword = usuarioActual?.HashPassword;
+                }
 
                 //Igual que en el alta: el DVH se calcula con la contraseña ya hasheada, para que coincida con la verificación.
                 usuario.DVH = HashHelper.GenerarHash(CadenaUsuario(usuario));
@@ -237,7 +253,17 @@ namespace BLL
         {
             try
             {
+                //Se guardan antes de borrar: son las filas de bitácora del propio usuario, que el FK va a dejar
+                //en NULL en cascada (ON DELETE SET NULL). Hay que recalcular su DVH después, porque su contenido
+                //cambia legítimamente y si no se refresca la próxima verificación las marca como "modificadas".
+                List<int> idsBitacoraAfectados = bll_bitacora.ObtenerBitacora()
+                    .Where(b => b.IdUsuario == id)
+                    .Select(b => b.IdBitacora)
+                    .ToList();
+
                 dal_usuario.EliminarUsuario(id);
+
+                bll_bitacora.RefrescarDVHDeFilas(idsBitacoraAfectados);
 
                 RefrescarDVVUsuario();
 
@@ -252,18 +278,25 @@ namespace BLL
 
         public void ResetearPassword(int id, string nuevoPass)
         {
-            nuevoPass = HashHelper.GenerarHash(nuevoPass);
-
-            dal_usuario.ResetearContrasena(id, nuevoPass);
-
-            BE_Usuario usuario = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == id);
-            if (usuario != null)
+            try
             {
-                RefrescarDVH(usuario);
-            }
+                nuevoPass = HashHelper.GenerarHash(nuevoPass);
 
-            //Mandamos a bitacora el reseteo de contraseña
-           //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_RESTABLECIMIENTO_PASSWORD, "USUARIO", $"El Usuario {Sesion.Instancia().UsuarioActual.Nombre}, resetea la contraseña del Usuario con ID: {id}");
+                dal_usuario.ResetearContrasena(id, nuevoPass);
+
+                BE_Usuario usuario = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == id);
+                if (usuario != null)
+                {
+                    RefrescarDVH(usuario);
+                }
+
+                //Mandamos a bitacora el reseteo de contraseña
+                //bll_bitacora.RegistrarEvento(Sesion.Instancia().UsuarioActual.IdUsuario, AccionBitacora.USUARIO_RESTABLECIMIENTO_PASSWORD, "USUARIO", $"El Usuario {Sesion.Instancia().UsuarioActual.Nombre}, resetea la contraseña del Usuario con ID: {id}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al resetear contraseña: {ex.Message}", ex);
+            }
         }
 
         private void RefrescarDVH(BE_Usuario usuario)
