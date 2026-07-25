@@ -105,6 +105,15 @@ namespace Presentacion
         protected global::System.Web.UI.WebControls.RegularExpressionValidator valPassword;
 
         /// <summary>
+        /// Control chkResetearPassword.
+        /// </summary>
+        /// <remarks>
+        /// Campo generado automáticamente.
+        /// Para modificarlo, mueva la declaración del campo del archivo del diseñador al archivo de código subyacente.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.CheckBox chkResetearPassword;
+
+        /// <summary>
         /// Control chkActivo.
         /// </summary>
         /// <remarks>

@@ -1,41 +1,95 @@
-﻿/* =========================
+/* =========================
+   TOKENS
+   Paleta de "ficha clinica": papel calido + tinta + teal clinico,
+   en vez del azul SaaS generico. El teal es el unico color que se
+   usa para accion/foco; el resto son estados semanticos.
+========================= */
+:root {
+    --ink: #17302c;
+    --ink-soft: #4b625d;
+    --paper: #f6f2e9;
+    --card: #fffdf8;
+    --line: #ddd3bd;
+
+    --teal: #0e6b60;
+    --teal-deep: #0a4840;
+    --teal-wash: #e4efec;
+
+    --sage: #2f7a56;
+    --sage-deep: #1f5b3f;
+    --sage-wash: #e2f2e8;
+
+    --clay: #ae4b34;
+    --clay-deep: #8a3a29;
+    --clay-wash: #fbe8e2;
+
+    --amber: #b45309;
+    --amber-wash: #fef3c7;
+
+    --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-body: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+}
+
+/* =========================
    BASE GLOBAL
 ========================= */
 body {
-    font-family: 'Segoe UI', Arial, sans-serif;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--paper);
     margin: 0;
     padding: 0;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
 }
 
 .form-container {
     max-width: 900px;
     margin: 30px auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 24px 28px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(23,48,44,0.06);
 }
 
 .form-container h2 {
     text-align: center;
-    color: #1e3a8a;
-    margin-bottom: 20px;
+    color: var(--ink);
+    margin: 0 0 22px 0;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--teal);
+    font-size: 24px;
 }
 
 .grid-container {
     max-width: 1000px;
     margin: 30px auto;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    padding: 20px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(23,48,44,0.06);
+    padding: 24px 28px;
+}
+
+.grid-container h2 {
+    text-align: center;
+    color: var(--ink);
+    margin: 0 0 22px 0;
+    padding-bottom: 14px;
+    border-bottom: 2px solid var(--teal);
+    font-size: 24px;
 }
 
 .section-card {
-    background: #f9fbff;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    background: var(--teal-wash);
+    padding: 16px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
     margin-bottom: 20px;
 }
 
@@ -52,9 +106,10 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(90deg, #2563eb, #1e40af);
-    padding: 10px 20px;
+    background: var(--teal-deep);
+    padding: 12px 24px;
     color: #fff;
+    font-family: var(--font-body);
 }
 .navbar-custom ul {
     list-style: none;
@@ -65,14 +120,15 @@ body {
 }
 
 .navbar-custom a {
-    color: #fff;
+    color: #fdfaf3;
     text-decoration: none;
     font-weight: 500;
-    transition: color 0.3s;
+    letter-spacing: 0.2px;
+    transition: color 0.2s;
 }
 
 .navbar-custom a:hover {
-    color: #facc15; /* amarillo suave */
+    color: #e8c778; /* dorado suave, como una placa de nombre en bronce */
 }
 
 .nav-right {
@@ -81,17 +137,45 @@ body {
     gap: 15px;
 }
 
+.usuario-logueado i {
+    margin-right: 6px;
+    color: #cfe3de;
+}
+
 .logout-link {
-    background: #dc2626;
-    padding: 6px 12px;
-    border-radius: 6px;
+    background: var(--clay);
+    padding: 6px 14px;
+    border-radius: 5px;
     color: #fff;
     font-weight: 600;
-    transition: background 0.3s;
+    transition: background 0.2s;
 }
 
 .logout-link:hover {
-    background: #b91c1c;
+    background: var(--clay-deep);
+}
+
+/* Firma visual del sitio: un trazo de pulso (ECG) bajo la barra de navegacion.
+   Un solo elemento, una sola vez por pagina: no se repite como decoracion. */
+.vital-line {
+    height: 18px;
+    width: 100%;
+    background-color: var(--teal-wash);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='18' viewBox='0 0 140 18'%3E%3Cpath d='M0 9 H46 L52 9 L57 2 L63 16 L68 9 L74 9 H140' fill='none' stroke='%230e6b60' stroke-width='1.6'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: 140px 18px;
+    border-bottom: 1px solid var(--line);
+    transform-origin: left center;
+    animation: vitalDrawIn 0.7s ease-out;
+}
+
+@keyframes vitalDrawIn {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vital-line { animation: none; }
 }
 
 
@@ -106,9 +190,10 @@ body {
     display: flex;
     justify-content: center; /* centra horizontal */
     align-items: center; /* centra vertical */
-    background: linear-gradient(135deg, #2563eb, #1e40af); /* fondo solo para login */
+    background: linear-gradient(160deg, var(--teal-deep), var(--ink) 130%); /* fondo solo para login */
     padding: 20px;
     box-sizing: border-box;
+    font-family: var(--font-body);
 }
 
 /* En el login, el .form-container es solo un envoltorio: la tarjeta real es .loginContainer.
@@ -116,6 +201,7 @@ body {
 .loginBody .form-container {
     background: transparent;
     box-shadow: none;
+    border: none;
     padding: 0;
     margin: 0;
     max-width: none;
@@ -123,10 +209,11 @@ body {
 
 /* Caja del login */
 .loginContainer {
-    background: #fff;
-    padding: 50px 45px;
-    border-radius: 16px;
-    box-shadow: 0 14px 36px rgba(0,0,0,0.28);
+    background: var(--card);
+    padding: 48px 44px;
+    border-radius: 10px;
+    border-top: 4px solid var(--teal);
+    box-shadow: 0 20px 44px rgba(10,30,27,0.35);
     text-align: center;
     width: 100%;
     max-width: 460px;
@@ -141,15 +228,16 @@ body {
 /* Título */
 .loginContainer h2 {
     margin: 0 0 8px 0;
-    color: #1e3a8a;
+    color: var(--ink);
+    font-family: var(--font-display);
     font-size: 30px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 /* Texto informativo (ej. aviso del Login del Webmaster) */
 .loginContainer p {
     margin: 0 0 22px 0;
-    color: #64748b;
+    color: var(--ink-soft);
     font-size: 14px;
     line-height: 1.4;
 }
@@ -161,8 +249,9 @@ body {
     width: 100%;
     padding: 12px 14px;
     margin: 0 0 16px 0;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-family: var(--font-body);
     font-size: 14px;
     box-sizing: border-box;
     transition: border-color 0.3s, box-shadow 0.3s;
@@ -170,8 +259,8 @@ body {
 
 .loginContainer input[type="text"]:focus,
 .loginContainer input[type="password"]:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.25);
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(14,107,96,0.22);
     outline: none;
 }
 
@@ -180,10 +269,10 @@ body {
     width: 100%;
     padding: 12px;
     margin-top: 6px;
-    background: #2563eb;
+    background: var(--teal);
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
@@ -191,7 +280,7 @@ body {
 }
 
 .loginContainer .btn:hover {
-    background: #1e40af;
+    background: var(--teal-deep);
     transform: translateY(-1px);
 }
 
@@ -201,7 +290,7 @@ body {
     margin-top: 18px;
     font-size: 14px;
     font-weight: 600;
-    color: #dc2626; /* rojo para errores */
+    color: var(--clay); /* rojo para errores */
 }
 
 
@@ -209,18 +298,24 @@ body {
     MENU
 ========================= */
 
-body {
-    background: #f0f4f8; /* azul grisáceo suave */
-}
-
 .welcome-panel {
-    background: linear-gradient(135deg, #2563eb, #1e40af);
-    color: #fff;
+    background: var(--teal-deep);
+    color: #fdfaf3;
     padding: 40px;
-    border-radius: 10px;
+    border-radius: 8px;
     text-align: center;
     margin-top: 30px;
     margin-bottom: 30px;
+}
+
+.welcome-panel h1 {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+}
+
+.welcome-panel p {
+    margin: 0;
+    color: #cfe3de;
 }
 
 .home-options {
@@ -232,23 +327,29 @@ body {
 }
 
 .option-card {
-    background: #fff;
+    background: var(--card);
     padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(23,48,44,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
     text-align: center;
 }
 
+.option-card h2 {
+    font-size: 19px;
+    margin: 4px 0 8px 0;
+}
+
 .option-card i {
-    font-size: 40px;
-    color: #2563eb;
+    font-size: 34px;
+    color: var(--teal);
     margin-bottom: 15px;
 }
 
 .option-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(23,48,44,0.12);
 }
 
 /* =========================
@@ -258,17 +359,20 @@ body {
     width: 100%;
     padding: 10px;
     margin: 8px 0 14px 0;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
     box-sizing: border-box;
+    font-family: var(--font-body);
     font-size: 14px;
+    color: var(--ink);
+    background: var(--card);
     transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 
 .input-base:focus, .ddl-base:focus {
-    border-color: #2563eb;
-    box-shadow: 0 0 6px rgba(37,99,235,0.3);
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(14,107,96,0.2);
     outline: none;
 }
 
@@ -279,40 +383,50 @@ body {
 .btn-base {
     padding: 10px 18px;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     cursor: pointer;
+    font-family: var(--font-body);
     font-size: 15px;
     font-weight: 600;
-    transition: background 0.3s, transform 0.2s;
+    transition: background 0.2s, transform 0.2s;
     color: #fff;
 }
 
 
 /* Variantes */
 .btn-primary {
-    background: #2563eb;
+    background: var(--teal);
 }
 
 .btn-primary:hover {
-    background: #1e40af;
+    background: var(--teal-deep);
     transform: scale(1.05);
 }
 
 .btn-success {
-    background: #22c55e;
+    background: var(--sage);
 }
 
 .btn-success:hover {
-    background: #15803d;
+    background: var(--sage-deep);
     transform: scale(1.05);
 }
 
 .btn-danger {
-    background: #dc2626;
+    background: var(--clay);
 }
 
 .btn-danger:hover {
-    background: #b91c1c;
+    background: var(--clay-deep);
+    transform: scale(1.05);
+}
+
+.btn-warning {
+    background: var(--amber);
+}
+
+.btn-warning:hover {
+    background: #92400e;
     transform: scale(1.05);
 }
 
@@ -333,10 +447,10 @@ body {
    LABELS
 ========================= */
 .label-base {
-    font-weight: bold;
+    font-weight: 600;
     margin-bottom: 6px;
     display: block;
-    color: #1e3a8a;
+    color: var(--ink);
 }
 
 /* =========================
@@ -344,82 +458,89 @@ body {
 ========================= */
 
 
-/* Contenedor general de tablas */
+/* Contenedor general de tablas: fuente monoespaciada para que fechas, IDs, DNI e IP
+   se lean como asientos de un registro/ficha, no como texto de UI generico. */
 .grid-crud {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
-    background: #fff;
-    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
     overflow: hidden; /* redondea bordes */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     margin: 20px 0;
 }
 
 
 /* Encabezados */
 .grid-crud th {
-    background: linear-gradient(90deg, #2563eb, #1e40af);
-    color: #fff;
+    background: var(--teal-deep);
+    color: #fdfaf3;
     padding: 12px;
     text-align: center;
+    font-family: var(--font-body);
     font-weight: 600;
-    letter-spacing: 0.5px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
 }
 
 /* Celdas */
 .grid-crud td {
     padding: 10px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--line);
     text-align: center;
 }
 
 /* Filas alternadas */
-/*.grid-crud tr:nth-child(even) {
-    background-color: #f9f9f9;
-}*/
+.grid-crud tr:nth-child(even) {
+    background-color: #faf6ec;
+}
 
 
 /* Hover fila */
 .grid-crud tr:hover {
-    background-color: #eef6ff;
+    background-color: var(--teal-wash);
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background 0.2s;
 }
 
 /* Links dentro del GridView (ej. Seleccionar) */
 .grid-crud a {
     display: inline-block;
     padding: 6px 12px;
-    background-color: #2563eb;
+    background-color: var(--teal);
     color: #fff !important;
-    border-radius: 6px;
+    border-radius: 5px;
+    font-family: var(--font-body);
     text-decoration: none;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s;
 }
 
 
 .grid-crud a:hover {
-    background-color: #1e40af;
+    background-color: var(--teal-deep);
 }
 
 
 /* Botones dentro del GridView */
 .grid-crud input[type="button"],
 .grid-crud input[type="submit"] {
-    background: #dc2626;
+    background: var(--clay);
     color: #fff;
     border: none;
     padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
+    font-family: var(--font-body);
     font-size: 13px;
-    transition: background 0.3s;
+    transition: background 0.2s;
 }
 
 .grid-crud input[type="button"]:hover,
 .grid-crud input[type="submit"]:hover {
-    background: #b91c1c;
+    background: var(--clay-deep);
 }
 
 
@@ -428,13 +549,13 @@ body {
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-color: #2563eb; /* color azul moderno */
+    accent-color: var(--teal);
     transform: scale(1.1);
 }
 
 /* Opcional: efecto hover */
 .grid-crud input[type="checkbox"]:hover {
-    box-shadow: 0 0 4px rgba(37,99,235,0.5);
+    box-shadow: 0 0 4px rgba(14,107,96,0.5);
 }
 
 /* Opcional: estilo deshabilitado */
@@ -461,9 +582,10 @@ body {
     grid-column: span 2; /* ocupa las dos columnas */
     text-align: center;
     margin-bottom: 20px;
+    font-family: var(--font-display);
     font-size: 22px;
-    font-weight: 700;
-    color: #1e3a8a;
+    font-weight: 600;
+    color: var(--ink);
 }
 
 .form-col {
@@ -484,39 +606,39 @@ body {
 .btn-toggle {
     padding: 10px 20px;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-/* Estado Activo (verde) */
+/* Estado Activo */
 .btn-activo {
-    background-color: #4CAF50;
+    background-color: var(--sage);
     color: white;
 }
 
 .btn-activo:hover {
-    background-color: #45a049;
+    background-color: var(--sage-deep);
     transform: scale(1.05);
 }
 
-/* Estado Inactivo (rojo) */
+/* Estado Inactivo */
 .btn-inactivo {
-    background-color: #f44336;
+    background-color: var(--clay);
     color: white;
 }
 
 .btn-inactivo:hover {
-    background-color: #d32f2f;
+    background-color: var(--clay-deep);
     transform: scale(1.05);
 }
 
 
 
 /* ========================================
-   HORA Y DIA DE FORMULARIO TURNOS 
+   HORA Y DIA DE FORMULARIO TURNOS
 =========================================== */
 
 
@@ -530,7 +652,7 @@ body {
 
 .horario-turno label {
     font-weight: 600;
-    color: #1e3a8a;
+    color: var(--ink);
 }
 
 
@@ -552,6 +674,7 @@ body {
     padding: 0;
     background: transparent;
     box-shadow: none;
+    border: none;
     overflow-x: auto;
 }
 
@@ -571,7 +694,7 @@ body {
 .ayuda-campo {
     display: block;
     margin: -6px 0 14px 0;
-    color: #64748b;
+    color: var(--ink-soft);
     font-size: 13px;
 }
 
@@ -579,9 +702,10 @@ body {
 .info-paginas {
     display: block;
     text-align: right;
-    color: #1e3a8a;
+    color: var(--ink);
+    font-family: var(--font-mono);
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     margin-bottom: 8px;
 }
 
@@ -680,7 +804,7 @@ body {
     display: inline-block;
     padding-left: 60px;
     line-height: 28px;
-    color: #1e3a8a;
+    color: var(--ink);
     font-weight: 600;
     cursor: pointer;
     user-select: none;
@@ -694,7 +818,7 @@ body {
     top: 0;
     width: 50px;
     height: 28px;
-    background: #cbd5e1;
+    background: #cbd0c9;
     border-radius: 14px;
     transition: background 0.3s;
 }
@@ -715,7 +839,7 @@ body {
 
 /* Encendido = riel verde y perilla desplazada a la derecha. */
 .chk-activo input[type="checkbox"]:checked + label::before {
-    background: #22c55e;
+    background: var(--sage);
 }
 
 .chk-activo input[type="checkbox"]:checked + label::after {
@@ -724,7 +848,7 @@ body {
 
 /* Foco de teclado visible. */
 .chk-activo input[type="checkbox"]:focus + label::before {
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.3);
+    box-shadow: 0 0 0 3px rgba(14,107,96,0.3);
 }
 
 /* Mensaje debajo del formulario (no rojo por defecto; el code-behind fija el color según el caso). */
@@ -742,20 +866,21 @@ body {
     right: 20px;
     z-index: 9999;
     padding: 14px 22px;
-    border-radius: 8px;
+    border-radius: 6px;
     color: #fff;
+    font-family: var(--font-body);
     font-weight: 600;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.28);
+    box-shadow: 0 8px 20px rgba(23,48,44,0.28);
     opacity: 1;
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .toast-exito {
-    background: #22c55e;
+    background: var(--sage);
 }
 
 .toast-error {
-    background: #dc2626;
+    background: var(--clay);
 }
 
 .toast-hide {
@@ -776,7 +901,7 @@ body {
 
 /* Fila del paginador dentro del GridView de la bitácora. */
 .grid-pager {
-    background: #f0f4f8;
+    background: var(--paper);
     padding: 14px;
 }
 
@@ -796,16 +921,17 @@ body {
 .grid-pager a {
     display: inline-block;
     padding: 8px 16px;
-    background: #2563eb;
+    background: var(--teal);
     color: #fff !important;
-    border-radius: 6px;
+    border-radius: 5px;
+    font-family: var(--font-body);
     font-weight: 600;
     text-decoration: none;
-    transition: background 0.3s, transform 0.2s;
+    transition: background 0.2s, transform 0.2s;
 }
 
 .grid-pager a:hover {
-    background: #1e40af;
+    background: var(--teal-deep);
     transform: scale(1.05);
 }
 
@@ -813,9 +939,10 @@ body {
 .grid-pager span {
     display: inline-block;
     padding: 8px 16px;
-    background: #e5e7eb;
-    color: #9ca3af;
-    border-radius: 6px;
+    background: #e5e1d4;
+    color: #9a927e;
+    font-family: var(--font-body);
+    border-radius: 5px;
     font-weight: 600;
     cursor: default;
 }
@@ -872,7 +999,7 @@ body {
 .mis-turnos h2,
 .misRecetas h2 {
     text-align: center;
-    color: #1e3a8a;
+    color: var(--ink);
     margin-top: 0;
 }
 
@@ -890,6 +1017,7 @@ body {
     display: inline-block;
     padding: 4px 12px;
     border-radius: 999px;
+    font-family: var(--font-body);
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.3px;
@@ -897,54 +1025,54 @@ body {
 }
 
 .badge-confirmado {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--teal-wash);
+    color: var(--teal-deep);
 }
 
 .badge-pendiente,
 .badge-en-espera {
-    background: #fef3c7;
-    color: #b45309;
+    background: var(--amber-wash);
+    color: var(--amber);
 }
 
 .badge-atendido,
 .badge-vigente {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--sage-wash);
+    color: var(--sage-deep);
 }
 
 .badge-finalizada {
-    background: #e5e7eb;
-    color: #4b5563;
+    background: #e5e1d4;
+    color: #6b6353;
 }
 
 /* Celda de Criticidad en la bitácora (la clase la asigna gvBitacora_RowDataBound). */
 .grid-crud td.criticidad-alta {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: var(--clay-wash);
+    color: var(--clay-deep);
     font-weight: 700;
 }
 
 .grid-crud td.criticidad-media {
-    background: #fef3c7;
-    color: #b45309;
+    background: var(--amber-wash);
+    color: var(--amber);
     font-weight: 700;
 }
 
 .grid-crud td.criticidad-baja {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--sage-wash);
+    color: var(--sage-deep);
     font-weight: 700;
 }
 
 /* Aviso con el paciente que el médico está atendiendo. */
 .paciente-seleccionado {
     display: block;
-    background: #eff6ff;
-    border-left: 4px solid #2563eb;
+    background: var(--teal-wash);
+    border-left: 4px solid var(--teal);
     padding: 10px 14px;
-    border-radius: 6px;
-    color: #1e3a8a;
+    border-radius: 5px;
+    color: var(--teal-deep);
     font-weight: 600;
     margin-bottom: 18px;
 }
@@ -952,22 +1080,23 @@ body {
 /* Fila seleccionada en la agenda del médico. */
 .grid-crud .fila-seleccionada,
 .grid-crud tr.fila-seleccionada:hover {
-    background: #dbeafe;
+    background: var(--teal-wash);
 }
 
 /* Colores del mensaje bajo los formularios (el code-behind elige la clase). */
 .msg-exito {
-    color: #15803d;
+    color: var(--sage-deep);
 }
 
 .msg-error {
-    color: #dc2626;
+    color: var(--clay);
 }
 
 /* Texto que muestran las grillas cuando no hay datos. */
 .sin-datos {
     text-align: center;
-    color: #64748b;
+    color: var(--ink-soft);
+    font-family: var(--font-body);
     padding: 25px 10px;
     font-size: 15px;
 }
@@ -975,7 +1104,49 @@ body {
 /* Título del bloque Receta dentro de la atención médica. */
 .section-card h3 {
     margin: 0 0 12px 0;
-    color: #1e3a8a;
+    color: var(--ink);
+}
+
+
+/* ========================================
+   SEGURIDAD / INTEGRIDAD DE DATOS (Seguridad.aspx)
+=========================================== */
+
+.grid-container.seguridad h2 {
+    border-bottom-color: var(--clay);
+}
+
+/* Banner de alerta cuando se detectan problemas de integridad (DVV) en tablas protegidas. */
+.alerta-integridad {
+    display: block;
+    background: var(--clay-wash);
+    border: 1px solid var(--clay);
+    border-left: 5px solid var(--clay);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+}
+
+.alerta-integridad h3 {
+    margin: 0 0 10px 0;
+    color: var(--clay-deep);
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.alerta-integridad h3::before {
+    content: "\26A0";
+    margin-right: 8px;
+}
+
+.lista-integridad {
+    margin: 0;
+    padding-left: 22px;
+    color: var(--clay-deep);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
 }
 
 
@@ -987,26 +1158,27 @@ body {
     max-width: 480px;
     margin: 70px auto;
     padding: 45px 35px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--clay);
+    border-radius: 8px;
     text-align: center;
 }
 
 .acceso-denegado-icono {
-    font-size: 52px;
+    font-size: 44px;
     margin-bottom: 12px;
 }
 
 .acceso-denegado h2 {
     margin: 0 0 10px 0;
-    color: #dc2626;
+    color: var(--clay);
     font-size: 26px;
 }
 
 .acceso-denegado p {
     margin: 0 0 26px 0;
-    color: #64748b;
+    color: var(--ink-soft);
     font-size: 15px;
     line-height: 1.5;
 }
@@ -1015,19 +1187,17 @@ body {
 .btn-volver {
     display: inline-block;
     padding: 12px 26px;
-    background: #2563eb;
+    background: var(--teal);
     color: #fff;
-    border-radius: 8px;
+    border-radius: 6px;
+    font-family: var(--font-body);
     font-size: 15px;
     font-weight: 600;
     text-decoration: none;
-    transition: background 0.3s, transform 0.2s;
+    transition: background 0.2s, transform 0.2s;
 }
 
 .btn-volver:hover {
-    background: #1e40af;
+    background: var(--teal-deep);
     transform: translateY(-1px);
 }
-
-
-

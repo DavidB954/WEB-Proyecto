@@ -45,6 +45,34 @@ namespace BLL
             RefrescarDVVBitacora();
         }
 
+        //Refresca el DVH de filas puntuales (ej. las que el FK de Usuario dejó en NULL en cascada al borrar un usuario):
+        //su contenido cambió legítimamente, y si no se recalcula acá la próxima verificación las marca como modificadas.
+        public void RefrescarDVHDeFilas(IEnumerable<int> idsBitacora)
+        {
+            if (idsBitacora == null)
+            {
+                return;
+            }
+
+            var eventosPorId = dal_bitacora.ObtenerBitacora().ToDictionary(b => b.IdBitacora);
+
+            bool huboCambios = false;
+
+            foreach (var idBitacora in idsBitacora)
+            {
+                if (eventosPorId.TryGetValue(idBitacora, out var evento))
+                {
+                    dal_bitacora.ActualizarDVH(evento.IdBitacora, EncryptionHelper.Encriptar(CadenaBitacora(evento)));
+                    huboCambios = true;
+                }
+            }
+
+            if (huboCambios)
+            {
+                RefrescarDVVBitacora();
+            }
+        }
+
         private void RefrescarDVVBitacora()
         {
             List<string> hashesFila = dal_bitacora.ObtenerBitacora().Select(b => EncryptionHelper.Encriptar(CadenaBitacora(b))).ToList();

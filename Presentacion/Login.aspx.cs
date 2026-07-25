@@ -19,21 +19,36 @@ namespace Presentacion
         {
             if (!IsPostBack)
             {
-                var tablasProtegidas = new[] { "Usuario", "Rol", "Bitacora" };
+                //"Bitacora" va primero: verificar Usuario/Rol registra un evento INTEGRIDAD_ERROR en la propia Bitacora,
+                //y ese registro refresca el DVV de Bitacora con su contenido actual. Si Bitacora se revisara al final,
+                //una manipulación directa sobre ella (una fila borrada/alterada por fuera de la app) quedaría
+                //enmascarada por ese refresco antes de llegar a compararla.
+                var tablasProtegidas = new[] { "Bitacora", "Usuario", "Rol" };
                 var mensajes = new List<string>();
 
-                foreach (var tabla in tablasProtegidas)
+                try
                 {
-                    if (!bll_dvv.VerificarIntegridad(tabla))
+                    foreach (var tabla in tablasProtegidas)
                     {
-                        mensajes.AddRange(bll_dvv.DetectarCambios(tabla));
+                        if (!bll_dvv.VerificarIntegridad(tabla))
+                        {
+                            mensajes.AddRange(bll_dvv.DetectarCambios(tabla));
+                        }
                     }
+                }
+                catch (Exception)
+                {
+                    //Sin esto, una base caída o inaccesible tumbaba la página de Login con pantalla amarilla
+                    //antes de que nadie pudiera siquiera ver el formulario.
+                    lblMensaje.Text = "No se pudo verificar la integridad del sistema. Intentá nuevamente más tarde.";
+                    return;
                 }
 
                 if (mensajes.Count > 0)
                 {
                     Session["MensajesIntegridad"] = mensajes;
                     Response.Redirect("LoginWebmaster.aspx");
+                    return;
                 }
 
                 //Si la integridad está OK, mostramos el aviso de "volvé a loguearte" que dejó Seguridad.aspx tras Recalcular/BackUp/Restore.
@@ -94,10 +109,27 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                lblMensaje.Text = ex.Message; 
-
+                RegistrarErrorInterno("Login.btnLogin_Click", ex);
+                lblMensaje.Text = "No se pudo iniciar sesión. Intentá nuevamente más tarde.";
             }
 
+        }
+
+        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
+        private void RegistrarErrorInterno(string origen, Exception ex)
+        {
+            try
+            {
+                string carpetaLogs = Server.MapPath("~/App_Data");
+                System.IO.Directory.CreateDirectory(carpetaLogs);
+                System.IO.File.AppendAllText(
+                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
+            }
+            catch
+            {
+                //Si ni el log funciona, no hay nada más para hacer acá.
+            }
         }
     }
 }

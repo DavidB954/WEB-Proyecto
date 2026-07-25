@@ -70,7 +70,14 @@ namespace BLL
         //Se usa para decisiones de UI (ej. deshabilitar "Generar BackUp" si la base está comprometida).
         public bool EstaIntegra(string nombreTabla)
         {
-            return dal_dvv.ObtenerDVV(nombreTabla) == CalcularDVV(nombreTabla);
+            try
+            {
+                return dal_dvv.ObtenerDVV(nombreTabla) == CalcularDVV(nombreTabla);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al verificar integridad de '{nombreTabla}': {ex.Message}", ex);
+            }
         }
 
         //Calcula el DV de tabla (DVV): calcula el DV de cada fila (hash para Usuario/Rol, cifrado reversible para Bitacora) y luego hashea el total.
@@ -178,10 +185,9 @@ namespace BLL
                 }
             }
 
-            if (mensajes.Count == 0)
-            {
-                DetectarUsuarioEliminado(usuarios, mensajes);
-            }
+            //Se corre siempre, no solo cuando no hubo modificaciones: una fila modificada y una fila eliminada
+            //pueden pasar al mismo tiempo, y antes la segunda quedaba enmascarada por la primera.
+            DetectarUsuarioEliminado(usuarios, mensajes);
         }
 
         //Cruza altas y bajas registradas en bitácora para reconstruir el nombre de un usuario que ya no existe y nunca tuvo una baja legítima.
@@ -262,10 +268,17 @@ namespace BLL
                     break;
 
                 case "Bitacora":
-                    foreach (var evento in dal_bitacora.ObtenerBitacora())
+                    List<BE_Bitacora> eventosBitacora = dal_bitacora.ObtenerBitacora();
+
+                    foreach (var evento in eventosBitacora)
                     {
                         dal_bitacora.ActualizarDVH(evento.IdBitacora, EncryptionHelper.Encriptar(CadenaBitacora(evento)));
                     }
+
+                    //Acepta el estado actual de IDs como la nueva base "válida": a partir de acá, DetectarBitacoraEliminada
+                    //solo va a reportar borrados posteriores a este recálculo, no huecos ya conocidos/aceptados.
+                    string idsVigentes = string.Join(",", eventosBitacora.Select(e => e.IdBitacora));
+                    dal_dvv.ActualizarIdsVigentes("Bitacora", idsVigentes);
                     break;
 
                 default:
@@ -287,33 +300,33 @@ namespace BLL
                 }
             }
 
-            //Si ninguna fila quedó marcada como modificada pero el DVV falló, es porque se borraron filas enteras.
-            //Como el IdBitacora es autoincremental, los registros borrados dejan "huecos" en la secuencia: los detectamos por ahí.
-            if (mensajes.Count == 0)
-            {
-                DetectarBitacoraEliminada(eventos, mensajes);
-            }
+            //Se corre siempre, no solo cuando ninguna fila quedó marcada como modificada: pueden pasar las dos cosas
+            //a la vez (ej. filas "modificadas" en cascada por el ON DELETE SET NULL de un usuario borrado, más una
+            //fila borrada de verdad), y antes la segunda quedaba enmascarada por la primera.
+            DetectarBitacoraEliminada(eventos, mensajes);
         }
 
-        //Detecta IDs faltantes en la secuencia de la bitácora (registros borrados) buscando huecos entre 1 y el ID máximo existente.
+        //Detecta bitácoras borradas comparando los IDs actuales contra "IdsVigentes": la lista de IDs aceptada
+        //como válida la última vez que se ejecutó "Recalcular DV" (o al restaurar un backup, que trae su propia
+        //lista guardada). A diferencia de escanear huecos desde el ID 1, esto no vuelve a marcar para siempre
+        //un hueco que el webmaster ya aceptó (ej. un borrado legítimo ya recalculado).
         private void DetectarBitacoraEliminada(List<BE_Bitacora> eventos, List<string> mensajes)
         {
-            if (eventos.Count == 0)
+            string idsVigentesCsv = dal_dvv.ObtenerIdsVigentes("Bitacora");
+
+            //Todavía no hay una base aceptada (recién migrado, nunca se corrió "Recalcular DV"): no hay contra qué comparar.
+            if (string.IsNullOrWhiteSpace(idsVigentesCsv))
             {
                 return;
             }
 
-            var idsExistentes = new HashSet<int>(eventos.Select(e => e.IdBitacora));
-            int idMaximo = eventos.Max(e => e.IdBitacora);
+            var idsVigentes = new HashSet<int>(
+                idsVigentesCsv.Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(int.Parse)
+            );
 
-            var faltantes = new List<int>();
-            for (int id = 1; id <= idMaximo; id++)
-            {
-                if (!idsExistentes.Contains(id))
-                {
-                    faltantes.Add(id);
-                }
-            }
+            var idsActuales = new HashSet<int>(eventos.Select(e => e.IdBitacora));
+
+            var faltantes = idsVigentes.Where(id => !idsActuales.Contains(id)).OrderBy(id => id).ToList();
 
             if (faltantes.Count > 0)
             {
@@ -321,21 +334,14 @@ namespace BLL
             }
         }
 
-        //Recibe la CARPETA donde guardar el backup y arma automáticamente el nombre del archivo con fecha/hora.
-        //Devuelve la ruta completa del .bak generado, para poder mostrársela al usuario.
-        public string GenerarBackUp(BE_Usuario usuarioLogueado, string carpetaBackup)
+        //Usa siempre la carpeta de backups propia de SQL Server (no una carpeta elegida por el usuario):
+        //esa es la única que la cuenta de servicio de SQL Server tiene garantizado poder escribir.
+        //Arma el nombre del archivo con fecha/hora y devuelve la ruta completa para mostrársela al usuario.
+        public string GenerarBackUp(BE_Usuario usuarioLogueado)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(carpetaBackup))
-                {
-                    throw new Exception("Debe indicar la carpeta donde generar el backup.");
-                }
-
-                if (!System.IO.Directory.Exists(carpetaBackup))
-                {
-                    System.IO.Directory.CreateDirectory(carpetaBackup);
-                }
+                string carpetaBackup = dal_dvv.ObtenerCarpetaBackupPorDefecto();
 
                 string nombreArchivo = $"GestionWEB_{DateTime.Now:yyyyMMdd_HHmmss}.bak";
                 string rutaCompleta = System.IO.Path.Combine(carpetaBackup, nombreArchivo);
@@ -358,17 +364,33 @@ namespace BLL
 
         }
 
-        public void RestaurarBackup(BE_Usuario usuarioLogueado, string rutaBackup)
+        //Backups disponibles para restaurar, para completar el desplegable de Seguridad.aspx (nada de tipear una ruta a mano).
+        public List<string> ListarBackupsDisponibles()
+        {
+            return dal_dvv.ListarBackups();
+        }
+
+        public void RestaurarBackup(BE_Usuario usuarioLogueado, string nombreArchivo)
         {
             try
             {
-                dal_dvv.RestaurarBackup(rutaBackup);
+                //El nombre viene de un desplegable armado con ListarBackupsDisponibles, pero igual se valida
+                //acá por si el POST se manipula: sin barras ni "..", no puede escapar de la carpeta de backups.
+                if (string.IsNullOrWhiteSpace(nombreArchivo) || nombreArchivo.IndexOfAny(new[] { '\\', '/' }) >= 0 || nombreArchivo.Contains(".."))
+                {
+                    throw new Exception("Debe seleccionar un backup válido de la lista.");
+                }
+
+                string carpetaBackup = dal_dvv.ObtenerCarpetaBackupPorDefecto();
+                string rutaCompleta = System.IO.Path.Combine(carpetaBackup, nombreArchivo);
+
+                dal_dvv.RestaurarBackup(rutaCompleta);
 
                 bll_bitacora.RegistrarEvento(
                    usuarioLogueado?.IdUsuario,
                     AccionBitacora.BACKUP_RESTAURADO,
                     "SEGURIDAD",
-                    $"Se restauró la base de datos desde el backup: {rutaBackup}"
+                    $"Se restauró la base de datos desde el backup: {rutaCompleta}"
                 );
             }
             catch (Exception ex)

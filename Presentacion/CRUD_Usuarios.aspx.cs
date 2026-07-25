@@ -17,18 +17,30 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            //Se revalida en CADA carga (incluidos los postbacks de Guardar/Modificar/Eliminar/Roles), no solo la
+            //primera vez: si la sesión vence mientras el administrador está en esta pantalla, un postback no debe
+            //poder ejecutar un alta/baja/modificación de usuarios ni de roles sin sesión válida.
+            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+
+            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "ADMINISTRADOR"))
+            {
+                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
+                return;
+            }
+
             if (!IsPostBack)
             {
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "ADMINISTRADOR"))
+                try
                 {
-                    Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                    return;
+                    CargarRoles();
+                    RefrescarGrillas();
                 }
-
-                CargarRoles();
-                RefrescarGrillas();
+                catch (Exception ex)
+                {
+                    RegistrarErrorInterno("CRUD_Usuarios.Page_Load", ex);
+                    lblMensaje.Text = "No se pudieron cargar los datos. Intentá nuevamente más tarde.";
+                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                }
             }
         }
 
@@ -84,6 +96,7 @@ namespace Presentacion
             txtPassword.Text = string.Empty;
             hiddenIdUsuario.Value = string.Empty;
             chkActivo.Checked = true;
+            chkResetearPassword.Checked = false;
 
             RefrescarGrillas();
         }
@@ -92,6 +105,13 @@ namespace Presentacion
         {
             try
             {
+                //Los RegularExpressionValidator del markup son solo del lado del cliente: si el postback llega
+                //con JavaScript deshabilitado (o armado a mano), hay que rechazarlo también acá.
+                if (!Page.IsValid)
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(txtNombre.Text) ||
                 string.IsNullOrWhiteSpace(txtApellido.Text) ||
                 string.IsNullOrWhiteSpace(txtDNI.Text) ||
@@ -114,7 +134,7 @@ namespace Presentacion
                 usuario.Activo = chkActivo.Checked;
 
                 //El DVH lo calcula la capa de negocio (BLL_Usuario) con la contraseña ya hasheada; acá no se arma.
-                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
                 bll_usuario.AgregarUsuario(usuarioLogueado, usuario);
 
@@ -125,7 +145,9 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                ScriptManager.RegisterStartupScript(this, GetType(), "errorAlert", $"alert('Error: {ex.Message}');", true);
+                RegistrarErrorInterno("CRUD_Usuarios.btnGuardar_Click", ex);
+                string mensaje = System.Web.HttpUtility.JavaScriptStringEncode("No se pudo guardar el usuario. Verificá los datos e intentá nuevamente.");
+                ScriptManager.RegisterStartupScript(this, GetType(), "errorAlert", $"alert('{mensaje}');", true);
             }
         }
 
@@ -145,14 +167,23 @@ namespace Presentacion
                 chkActivo.Checked = chk.Checked;
             }
 
-            //La contraseña nunca viaja de vuelta al navegador: se deja vacía y hay que reescribirla para modificar.
+            //La contraseña nunca viaja de vuelta al navegador: se deja vacía. Si se quiere cambiar, hay que
+            //tildar "Restablecer contraseña" y reescribirla; si no, "Modificar" preserva la actual.
             txtPassword.Text = string.Empty;
+            chkResetearPassword.Checked = false;
         }
 
         protected void btnModificar_Click(object sender, EventArgs e)
         {
             try
             {
+                //Los RegularExpressionValidator del markup son solo del lado del cliente: si el postback llega
+                //con JavaScript deshabilitado (o armado a mano), hay que rechazarlo también acá.
+                if (!Page.IsValid)
+                {
+                    return;
+                }
+
                 if (string.IsNullOrWhiteSpace(hiddenIdUsuario.Value))
                 {
                     lblMensaje.Text = "Seleccione un usuario de la lista antes de modificar.";
@@ -160,10 +191,13 @@ namespace Presentacion
                     return;
                 }
 
-                //La contraseña no vuelve del navegador tras seleccionar una fila. Si se guardara vacía, se hashearía "" y el usuario no podría loguearse: por eso se exige reescribirla.
-                if (string.IsNullOrWhiteSpace(txtPassword.Text))
+                //"Restablecer contraseña" es opcional: solo si está tildado hace falta reescribirla. Si no,
+                //ModificarUsuario preserva la contraseña actual del usuario sin tocarla.
+                bool restablecerPassword = chkResetearPassword.Checked;
+
+                if (restablecerPassword && string.IsNullOrWhiteSpace(txtPassword.Text))
                 {
-                    lblMensaje.Text = "Debe reingresar la contraseña para modificar el usuario.";
+                    lblMensaje.Text = "Ingrese la nueva contraseña para restablecerla.";
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                     return;
                 }
@@ -178,10 +212,17 @@ namespace Presentacion
                 usuario.DNI = txtDNI.Text;
                 usuario.Activo = chkActivo.Checked;
 
-                //El DVH lo calcula la capa de negocio (BLL_Usuario) con la contraseña ya hasheada; acá no se arma.
-                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+                //Este formulario no edita los intentos fallidos: hay que preservar el valor actual en base,
+                //si no, al no setearlo acá quedaría en el default de int (0) y CUALQUIER modificación
+                //(aunque sea solo corregir el nombre) resetearía silenciosamente el contador de intentos fallidos.
+                BE_Usuario usuarioActual = bll_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == usuario.IdUsuario);
+                usuario.IntentosFallidos = usuarioActual?.IntentosFallidos ?? 0;
 
-                bll_usuario.ModificarUsuario(usuarioLogueado, usuario);
+                //El DVH lo calcula la capa de negocio (BLL_Usuario). Si no se restablece la contraseña, BLL_Usuario
+                //ignora usuario.HashPassword y preserva el valor actual (ya hasheado) tal como está en la base.
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+
+                bll_usuario.ModificarUsuario(usuarioLogueado, usuario, restablecerPassword);
 
                 LimpiarFormularioUsuario();
 
@@ -190,7 +231,8 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                lblMensaje.Text = ex.Message;
+                RegistrarErrorInterno("CRUD_Usuarios.btnModificar_Click", ex);
+                lblMensaje.Text = "No se pudo modificar el usuario. Intentá nuevamente más tarde.";
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -207,7 +249,7 @@ namespace Presentacion
                 }
 
                 int id = int.Parse(hiddenIdUsuario.Value);
-                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
                 bll_usuario.EliminarUsuario(usuarioLogueado, id);
 
@@ -218,7 +260,8 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                lblMensaje.Text = ex.Message;
+                RegistrarErrorInterno("CRUD_Usuarios.btnEliminar_Click", ex);
+                lblMensaje.Text = "No se pudo eliminar el usuario. Intentá nuevamente más tarde.";
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -287,7 +330,7 @@ namespace Presentacion
                     return;
                 }
 
-                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
                 bll_rol.AsignarRol(usuarioLogueado, idUsuarioDestino, idRol);
 
@@ -298,7 +341,8 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                lblMensajeRol.Text = ex.Message;
+                RegistrarErrorInterno("CRUD_Usuarios.btnGuardarRol_Click", ex);
+                lblMensajeRol.Text = "No se pudo asignar el rol. Intentá nuevamente más tarde.";
                 lblMensajeRol.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -331,7 +375,7 @@ namespace Presentacion
                     return;
                 }
 
-                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
                 bll_rol.ModificarRol(usuarioLogueado, idUsuarioDestino, idRol);
 
@@ -342,7 +386,8 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                lblMensajeRol.Text = ex.Message;
+                RegistrarErrorInterno("CRUD_Usuarios.btnModificarRol_Click", ex);
+                lblMensajeRol.Text = "No se pudo modificar el rol. Intentá nuevamente más tarde.";
                 lblMensajeRol.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -367,7 +412,7 @@ namespace Presentacion
                     return;
                 }
 
-                BE_Usuario usuarioLogueado = (BE_Usuario)Session["Usuario"];
+                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
                 //Eliminamos el rol que realmente tiene (no el seleccionado en el combo, que podría ser otro).
                 bll_rol.EliminarRol(usuarioLogueado, idUsuarioDestino, rolActual.IdRol);
@@ -379,8 +424,26 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                lblMensajeRol.Text = ex.Message;
+                RegistrarErrorInterno("CRUD_Usuarios.btnEliminarRol_Click", ex);
+                lblMensajeRol.Text = "No se pudo quitar el rol. Intentá nuevamente más tarde.";
                 lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+            }
+        }
+
+        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
+        private void RegistrarErrorInterno(string origen, Exception ex)
+        {
+            try
+            {
+                string carpetaLogs = Server.MapPath("~/App_Data");
+                System.IO.Directory.CreateDirectory(carpetaLogs);
+                System.IO.File.AppendAllText(
+                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
+                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
+            }
+            catch
+            {
+                //Si ni el log funciona, no hay nada más para hacer acá.
             }
         }
     }

@@ -70,6 +70,8 @@
     <Content Include="AccesoDenegado.aspx" />
     <Content Include="Bitacora.aspx" />
     <Content Include="CerrarSesion.aspx" />
+    <Content Include="ErrorGeneral.aspx" />
+    <Content Include="Global.asax" />
     <Content Include="Login.aspx" />
     <Content Include="LoginWebmaster.aspx" />
     <Content Include="Menu.aspx" />
@@ -88,6 +90,16 @@
     </Compile>
     <Compile Include="AccesoDenegado.aspx.designer.cs">
       <DependentUpon>AccesoDenegado.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ErrorGeneral.aspx.cs">
+      <DependentUpon>ErrorGeneral.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ErrorGeneral.aspx.designer.cs">
+      <DependentUpon>ErrorGeneral.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Bitacora.aspx.cs">
       <DependentUpon>Bitacora.aspx</DependentUpon>
