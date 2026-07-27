@@ -783,7 +783,16 @@ h1, h2, h3 {
     flex-wrap: wrap;
 }
 
-/* Checkbox "Usuario activo" convertido en interruptor (toggle).
+/* La fila de Estado alinea el interruptor "Usuario activo" con la ficha
+   "Resetear intentos fallidos"; en pantallas chicas se apilan. */
+.fila-estado {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 26px;
+}
+
+/* Checkbox "Usuario activo" convertido en interruptor (toggle): es un ESTADO del usuario.
    El asp:CheckBox se renderiza como <span class="chk-activo"><input type="checkbox"><label>...</label></span>. */
 .chk-activo {
     display: inline-block;
@@ -802,25 +811,27 @@ h1, h2, h3 {
 .chk-activo label {
     position: relative;
     display: inline-block;
-    padding-left: 60px;
-    line-height: 28px;
+    padding-left: 58px;
+    line-height: 26px;
     color: var(--ink);
     font-weight: 600;
     cursor: pointer;
     user-select: none;
 }
 
-/* Riel del interruptor (apagado = gris). */
+/* Riel del interruptor (apagado = gris verdoso de la paleta, con borde de tinta suave). */
 .chk-activo label::before {
     content: "";
     position: absolute;
+    box-sizing: border-box;
     left: 0;
     top: 0;
-    width: 50px;
-    height: 28px;
-    background: #cbd0c9;
-    border-radius: 14px;
-    transition: background 0.3s;
+    width: 48px;
+    height: 26px;
+    background: #c6cdc3;
+    border: 1px solid rgba(23,48,44,0.15);
+    border-radius: 13px;
+    transition: background 0.25s, border-color 0.25s;
 }
 
 /* Perilla. */
@@ -829,26 +840,138 @@ h1, h2, h3 {
     position: absolute;
     left: 3px;
     top: 3px;
-    width: 22px;
-    height: 22px;
-    background: #fff;
+    width: 20px;
+    height: 20px;
+    background: var(--card);
     border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    transition: transform 0.3s;
+    box-shadow: 0 1px 3px rgba(23,48,44,0.35);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Encendido = riel verde y perilla desplazada a la derecha. */
+.chk-activo label:hover::before {
+    background: #b5beb1;
+}
+
+/* Encendido = riel verde (estado positivo) y perilla desplazada a la derecha. */
 .chk-activo input[type="checkbox"]:checked + label::before {
     background: var(--sage);
+    border-color: var(--sage-deep);
 }
 
 .chk-activo input[type="checkbox"]:checked + label::after {
     transform: translateX(22px);
 }
 
+.chk-activo input[type="checkbox"]:checked + label:hover::before {
+    background: var(--sage-deep);
+}
+
 /* Foco de teclado visible. */
 .chk-activo input[type="checkbox"]:focus + label::before {
     box-shadow: 0 0 0 3px rgba(14,107,96,0.3);
+}
+
+/* Checkboxes de "orden puntual" (Restablecer contrasena / Resetear intentos fallidos):
+   no describen un estado del usuario sino algo que va a pasar UNA vez al tocar Modificar.
+   Por eso no son interruptores: son fichas con borde punteado (pendiente) que al tildarse
+   se rellenan en ambar, el color de atencion de la paleta. */
+.chk-reset {
+    display: inline-flex;
+    margin-top: 8px;
+}
+
+.chk-reset input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.chk-reset label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 16px 6px 10px;
+    border: 1.5px dashed #c9bd9f;
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 18px;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(23,48,44,0.05);
+    transition: border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.chk-reset label:hover {
+    border-color: var(--amber);
+    background: #fffbef;
+    color: var(--ink);
+    box-shadow: 0 2px 5px rgba(23,48,44,0.10);
+}
+
+/* Casilla cuadrada delante del texto. */
+.chk-reset label::before {
+    content: "";
+    box-sizing: border-box;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--ink-soft);
+    border-radius: 4px;
+    background: var(--card);
+    transition: background 0.2s, border-color 0.2s;
+}
+
+/* Tilde de dos trazos: aparece con un pequeño "pop" al marcar. */
+.chk-reset label::after {
+    content: "";
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    width: 4px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: translateY(-65%) rotate(45deg) scale(0);
+    transition: transform 0.18s ease;
+}
+
+/* Tildado = la orden queda "sellada": borde solido y fondo ambar de atencion. */
+.chk-reset input[type="checkbox"]:checked + label {
+    border-style: solid;
+    border-color: var(--amber);
+    background: var(--amber-wash);
+    color: #8a4207;
+    box-shadow: 0 1px 3px rgba(180,83,9,0.25);
+}
+
+.chk-reset input[type="checkbox"]:checked + label::before {
+    background: var(--amber);
+    border-color: var(--amber);
+}
+
+.chk-reset input[type="checkbox"]:checked + label::after {
+    transform: translateY(-65%) rotate(45deg) scale(1);
+}
+
+/* Foco de teclado visible. */
+.chk-reset input[type="checkbox"]:focus + label {
+    box-shadow: 0 0 0 3px rgba(14,107,96,0.3);
+}
+
+/* Sin animaciones para quien pide movimiento reducido. */
+@media (prefers-reduced-motion: reduce) {
+    .chk-activo label::before,
+    .chk-activo label::after,
+    .chk-reset label,
+    .chk-reset label::before,
+    .chk-reset label::after {
+        transition: none;
+    }
 }
 
 /* Mensaje debajo del formulario (no rojo por defecto; el code-behind fija el color según el caso). */

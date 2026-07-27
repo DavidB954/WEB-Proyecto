@@ -97,6 +97,7 @@ namespace Presentacion
             hiddenIdUsuario.Value = string.Empty;
             chkActivo.Checked = true;
             chkResetearPassword.Checked = false;
+            chkResetearIntentos.Checked = false;
 
             RefrescarGrillas();
         }
@@ -129,7 +130,7 @@ namespace Presentacion
                 usuario.Apellido = txtApellido.Text;
                 usuario.Email = txtEmail.Text;
                 usuario.HashPassword = txtPassword.Text;
-                usuario.DNI = txtDNI.Text;
+                usuario.DNI = txtDNI.Text.Trim();
                 usuario.IntentosFallidos = 0;
                 usuario.Activo = chkActivo.Checked;
 
@@ -171,6 +172,7 @@ namespace Presentacion
             //tildar "Restablecer contraseña" y reescribirla; si no, "Modificar" preserva la actual.
             txtPassword.Text = string.Empty;
             chkResetearPassword.Checked = false;
+            chkResetearIntentos.Checked = false;
         }
 
         protected void btnModificar_Click(object sender, EventArgs e)
@@ -209,14 +211,21 @@ namespace Presentacion
                 usuario.Apellido = txtApellido.Text;
                 usuario.Email = txtEmail.Text;
                 usuario.HashPassword = txtPassword.Text;
-                usuario.DNI = txtDNI.Text;
+                usuario.DNI = txtDNI.Text.Trim();
                 usuario.Activo = chkActivo.Checked;
 
-                //Este formulario no edita los intentos fallidos: hay que preservar el valor actual en base,
-                //si no, al no setearlo acá quedaría en el default de int (0) y CUALQUIER modificación
-                //(aunque sea solo corregir el nombre) resetearía silenciosamente el contador de intentos fallidos.
-                BE_Usuario usuarioActual = bll_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == usuario.IdUsuario);
-                usuario.IntentosFallidos = usuarioActual?.IntentosFallidos ?? 0;
+                //El contador de intentos fallidos solo se pone en 0 si el administrador tildó explícitamente
+                //"Resetear intentos fallidos"; si no, se preserva el valor actual en base para que una
+                //modificación cualquiera (por ejemplo corregir el nombre) no lo resetee silenciosamente.
+                if (chkResetearIntentos.Checked)
+                {
+                    usuario.IntentosFallidos = 0;
+                }
+                else
+                {
+                    BE_Usuario usuarioActual = bll_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == usuario.IdUsuario);
+                    usuario.IntentosFallidos = usuarioActual?.IntentosFallidos ?? 0;
+                }
 
                 //El DVH lo calcula la capa de negocio (BLL_Usuario). Si no se restablece la contraseña, BLL_Usuario
                 //ignora usuario.HashPassword y preserva el valor actual (ya hasheado) tal como está en la base.

@@ -29,6 +29,10 @@ namespace BE
         ROL_QUITADO_USUARIO,
         PERMISO_ALTA,
         PERMISO_BAJA,
-        MODULO_GENERAL
+        MODULO_GENERAL,
+
+        //Se usa cuando la columna Accion de un registro de Bitacora no coincide con ningún valor de este enum
+        //(ej. una manipulación directa por SQL). Nunca se registra a propósito: solo aparece al leer la tabla.
+        ACCION_INVALIDA
     }
 }

@@ -34,11 +34,14 @@
 
             <div class="abm-field">
                 <asp:Label CssClass="label-base" runat="server">DNI</asp:Label>
-                <asp:TextBox ID="txtDNI" CssClass="input-base" runat="server"></asp:TextBox>
+                <%-- autocomplete="off": sin esto, el navegador a veces autocompleta con un valor viejo
+                     recordado de pruebas anteriores (ej. con puntos) al tabular o hacer click en Guardar,
+                     y el validador lo rechaza aunque lo que el usuario tipeó haya sido correcto. --%>
+                <asp:TextBox ID="txtDNI" CssClass="input-base" runat="server" autocomplete="off"></asp:TextBox>
                 <asp:RegularExpressionValidator ID="valDNI" runat="server"
                     ControlToValidate="txtDNI"
                     ErrorMessage="El DNI debe contener solo numeros sin punto."
-                    ValidationExpression="^\d{7,8}$" ForeColor="Red" Display="Dynamic">
+                    ValidationExpression="^\s*\d{7,8}\s*$" ForeColor="Red" Display="Dynamic">
                 </asp:RegularExpressionValidator>
             </div>
 
@@ -61,13 +64,17 @@
                     ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$" ForeColor="Red" Display="Dynamic">
                 </asp:RegularExpressionValidator>
                 <%-- Solo aplica a "Modificar": sin tildar, se preserva la contraseña actual y no hace falta reescribirla. En "Guardar" (alta) la contraseña siempre es obligatoria. --%>
-                <asp:CheckBox ID="chkResetearPassword" runat="server" Text="Restablecer contraseña" CssClass="chk-activo" />
+                <asp:CheckBox ID="chkResetearPassword" runat="server" Text="Restablecer contrasena" CssClass="chk-reset" />
             </div>
 
             <div class="abm-field abm-field-activo">
                 <asp:Label CssClass="label-base" runat="server">Estado</asp:Label>
                
-                <asp:CheckBox ID="chkActivo" runat="server" Text="Usuario activo" CssClass="chk-activo" Checked="true" />
+                <div class="fila-estado">
+                    <asp:CheckBox ID="chkActivo" runat="server" Text="Usuario activo" CssClass="chk-activo" Checked="true" />
+                    <%-- Solo aplica a "Modificar": sin tildar, se preserva el contador actual; tildado, vuelve a 0. --%>
+                    <asp:CheckBox ID="chkResetearIntentos" runat="server" Text="Resetear intentos fallidos" CssClass="chk-reset" />
+                </div>
             </div>
 
         </div>

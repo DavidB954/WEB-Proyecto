@@ -17,40 +17,17 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            //Sin IsPostBack acá: si esto solo corriera en la carga inicial, alcanzaría con manipular
+            //la base con la página de Login ya abierta en el navegador y tocar "Ingresar" (eso es un
+            //postback) para que btnLogin_Click autentique contra datos corruptos sin pasar por este control,
+            //y encima RefrescarDVH terminaría "curando" el DVH manipulado con los datos ya alterados.
+            if (!VerificarIntegridadOAbortar())
+            {
+                return;
+            }
+
             if (!IsPostBack)
             {
-                //"Bitacora" va primero: verificar Usuario/Rol registra un evento INTEGRIDAD_ERROR en la propia Bitacora,
-                //y ese registro refresca el DVV de Bitacora con su contenido actual. Si Bitacora se revisara al final,
-                //una manipulación directa sobre ella (una fila borrada/alterada por fuera de la app) quedaría
-                //enmascarada por ese refresco antes de llegar a compararla.
-                var tablasProtegidas = new[] { "Bitacora", "Usuario", "Rol" };
-                var mensajes = new List<string>();
-
-                try
-                {
-                    foreach (var tabla in tablasProtegidas)
-                    {
-                        if (!bll_dvv.VerificarIntegridad(tabla))
-                        {
-                            mensajes.AddRange(bll_dvv.DetectarCambios(tabla));
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    //Sin esto, una base caída o inaccesible tumbaba la página de Login con pantalla amarilla
-                    //antes de que nadie pudiera siquiera ver el formulario.
-                    lblMensaje.Text = "No se pudo verificar la integridad del sistema. Intentá nuevamente más tarde.";
-                    return;
-                }
-
-                if (mensajes.Count > 0)
-                {
-                    Session["MensajesIntegridad"] = mensajes;
-                    Response.Redirect("LoginWebmaster.aspx");
-                    return;
-                }
-
                 //Si la integridad está OK, mostramos el aviso de "volvé a loguearte" que dejó Seguridad.aspx tras Recalcular/BackUp/Restore.
                 //Se muestra como toast flotante (no como texto fijo en el formulario de login).
                 if (Session["MensajeLogout"] != null)
@@ -60,6 +37,48 @@ namespace Presentacion
                     MostrarToast(mensajeLogout);
                 }
             }
+        }
+
+        //Devuelve true si la base está íntegra y el request puede seguir su curso normal.
+        //Devuelve false (y ya dejó la respuesta lista: mensaje de error o redirect a LoginWebmaster)
+        //cuando hay que frenar acá, sea por corrupción detectada o por no poder verificarla.
+        private bool VerificarIntegridadOAbortar()
+        {
+            var mensajes = new List<string>();
+
+            try
+            {
+                //Bitácora se chequea aparte y siempre, sin usar VerificarIntegridad como gate: su DVV agregado
+                //se auto-repara con cualquier evento nuevo (ver comentario en BLL_DVV.DetectarCambiosBitacoraSiempre),
+                //así que ese agregado no es confiable ni para decidir si vale la pena mirar fila por fila ni para
+                //decidir si corresponde loguear el evento INTEGRIDAD_ERROR (ese log ahora cuelga del chequeo por
+                //fila, dentro de DetectarCambiosBitacoraSiempre, que es el que realmente detecta algo).
+                mensajes.AddRange(bll_dvv.DetectarCambiosBitacoraSiempre());
+
+                foreach (var tabla in new[] { "Usuario", "Rol" })
+                {
+                    if (!bll_dvv.VerificarIntegridad(tabla))
+                    {
+                        mensajes.AddRange(bll_dvv.DetectarCambios(tabla));
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                //Sin esto, una base caída o inaccesible tumbaba la página de Login con pantalla amarilla
+                //antes de que nadie pudiera siquiera ver el formulario.
+                lblMensaje.Text = "No se pudo verificar la integridad del sistema. Intentá nuevamente más tarde.";
+                return false;
+            }
+
+            if (mensajes.Count > 0)
+            {
+                Session["MensajesIntegridad"] = mensajes;
+                Response.Redirect("LoginWebmaster.aspx");
+                return false;
+            }
+
+            return true;
         }
         //Muestra un mensaje flotante (toast) que se cierra solo
         private void MostrarToast(string mensaje)

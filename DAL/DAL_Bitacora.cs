@@ -78,13 +78,21 @@ namespace DAL
                         Bitacora.IdBitacora = Lector.GetInt32(0);
                         Bitacora.IdUsuario = Lector.IsDBNull(1) ? (int?)null : Lector.GetInt32(1);
                         Bitacora.FechaHora = Lector.GetDateTime(2);
-                        Bitacora.Accion = (AccionBitacora)Enum.Parse(typeof(AccionBitacora), Lector.GetString(3));
-                        Bitacora.Descripcion = Lector.GetString(4);
-                        Bitacora.IP = Lector.GetString(5);
+
+                        //TryParse en vez de Parse: una manipulación directa por SQL puede dejar en la columna
+                        //Accion un valor que no es ninguno de los del enum (ej. "hacked"). Si acá se usara Parse,
+                        //esa fila tiraría abajo toda la lectura de la bitácora (y con ella, la verificación de
+                        //integridad que corre en el login) en vez de quedar detectada como fila modificada.
+                        Bitacora.Accion = Enum.TryParse(Lector.GetString(3), out AccionBitacora accion)
+                            ? accion
+                            : AccionBitacora.ACCION_INVALIDA;
+
+                        Bitacora.Descripcion = Lector.IsDBNull(4) ? null : Lector.GetString(4);
+                        Bitacora.IP = Lector.IsDBNull(5) ? null : Lector.GetString(5);
                         Bitacora.DVH = Lector.IsDBNull(6) ? null : Lector.GetString(6);
-                        Bitacora.Modulo = Lector.GetString(7);
-                        Bitacora.NombreMaquina = Lector.GetString(8);
-                        Bitacora.Criticidad = Lector.GetString(9);
+                        Bitacora.Modulo = Lector.IsDBNull(7) ? null : Lector.GetString(7);
+                        Bitacora.NombreMaquina = Lector.IsDBNull(8) ? null : Lector.GetString(8);
+                        Bitacora.Criticidad = Lector.IsDBNull(9) ? null : Lector.GetString(9);
 
                         ListaBitacora.Add(Bitacora);
                     }
