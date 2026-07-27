@@ -179,7 +179,17 @@ namespace BLL
             {
                 string dvhEsperado = HashHelper.GenerarHash(CadenaUsuario(usuario));
 
-                if (usuario.DVH != null && usuario.DVH != dvhEsperado)
+                //DVH null: no es una fila vieja anterior a la funcionalidad (ObtenerUsuarioPorEmail y
+                //RecalcularDVHFilas garantizan que toda fila real siempre tenga uno), así que solo puede
+                //ser una fila insertada por fuera del sistema (ej. SQL directo) sin pasar por el cálculo.
+                //Antes esto se ignoraba en silencio (la fila no generaba mensaje) y, si ninguna otra fila
+                //tenía problemas, el fallback genérico de DetectarCambios terminaba diciendo "se eliminó
+                //un registro" para lo que en realidad era una inserción.
+                if (usuario.DVH == null)
+                {
+                    mensajes.Add($"El usuario {usuario.NombreApellido} (ID {usuario.IdUsuario}) no tiene firma de integridad: parece haber sido insertado por fuera del sistema.");
+                }
+                else if (usuario.DVH != dvhEsperado)
                 {
                     mensajes.Add($"Se modificó el usuario {usuario.NombreApellido} (ID {usuario.IdUsuario}).");
                 }
@@ -190,8 +200,9 @@ namespace BLL
             DetectarUsuarioEliminado(usuarios, mensajes);
         }
 
-        //Cruza altas y bajas registradas en bitácora para reconstruir el nombre de un usuario que ya no existe y nunca tuvo una baja legítima.
-        private void DetectarUsuarioEliminado(List<BE_Usuario> usuariosActuales, List<string> mensajes)
+        //Cruza altas y bajas registradas en bitácora para reconstruir qué usuarios ya no existen y nunca
+        //tuvieron una baja legítima ("fantasmas"): ID -> nombre reconstruido desde el evento de alta.
+        private Dictionary<int, string> ObtenerFantasmasUsuario(List<BE_Usuario> usuariosActuales)
         {
             List<BE_Bitacora> bitacora = bll_bitacora.ObtenerBitacora();
 
@@ -221,6 +232,8 @@ namespace BLL
 
             var idsActuales = new HashSet<int>(usuariosActuales.Select(u => u.IdUsuario));
 
+            var fantasmas = new Dictionary<int, string>();
+
             foreach (var alta in altas)
             {
                 bool tieneBajaLegitima = bajasIds.Contains(alta.Key);
@@ -228,7 +241,32 @@ namespace BLL
 
                 if (yaNoExiste && !tieneBajaLegitima)
                 {
-                    mensajes.Add($"Se eliminó el usuario {alta.Value} (ID {alta.Key}) sin registro de baja en la bitácora.");
+                    fantasmas[alta.Key] = alta.Value;
+                }
+            }
+
+            return fantasmas;
+        }
+
+        private void DetectarUsuarioEliminado(List<BE_Usuario> usuariosActuales, List<string> mensajes)
+        {
+            var fantasmas = ObtenerFantasmasUsuario(usuariosActuales);
+
+            //IDs de fantasma YA reportados y aceptados en el último "Recalcular DV" sobre Usuario (ver
+            //RecalcularDVHFilas). Ojo: esto NO es "IDs que existían en el último recálculo" (ese era el bug:
+            //un usuario creado y borrado por SQL DESPUÉS del recálculo tampoco está en ese conjunto, y quedaba
+            //sin reportar igual que uno viejo ya aceptado). Es la lista de fantasmas puntuales que el webmaster
+            //ya vio y aceptó; cualquier fantasma que no esté ahí es una novedad y se reporta.
+            string idsAceptadosCsv = dal_dvv.ObtenerIdsVigentes("Usuario");
+            HashSet<int> idsAceptados = string.IsNullOrWhiteSpace(idsAceptadosCsv)
+                ? new HashSet<int>()
+                : new HashSet<int>(idsAceptadosCsv.Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(int.Parse));
+
+            foreach (var fantasma in fantasmas)
+            {
+                if (!idsAceptados.Contains(fantasma.Key))
+                {
+                    mensajes.Add($"Se eliminó el usuario {fantasma.Value} (ID {fantasma.Key}) sin registro de baja en la bitácora.");
                 }
             }
         }
@@ -241,10 +279,49 @@ namespace BLL
             {
                 string dvhEsperado = HashHelper.GenerarHash(CadenaRol(rol));
 
-                if (rol.DVH != null && rol.DVH != dvhEsperado)
+                //Ver el mismo comentario en DetectarCambiosUsuario: DVH null solo puede ser una fila
+                //insertada por fuera del sistema, no una fila vieja legítima.
+                if (rol.DVH == null)
+                {
+                    mensajes.Add($"El rol {rol.Nombre} (ID {rol.IdRol}) no tiene firma de integridad: parece haber sido insertado por fuera del sistema.");
+                }
+                else if (rol.DVH != dvhEsperado)
                 {
                     mensajes.Add($"Se modificó el rol {rol.Nombre} (ID {rol.IdRol}).");
                 }
+            }
+
+            DetectarRolEliminado(roles, mensajes);
+        }
+
+        //A diferencia de Usuario, Rol no tiene eventos de alta/baja en bitácora (AccionBitacora.ROL_ALTA/
+        //ROL_BAJA existen en el enum pero nunca se registran: BLL_Rol solo loguea asignación/quite de rol a
+        //un usuario), así que no hay forma de reconstruir el nombre de un rol borrado cruzando bitácora como
+        //en DetectarUsuarioEliminado. Se usa el mismo mecanismo que Bitácora (IdsVigentes): compara los IDs
+        //actuales contra los aceptados la última vez que se corrió "Recalcular DV", y reporta los que
+        //desaparecieron desde entonces. Sin esto, borrar un rol entero por SQL era indetectable: la fila
+        //simplemente dejaba de aparecer en dal_rol.ObtenerRoles() y no había ningún control que la extrañara.
+        private void DetectarRolEliminado(List<BE_Rol> rolesActuales, List<string> mensajes)
+        {
+            string idsVigentesCsv = dal_dvv.ObtenerIdsVigentes("Rol");
+
+            //Todavía no hay una base aceptada (recién migrado, nunca se corrió "Recalcular DV"): no hay contra qué comparar.
+            if (string.IsNullOrWhiteSpace(idsVigentesCsv))
+            {
+                return;
+            }
+
+            var idsVigentes = new HashSet<int>(
+                idsVigentesCsv.Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(int.Parse)
+            );
+
+            var idsActuales = new HashSet<int>(rolesActuales.Select(r => r.IdRol));
+
+            var faltantes = idsVigentes.Where(id => !idsActuales.Contains(id)).OrderBy(id => id).ToList();
+
+            if (faltantes.Count > 0)
+            {
+                mensajes.Add($"Falta(n) {faltantes.Count} rol(es) (IDs: {string.Join(", ", faltantes)}).");
             }
         }
 
@@ -254,17 +331,31 @@ namespace BLL
             switch (nombreTabla)
             {
                 case "Usuario":
-                    foreach (var usuario in dal_usuario.Usuarios())
+                    List<BE_Usuario> usuariosActuales = dal_usuario.Usuarios();
+
+                    foreach (var usuario in usuariosActuales)
                     {
                         dal_usuario.ActualizarDVH(usuario.IdUsuario, HashHelper.GenerarHash(CadenaUsuario(usuario)));
                     }
+
+                    //Acepta los fantasmas detectados HOY (usuarios eliminados sin baja) como ya revisados:
+                    //a partir de acá, DetectarUsuarioEliminado solo va a reportar fantasmas NUEVOS que
+                    //aparezcan después de este recálculo, no los que el webmaster ya vio y aceptó ahora.
+                    var fantasmasActuales = ObtenerFantasmasUsuario(usuariosActuales).Keys;
+                    dal_dvv.ActualizarIdsVigentes("Usuario", string.Join(",", fantasmasActuales));
                     break;
 
                 case "Rol":
-                    foreach (var rol in dal_rol.ObtenerRoles())
+                    List<BE_Rol> rolesActuales = dal_rol.ObtenerRoles();
+
+                    foreach (var rol in rolesActuales)
                     {
                         dal_rol.ActualizarDVH(rol.IdRol, HashHelper.GenerarHash(CadenaRol(rol)));
                     }
+
+                    //Igual que con Bitácora: acepta el estado actual de IDs como la nueva base "válida" para
+                    //DetectarRolEliminado, así un rol borrado ya visto/aceptado no se vuelve a reportar.
+                    dal_dvv.ActualizarIdsVigentes("Rol", string.Join(",", rolesActuales.Select(r => r.IdRol)));
                     break;
 
                 case "Bitacora":
@@ -294,7 +385,13 @@ namespace BLL
             {
                 string dvhEsperado = EncryptionHelper.Encriptar(CadenaBitacora(evento));
 
-                if (evento.DVH != null && evento.DVH != dvhEsperado)
+                //Ver el mismo comentario en DetectarCambiosUsuario: DVH null solo puede ser una fila
+                //insertada por fuera del sistema, no una fila vieja legítima (RegistrarEvento siempre calcula DVH).
+                if (evento.DVH == null)
+                {
+                    mensajes.Add($"El registro de bitácora ID {evento.IdBitacora} no tiene firma de integridad: parece haber sido insertado por fuera del sistema.");
+                }
+                else if (evento.DVH != dvhEsperado)
                 {
                     mensajes.Add($"Se modificó el registro de bitácora ID {evento.IdBitacora}.");
                 }
@@ -304,6 +401,37 @@ namespace BLL
             //a la vez (ej. filas "modificadas" en cascada por el ON DELETE SET NULL de un usuario borrado, más una
             //fila borrada de verdad), y antes la segunda quedaba enmascarada por la primera.
             DetectarBitacoraEliminada(eventos, mensajes);
+        }
+
+        //Chequeo de Bitácora que NO depende de que VerificarIntegridad("Bitacora") haya dado false. A diferencia
+        //de Usuario/Rol, el DVV agregado de Bitácora se auto-repara con CUALQUIER evento nuevo que se registre
+        //(incluidos los propios eventos de error de integridad que dispara esta misma verificación, o cualquier
+        //login posterior de cualquier usuario - ver BLL_Bitacora.RegistrarEvento/RefrescarDVVBitacora), así que
+        //deja de servir como aviso de manipulación de fila apenas se registra el próximo evento. El DVH de cada
+        //fila individual, en cambio, nadie lo toca salvo "Recalcular DV", así que compararlo fila por fila sigue
+        //siendo confiable siempre. Por eso Login.aspx.cs llama a este método en cada intento, sin usar
+        //VerificarIntegridad como gate (a diferencia de Usuario/Rol, que si dependen de ese gate).
+        public List<string> DetectarCambiosBitacoraSiempre()
+        {
+            var mensajes = new List<string>();
+            DetectarCambiosBitacora(mensajes);
+
+            //El evento INTEGRIDAD_ERROR para Usuario/Rol lo loguea VerificarIntegridad cuando el agregado da
+            //mal. Para Bitácora ese agregado no sirve como señal (ver comentario arriba), así que el log de
+            //auditoría tiene que colgar de ESTE chequeo (el confiable) en vez de VerificarIntegridad("Bitacora"):
+            //si no, nunca quedaba registro en la propia bitácora de que hubo una manipulación de fila detectada,
+            //aunque el reporte en pantalla del webmaster sí la mostrara.
+            if (mensajes.Count > 0)
+            {
+                bll_bitacora.RegistrarEvento(
+                    null,
+                    AccionBitacora.INTEGRIDAD_ERROR,
+                    "SEGURIDAD",
+                    "Fallo de integridad del DVV en la tabla 'Bitacora' detectado al iniciar la aplicación."
+                );
+            }
+
+            return mensajes;
         }
 
         //Detecta bitácoras borradas comparando los IDs actuales contra "IdsVigentes": la lista de IDs aceptada
