@@ -44,7 +44,6 @@ namespace DAL
             return ListaUsuarios;
         }
 
-        //Trae todos los usuarios junto con el nombre de su rol (LEFT JOIN para que aparezcan también los que todavía no tienen rol asignado).
         public List<BE_Usuario> UsuariosConRol()
         {
             List<BE_Usuario> ListaUsuarios = new List<BE_Usuario>();
@@ -84,17 +83,12 @@ namespace DAL
             {
                 conexion.Open();
 
-                //Columnas explícitas (en vez de u.*) para que los índices del lector no dependan del orden físico
-                //de la tabla: agregar una columna a Usuario en cualquier posición que no sea el final ya no rompe esto.
                 SqlCommand cmdUsuEmail = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.Email, u.HashPassword, u.DNI, u.DVH, u.IntentosFallidos, u.Activo, r.IdRol, r.Nombre As NombreRol
                                                         From Usuario u
                                                         Left Join UsuarioRol ur On ur.IdUsuario = u.IdUsuario
                                                         Left Join Rol r On r.IdRol = ur.IdRol
                                                         Where u.Email=@email", conexion);
 
-                //Mismo tamaño que la columna real (ver AgregarUsuario/ModificarUsuario): si acá se usa un Size
-                //menor, SqlParameter trunca el valor en silencio y un email legítimo de más de 30 caracteres
-                //jamás matchea en el WHERE, dejando a ese usuario sin poder loguearse nunca.
                 cmdUsuEmail.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = email;
 
                 SqlDataReader Lector = cmdUsuEmail.ExecuteReader();
@@ -123,7 +117,6 @@ namespace DAL
             }
         }
 
-        //Updateamos los intentos fallidos en caso de que el login sea incorrecto, y bloqueamos el usuario si supera los 3 intentos fallidos.
         public void ActualizarIntentosFallidos(int intentos, int IdUsuario)
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
@@ -171,9 +164,6 @@ namespace DAL
                 cmdUsuario.Parameters.Add("@intentos", SqlDbType.Int).Value = Usuario.IntentosFallidos;
                 cmdUsuario.Parameters.Add("@activo", SqlDbType.Bit).Value = Usuario.Activo;
 
-                //Recuperamos el ID generado para poder loguear en bitácora a qué usuario corresponde el alta.
-                //Si el Insert falla (ej. DNI/Email duplicado), la excepción debe propagarse: si no, BLL_Usuario
-                //sigue de largo y registra en bitácora un alta que en realidad nunca sucedió.
                 Usuario.IdUsuario = (int)cmdUsuario.ExecuteScalar();
             }
         }
@@ -207,15 +197,10 @@ namespace DAL
             {
                 conexion.Open();
 
-                //Se borra primero la asignación de rol del usuario: si la FK de UsuarioRol hacia Usuario no tiene
-                //ON DELETE CASCADE definido en la base, el DELETE de más abajo fallaría por violación de FK
-                //mientras el usuario tenga un rol asignado (el caso normal). Es un no-op si no tenía rol.
                 SqlCommand comandoRol = new SqlCommand("Delete from UsuarioRol WHERE IdUsuario = @id", conexion);
                 comandoRol.Parameters.AddWithValue("@id", id);
                 comandoRol.ExecuteNonQuery();
 
-                //Ya no se borra a mano lo del usuario en Bitacora: el FK (FK_Bitacora_Usuario) hace SET NULL
-                //en cascada, así el historial de auditoría del usuario borrado se conserva (solo pierde la referencia).
                 SqlCommand comando = new SqlCommand("Delete from Usuario WHERE IdUsuario = @id", conexion);
 
                 comando.Parameters.AddWithValue("@id", id);

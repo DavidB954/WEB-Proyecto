@@ -16,8 +16,6 @@ namespace DAL
 
         public string ObtenerDVV(string NombreTabla)
         {
-            //Sin catch: un fallo de conexión debe propagarse como error real (BLL_DVV ya lo envuelve),
-            //no enmascararse como "null" y hacerse pasar por una violación de integridad.
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
                 conexion.Open();
@@ -46,9 +44,6 @@ namespace DAL
             }
         }
 
-        //Lista de IDs aceptados como válidos para una tabla (hoy solo se usa para Bitacora), guardada la última vez
-        //que se ejecutó "Recalcular DV". Sirve de base para detectar borrados puntuales sin re-marcar para siempre
-        //huecos que el webmaster ya aceptó.
         public string ObtenerIdsVigentes(string nombreTabla)
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
@@ -77,9 +72,6 @@ namespace DAL
             }
         }
 
-        //Carpeta de backups propia del motor de SQL Server (ej. ...\MSSQL\Backup): es la única que se garantiza
-        //accesible para la cuenta de servicio de SQL Server (NT Service\MSSQLSERVER), sin depender de permisos
-        //de carpetas arbitrarias que el usuario podría escribir a mano.
         public string ObtenerCarpetaBackupPorDefecto()
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
@@ -92,8 +84,6 @@ namespace DAL
             }
         }
 
-        //Lista los .bak de la carpeta de backups usando xp_dirtree: corre del lado del motor de SQL Server,
-        //así la app no necesita permisos de archivo sobre esa carpeta para poder listarla.
         public List<string> ListarBackups()
         {
             string carpeta = ObtenerCarpetaBackupPorDefecto();
@@ -132,7 +122,6 @@ namespace DAL
             {
                 conexion.Open();
 
-                //Ruta parametrizada (evita inyección) y timeout amplio: un backup puede tardar.
                 SqlCommand cmd = new SqlCommand("BACKUP DATABASE GestionWEB TO DISK = @ruta", conexion);
                 cmd.Parameters.AddWithValue("@ruta", rutaBackup);
                 cmd.CommandTimeout = 120;
@@ -151,13 +140,11 @@ namespace DAL
             {
                 conexion.Open();
 
-                //Cerramos las conexiones existentes
                 SqlCommand cmdSingleUser = new SqlCommand("ALTER DATABASE GestionWEB SET SINGLE_USER WITH ROLLBACK IMMEDIATE", conexion);
                 cmdSingleUser.ExecuteNonQuery();
 
                 try
                 {
-                    //Restauramos con REPLACE (ruta parametrizada)
                     SqlCommand cmdRestauracion = new SqlCommand("RESTORE DATABASE GestionWEB FROM DISK = @ruta WITH REPLACE", conexion);
                     cmdRestauracion.Parameters.AddWithValue("@ruta", rutaBackup);
                     cmdRestauracion.CommandTimeout = 120;
@@ -165,7 +152,6 @@ namespace DAL
                 }
                 finally
                 {
-                    //Pase lo que pase (incluso si el RESTORE falla), devolvemos la base a multiusuario para no dejarla bloqueada.
                     SqlCommand cmdMultiUser = new SqlCommand("ALTER DATABASE GestionWEB SET MULTI_USER", conexion);
                     cmdMultiUser.ExecuteNonQuery();
                 }

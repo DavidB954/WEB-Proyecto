@@ -17,10 +17,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            //Sin IsPostBack acá: si esto solo corriera en la carga inicial, alcanzaría con manipular
-            //la base con la página de Login ya abierta en el navegador y tocar "Ingresar" (eso es un
-            //postback) para que btnLogin_Click autentique contra datos corruptos sin pasar por este control,
-            //y encima RefrescarDVH terminaría "curando" el DVH manipulado con los datos ya alterados.
             if (!VerificarIntegridadOAbortar())
             {
                 return;
@@ -28,8 +24,6 @@ namespace Presentacion
 
             if (!IsPostBack)
             {
-                //Si la integridad está OK, mostramos el aviso de "volvé a loguearte" que dejó Seguridad.aspx tras Recalcular/BackUp/Restore.
-                //Se muestra como toast flotante (no como texto fijo en el formulario de login).
                 if (Session["MensajeLogout"] != null)
                 {
                     string mensajeLogout = Session["MensajeLogout"] as string;
@@ -39,20 +33,12 @@ namespace Presentacion
             }
         }
 
-        //Devuelve true si la base está íntegra y el request puede seguir su curso normal.
-        //Devuelve false (y ya dejó la respuesta lista: mensaje de error o redirect a LoginWebmaster)
-        //cuando hay que frenar acá, sea por corrupción detectada o por no poder verificarla.
         private bool VerificarIntegridadOAbortar()
         {
             var mensajes = new List<string>();
 
             try
             {
-                //Bitácora se chequea aparte y siempre, sin usar VerificarIntegridad como gate: su DVV agregado
-                //se auto-repara con cualquier evento nuevo (ver comentario en BLL_DVV.DetectarCambiosBitacoraSiempre),
-                //así que ese agregado no es confiable ni para decidir si vale la pena mirar fila por fila ni para
-                //decidir si corresponde loguear el evento INTEGRIDAD_ERROR (ese log ahora cuelga del chequeo por
-                //fila, dentro de DetectarCambiosBitacoraSiempre, que es el que realmente detecta algo).
                 mensajes.AddRange(bll_dvv.DetectarCambiosBitacoraSiempre());
 
                 foreach (var tabla in new[] { "Usuario", "Rol" })
@@ -65,8 +51,6 @@ namespace Presentacion
             }
             catch (Exception)
             {
-                //Sin esto, una base caída o inaccesible tumbaba la página de Login con pantalla amarilla
-                //antes de que nadie pudiera siquiera ver el formulario.
                 lblMensaje.Text = "No se pudo verificar la integridad del sistema. Intentá nuevamente más tarde.";
                 return false;
             }
@@ -80,7 +64,6 @@ namespace Presentacion
 
             return true;
         }
-        //Muestra un mensaje flotante (toast) que se cierra solo
         private void MostrarToast(string mensaje)
         {
             string texto = System.Web.HttpUtility.JavaScriptStringEncode(mensaje, true);
@@ -101,7 +84,6 @@ namespace Presentacion
 
                 Obj_Usuario = bll_Usu.ObtenerUsuarioPorEmail(txtEmail.Text, txtPassword.Text);
 
-                //Si el login normal falla, probamos las credenciales de emergencia (por si se eliminó al único ADMINISTRADOR o WEBMASTER del sistema).
                 if (Obj_Usuario.Usuario == null)
                 {
                     BE_LoginResultado emergencia = bll_Usu.LoginEmergencia(txtEmail.Text, txtPassword.Text);
@@ -114,7 +96,6 @@ namespace Presentacion
 
                 if (Obj_Usuario.Usuario != null)
                 {
-                    // Guardamos el usuario en sesión
                     Session["Usuario"] = Obj_Usuario.Usuario;
 
 
@@ -134,7 +115,6 @@ namespace Presentacion
 
         }
 
-        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
         private void RegistrarErrorInterno(string origen, Exception ex)
         {
             try
@@ -147,7 +127,6 @@ namespace Presentacion
             }
             catch
             {
-                //Si ni el log funciona, no hay nada más para hacer acá.
             }
         }
     }

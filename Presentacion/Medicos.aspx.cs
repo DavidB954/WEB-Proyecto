@@ -28,7 +28,6 @@ namespace Presentacion
             }
         }
 
-        // Los turnos del día viven en la sesión: son datos de ejemplo hardcodeados, no de la base.
         private DataTable TurnosDelDia
         {
             get

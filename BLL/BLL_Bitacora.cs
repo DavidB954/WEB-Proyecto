@@ -18,7 +18,7 @@ namespace BLL
 
         public void RegistrarEvento(int? IdUsuario, AccionBitacora accion, string modulo, string descripcion)
         {
-            
+
             if (IdUsuario == 0)
             {
                 IdUsuario = null;
@@ -36,17 +36,13 @@ namespace BLL
                 Criticidad = CriticidadBitacora.Obtener(accion)
             };
 
-            //DVH con encriptación reversible: permite, ante una corrupción, desencriptar y comparar contra los valores actuales de la fila.
             objBitacora.DVH = EncryptionHelper.Encriptar(CadenaBitacora(objBitacora));
 
             dal_bitacora.RegistrarEvento(objBitacora);
 
-            //Bitacora es una tabla que crece con cada evento (incluido este mismo insert, y el propio log de error de integridad): hay que refrescar su DVV en cada alta, si no cualquier acción legítima (o el propio chequeo fallido de otra tabla) haría que el próximo chequeo de Bitacora fallara igual.
             RefrescarDVVBitacora();
         }
 
-        //Refresca el DVH de filas puntuales (ej. las que el FK de Usuario dejó en NULL en cascada al borrar un usuario):
-        //su contenido cambió legítimamente, y si no se recalcula acá la próxima verificación las marca como modificadas.
         public void RefrescarDVHDeFilas(IEnumerable<int> idsBitacora)
         {
             if (idsBitacora == null)
@@ -86,7 +82,6 @@ namespace BLL
             dal_dvv.ActualizarDVV(HashHelper.GenerarHash(concatenacion.ToString()), "Bitacora");
         }
 
-        //Tiene que ser idéntica a BLL_DVV.CadenaBitacora.
         private string CadenaBitacora(BE_Bitacora bitacora)
         {
             return $"{bitacora.IdUsuario}|{bitacora.FechaHora}|{bitacora.Accion}|{bitacora.Modulo}|{bitacora.IP}|{bitacora.Descripcion}|{bitacora.NombreMaquina}|{bitacora.Criticidad}";
@@ -94,7 +89,6 @@ namespace BLL
 
         private string ObtenerIP()
         {
-            //Obtener el nombre del equipo local
             string nombreHost = Dns.GetHostName();
 
             IPAddress[] direccionesIP = Dns.GetHostAddresses(nombreHost);

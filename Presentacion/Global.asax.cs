@@ -6,8 +6,6 @@ namespace Presentacion
 {
     public class Global : HttpApplication
     {
-        //Red de seguridad final: si una excepción se escapa de cualquier página sin ser atrapada,
-        //esto evita que el usuario vea la pantalla amarilla de ASP.NET (y, con ella, el stack trace).
         protected void Application_Error(object sender, EventArgs e)
         {
             Exception ex = Server.GetLastError();
@@ -22,7 +20,6 @@ namespace Presentacion
             }
             catch
             {
-                //Si ni siquiera se puede escribir el log, no hay nada más para hacer acá: seguimos con la redirección.
             }
 
             Server.ClearError();

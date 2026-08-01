@@ -17,7 +17,6 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
 
-    <%-- El ?v= fuerza al navegador a descargar el CSS de nuevo cuando cambia (evita quedar con una copia cacheada vieja). --%>
     <link href="Styles/StyleSheet.css?v=2" rel="stylesheet" />
 
     <asp:ContentPlaceHolder ID="head" runat="server">
@@ -39,11 +38,9 @@
 
     <form id="form1" runat="server">
 
-        <!-- NAVBAR -->
 
         <nav class="navbar-custom" role="navigation">
 
-            <!-- IZQUIERDA -->
 
             <div class="nav-left">
 
@@ -79,7 +76,6 @@
 
             </div>
 
-            <!-- DERECHA -->
 
             <div class="user-info">
                 <div class="nav-right">
@@ -101,7 +97,6 @@
 
         <div class="vital-line" aria-hidden="true"></div>
 
-        <!-- CONTENIDO -->
 
         <main class="contenido-principal">
 

@@ -17,9 +17,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            //Se revalida en CADA carga (incluidos los postbacks de Guardar/Modificar/Eliminar/Roles), no solo la
-            //primera vez: si la sesión vence mientras el administrador está en esta pantalla, un postback no debe
-            //poder ejecutar un alta/baja/modificación de usuarios ni de roles sin sesión válida.
             BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
             if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "ADMINISTRADOR"))
@@ -44,7 +41,6 @@ namespace Presentacion
             }
         }
 
-        //Rebinda las dos grillas (ABM y roles) con los datos actuales. Se llama tras cualquier alta/baja/modificación para que el rol nuevo aparezca al toque.
         private void RefrescarGrillas()
         {
             List<BE_Usuario> usuarios = bll_usuario.UsuariosConRol();
@@ -63,11 +59,9 @@ namespace Presentacion
             ddlRoles.DataValueField = "IdRol";
             ddlRoles.DataBind();
 
-            //Opción por defecto para que no quede preseleccionado el primer rol de la lista.
             ddlRoles.Items.Insert(0, new ListItem("-- Seleccionar Rol --", ""));
         }
 
-        //Muestra un mensaje flotante (toast) que se cierra solo, en vez de dejar un texto fijo en la página.
         private void MostrarToast(string mensaje, bool exito)
         {
             string clase = exito ? "toast-exito" : "toast-error";
@@ -82,11 +76,7 @@ namespace Presentacion
             ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
         }
 
-        // =====================================================================
-        //  ABM DE USUARIOS
-        // =====================================================================
 
-        //Limpia el formulario de ABM y refresca las grillas.
         private void LimpiarFormularioUsuario()
         {
             txtNombre.Text = string.Empty;
@@ -106,8 +96,6 @@ namespace Presentacion
         {
             try
             {
-                //Los RegularExpressionValidator del markup son solo del lado del cliente: si el postback llega
-                //con JavaScript deshabilitado (o armado a mano), hay que rechazarlo también acá.
                 if (!Page.IsValid)
                 {
                     return;
@@ -121,7 +109,7 @@ namespace Presentacion
                 {
                     lblMensaje.Text = "Debe completar todos los campos antes de guardar.";
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
-                    return; // corta la ejecución, no guarda
+                    return;
                 }
 
                 BE_Usuario usuario = new BE_Usuario();
@@ -134,7 +122,6 @@ namespace Presentacion
                 usuario.IntentosFallidos = 0;
                 usuario.Activo = chkActivo.Checked;
 
-                //El DVH lo calcula la capa de negocio (BLL_Usuario) con la contraseña ya hasheada; acá no se arma.
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
                 bll_usuario.AgregarUsuario(usuarioLogueado, usuario);
@@ -162,14 +149,11 @@ namespace Presentacion
             txtDNI.Text = fila.Cells[4].Text;
             txtEmail.Text = fila.Cells[5].Text;
 
-            //La columna Activo es un CheckBoxField: el control real está dentro de la celda (índice 8, después de Rol e Intentos Fallidos).
             if (fila.Cells[8].Controls.Count > 0 && fila.Cells[8].Controls[0] is CheckBox chk)
             {
                 chkActivo.Checked = chk.Checked;
             }
 
-            //La contraseña nunca viaja de vuelta al navegador: se deja vacía. Si se quiere cambiar, hay que
-            //tildar "Restablecer contraseña" y reescribirla; si no, "Modificar" preserva la actual.
             txtPassword.Text = string.Empty;
             chkResetearPassword.Checked = false;
             chkResetearIntentos.Checked = false;
@@ -179,8 +163,6 @@ namespace Presentacion
         {
             try
             {
-                //Los RegularExpressionValidator del markup son solo del lado del cliente: si el postback llega
-                //con JavaScript deshabilitado (o armado a mano), hay que rechazarlo también acá.
                 if (!Page.IsValid)
                 {
                     return;
@@ -193,8 +175,6 @@ namespace Presentacion
                     return;
                 }
 
-                //"Restablecer contraseña" es opcional: solo si está tildado hace falta reescribirla. Si no,
-                //ModificarUsuario preserva la contraseña actual del usuario sin tocarla.
                 bool restablecerPassword = chkResetearPassword.Checked;
 
                 if (restablecerPassword && string.IsNullOrWhiteSpace(txtPassword.Text))
@@ -214,9 +194,6 @@ namespace Presentacion
                 usuario.DNI = txtDNI.Text.Trim();
                 usuario.Activo = chkActivo.Checked;
 
-                //El contador de intentos fallidos solo se pone en 0 si el administrador tildó explícitamente
-                //"Resetear intentos fallidos"; si no, se preserva el valor actual en base para que una
-                //modificación cualquiera (por ejemplo corregir el nombre) no lo resetee silenciosamente.
                 if (chkResetearIntentos.Checked)
                 {
                     usuario.IntentosFallidos = 0;
@@ -227,8 +204,6 @@ namespace Presentacion
                     usuario.IntentosFallidos = usuarioActual?.IntentosFallidos ?? 0;
                 }
 
-                //El DVH lo calcula la capa de negocio (BLL_Usuario). Si no se restablece la contraseña, BLL_Usuario
-                //ignora usuario.HashPassword y preserva el valor actual (ya hasheado) tal como está en la base.
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
                 bll_usuario.ModificarUsuario(usuarioLogueado, usuario, restablecerPassword);
@@ -275,26 +250,19 @@ namespace Presentacion
             }
         }
 
-        // =====================================================================
-        //  ASIGNACIÓN DE ROLES
-        // =====================================================================
 
         protected void gvUsuariosRoles_SelectedIndexChanged(object sender, EventArgs e)
         {
             GridViewRow fila = gvUsuariosRoles.SelectedRow;
 
-            //El Id viaja por DataKeyNames (no como columna visible), así que lo tomamos de DataKeys.
             hiddenIdUsuarioRol.Value = gvUsuariosRoles.DataKeys[fila.RowIndex].Value.ToString();
 
-            //Nombre + Apellido de las columnas 1 y 2 (0 es el botón Seleccionar).
             txtUsuarioRol.Text = $"{fila.Cells[1].Text} {fila.Cells[2].Text}";
 
-            //Preseleccionamos en el combo el rol que ya tiene; si no tiene, dejamos "-- Seleccionar Rol --".
             BE_Rol rolActual = bll_rol.ObtenerRolDeUsuario(int.Parse(hiddenIdUsuarioRol.Value));
             ddlRoles.SelectedValue = rolActual != null ? rolActual.IdRol.ToString() : "";
         }
 
-        //Valida que haya un usuario seleccionado en la grilla de roles. Devuelve false y muestra mensaje si no.
         private bool HayUsuarioRolSeleccionado()
         {
             if (string.IsNullOrWhiteSpace(hiddenIdUsuarioRol.Value))
@@ -306,7 +274,6 @@ namespace Presentacion
             return true;
         }
 
-        //Valida que se haya elegido un rol del combo (no la opción "-- Seleccionar Rol --").
         private bool HayRolSeleccionado()
         {
             if (string.IsNullOrEmpty(ddlRoles.SelectedValue))
@@ -330,7 +297,6 @@ namespace Presentacion
                 int idUsuarioDestino = int.Parse(hiddenIdUsuarioRol.Value);
                 int idRol = int.Parse(ddlRoles.SelectedValue);
 
-                //Si el usuario ya tiene exactamente ese rol, avisamos y no hacemos nada (evita reasignar lo mismo).
                 BE_Rol rolActual = bll_rol.ObtenerRolDeUsuario(idUsuarioDestino);
                 if (rolActual != null && rolActual.IdRol == idRol)
                 {
@@ -423,7 +389,6 @@ namespace Presentacion
 
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
-                //Eliminamos el rol que realmente tiene (no el seleccionado en el combo, que podría ser otro).
                 bll_rol.EliminarRol(usuarioLogueado, idUsuarioDestino, rolActual.IdRol);
 
                 RefrescarGrillas();
@@ -439,7 +404,6 @@ namespace Presentacion
             }
         }
 
-        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
         private void RegistrarErrorInterno(string origen, Exception ex)
         {
             try
@@ -452,7 +416,6 @@ namespace Presentacion
             }
             catch
             {
-                //Si ni el log funciona, no hay nada más para hacer acá.
             }
         }
     }

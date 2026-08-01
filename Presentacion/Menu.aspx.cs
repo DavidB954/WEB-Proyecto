@@ -20,7 +20,6 @@ namespace Presentacion
                 return;
             }
 
-            //Cada tarjeta se muestra solo para los roles a los que les sirve esa pantalla.
             cardTurnos.Visible = usuarioLogueado.NombreRol == "PACIENTE";
             cardUsuarios.Visible = usuarioLogueado.NombreRol == "ADMINISTRADOR";
             cardRecetas.Visible = usuarioLogueado.NombreRol == "PACIENTE";

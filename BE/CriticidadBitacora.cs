@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 
 namespace BE
 {
-    //Mapeo Accion -> Criticidad que se aplica al momento de registrar el evento; el valor se guarda
-    //en la columna Criticidad de la Bitacora. Cambiar este switch solo afecta a los eventos futuros:
-    //los ya registrados conservan la criticidad con la que se grabaron (está protegida por el DVH).
-    //Debe coincidir con el CASE del script Scripts/AgregarCriticidadBitacora.sql que clasificó las filas históricas.
     public static class CriticidadBitacora
     {
         public const string ALTA = "ALTA";
@@ -20,7 +16,6 @@ namespace BE
         {
             switch (accion)
             {
-                //Eventos de seguridad o que alteran/eliminan datos de forma sensible.
                 case AccionBitacora.LOGIN_BLOQUEADO:
                 case AccionBitacora.INTEGRIDAD_ERROR:
                 case AccionBitacora.USUARIO_BAJA:
@@ -30,7 +25,6 @@ namespace BE
                 case AccionBitacora.BACKUP_RESTAURADO:
                     return ALTA;
 
-                //Cambios de configuración/datos que conviene auditar pero no son incidentes.
                 case AccionBitacora.LOGIN_INCORRECTO:
                 case AccionBitacora.USUARIO_ALTA:
                 case AccionBitacora.USUARIO_MODIFICACION:
@@ -38,11 +32,10 @@ namespace BE
                 case AccionBitacora.ROL_ALTA:
                 case AccionBitacora.ROL_ASIGNADO_USUARIO:
                 case AccionBitacora.ROL_QUITADO_USUARIO:
-                case AccionBitacora.PERMISO_ALTA:              
+                case AccionBitacora.PERMISO_ALTA:
                 case AccionBitacora.BACKUP_GENERADO:
                     return MEDIA;
 
-                //Operatoria normal (LOGIN_INTENTO, LOGIN_OK, LOGOUT, MODULO_GENERAL, etc.).
                 default:
                     return BAJA;
             }

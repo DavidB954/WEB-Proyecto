@@ -8,7 +8,6 @@ namespace BE
 {
     public enum AccionBitacora
     {
-        //Utilizamos un enum para poder definir las acciones que se van a registrar en la bitacora. Enum es la mejor opcion para esto porque nos permite tener un conjunto de valores predefinidos y evitar errores de tipeo al registrar las acciones.
 
         LOGIN_INTENTO,
         LOGIN_INCORRECTO,
@@ -31,8 +30,6 @@ namespace BE
         PERMISO_BAJA,
         MODULO_GENERAL,
 
-        //Se usa cuando la columna Accion de un registro de Bitacora no coincide con ningún valor de este enum
-        //(ej. una manipulación directa por SQL). Nunca se registra a propósito: solo aparece al leer la tabla.
         ACCION_INVALIDA
     }
 }

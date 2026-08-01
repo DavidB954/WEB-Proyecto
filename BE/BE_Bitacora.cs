@@ -33,7 +33,7 @@ namespace BE
             get; set;
         }
 
-        
+
         public string Criticidad
         {
             get; set;

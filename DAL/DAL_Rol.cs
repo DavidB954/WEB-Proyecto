@@ -14,7 +14,6 @@ namespace DAL
     {
         DAL_Conexion conex = new DAL_Conexion();
 
-        //Un usuario tiene un solo rol activo a la vez: borramos el anterior antes de insertar el nuevo.
         public void AsignarRol(int IdUsuario, int idRol)
         {
             using (SqlConnection cn = conex.ObtenerConexion())

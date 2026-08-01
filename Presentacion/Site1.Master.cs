@@ -19,7 +19,6 @@ namespace Presentacion
                     BE_Usuario usuario = (BE_Usuario)Session["Usuario"];
                     lblUsuario.Text = usuario.Nombre;
 
-                    //Cada link del navbar se muestra solo para los roles a los que les sirve esa pantalla.
                     liUsuarios.Visible = usuario.NombreRol == "ADMINISTRADOR";
                     liTurnos.Visible = usuario.NombreRol == "PACIENTE";
                     liRecetas.Visible = usuario.NombreRol == "PACIENTE";

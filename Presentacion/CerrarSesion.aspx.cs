@@ -15,7 +15,7 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            
+
             BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
             if (usuarioLogueado != null)
@@ -26,8 +26,6 @@ namespace Presentacion
                 }
                 catch (Exception ex)
                 {
-                    //Un fallo al registrar el logout en bitácora no debe impedir que el usuario pueda salir del sistema,
-                    //pero igual dejamos rastro en el mismo log que usa Global.asax para que no pase inadvertido.
                     try
                     {
                         string carpetaLogs = Server.MapPath("~/App_Data");
@@ -38,7 +36,6 @@ namespace Presentacion
                     }
                     catch
                     {
-                        //Si ni el log funciona, no hay nada más para hacer acá.
                     }
                 }
             }

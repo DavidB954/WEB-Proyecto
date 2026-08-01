@@ -21,10 +21,8 @@ namespace Presentacion
         {
             try
             {
-                //Login acotado para el estado comprometido: valida existencia + contraseña + rol WEBMASTER, sin refrescar el DVV (no "cura" la manipulación).
                 BE_LoginResultado resultado = bll_Usu.ValidarWebmaster(txtEmail.Text, txtPassword.Text);
 
-                //Si el login normal falla, probamos las credenciales de emergencia: es el caso en que el atacante borró al único Webmaster y nadie más puede recuperar el sistema.
                 if (resultado.Usuario == null)
                 {
                     BE_LoginResultado emergencia = bll_Usu.LoginEmergencia(txtEmail.Text, txtPassword.Text);
@@ -41,7 +39,6 @@ namespace Presentacion
                     return;
                 }
 
-                //Aunque las credenciales sean correctas, mientras la base esté comprometida solo puede ingresar el Webmaster.
                 if (resultado.Usuario.NombreRol != "WEBMASTER")
                 {
                     lblMensaje.Text = "La base de datos tiene un problema de integridad. Solo Webmaster puede ingresar en este momento.";
@@ -58,7 +55,6 @@ namespace Presentacion
             }
         }
 
-        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
         private void RegistrarErrorInterno(string origen, Exception ex)
         {
             try
@@ -71,7 +67,6 @@ namespace Presentacion
             }
             catch
             {
-                //Si ni el log funciona, no hay nada más para hacer acá.
             }
         }
     }
