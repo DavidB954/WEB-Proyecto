@@ -12,7 +12,6 @@ namespace Presentacion
 {
     public partial class Turnos : System.Web.UI.Page
     {
-        // Agenda hardcodeada en el programa (no viene de la base de datos).
         private static readonly Dictionary<string, string[]> MedicosPorEspecialidad = new Dictionary<string, string[]>
         {
             { "Cardiología",    new[] { "Dr. Pérez",   "Dra. Salinas" } },
@@ -45,7 +44,6 @@ namespace Presentacion
             }
         }
 
-        // Los turnos agendados viven en la sesión: son datos de ejemplo, no de la base.
         private DataTable TurnosDelPaciente
         {
             get
@@ -77,7 +75,6 @@ namespace Presentacion
                 ddlEspecialidades.Items.Add(especialidad);
         }
 
-        // Los médicos dependen de la especialidad elegida.
         private void CargarMedicos()
         {
             ddlMedico.Items.Clear();
@@ -117,7 +114,6 @@ namespace Presentacion
 
         protected void btnAgendar_Click(object sender, EventArgs e)
         {
-            // Evita agendar dos veces el mismo turno.
             foreach (DataRow fila in TurnosDelPaciente.Rows)
             {
                 if (fila["Medico"].ToString() == ddlMedico.SelectedValue

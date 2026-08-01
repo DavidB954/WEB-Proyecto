@@ -13,7 +13,6 @@ namespace DAL
     {
         DAL_Conexion conex = new DAL_Conexion();
 
-        //Registrar Eventos
 
         public void RegistrarEvento(BE_Bitacora Bitacora)
         {
@@ -24,7 +23,6 @@ namespace DAL
                 SqlCommand cmdBitacora = new SqlCommand("Insert into Bitacora (IdUsuario, FechaHora, Accion, Descripcion, DireccionIP, Modulo, NombreMaquina, Criticidad, DVH) VALUES (@idUsuario, @fechaHora, @accion, @descripcion, @ip, @modulo, @nombremaquina, @criticidad, @dvh)", conexion);
 
 
-                //Se utiliza el ADD con el SqlDbType en vez de AddWithValue ya que AddWithValue lo que hace es adivinar el tipo de parametro previsto. Esto puede generar probelmas de rendimiento cuando se debe convertir el valor de la columna a un tipo de dato diferente. Al especificar el tipo de dato con SqlDbType, se evita esta conversión y se mejora el rendimiento de la consulta.
 
                 cmdBitacora.Parameters.Add("@idUsuario", SqlDbType.Int).Value = (object)Bitacora.IdUsuario ?? DBNull.Value;
                 cmdBitacora.Parameters.Add("@fechaHora", SqlDbType.DateTime).Value = Bitacora.FechaHora;
@@ -67,7 +65,6 @@ namespace DAL
 
                     conexion.Open();
 
-                    //Columnas explícitas (en vez de Select *) para que los índices del lector no dependan del orden físico de la tabla.
                     SqlCommand cmdBitacora = new SqlCommand("Select IdBitacora, IdUsuario, FechaHora, Accion, Descripcion, DireccionIP, DVH, Modulo, NombreMaquina, Criticidad From Bitacora", conexion);
 
                     SqlDataReader Lector = cmdBitacora.ExecuteReader();
@@ -79,10 +76,6 @@ namespace DAL
                         Bitacora.IdUsuario = Lector.IsDBNull(1) ? (int?)null : Lector.GetInt32(1);
                         Bitacora.FechaHora = Lector.GetDateTime(2);
 
-                        //TryParse en vez de Parse: una manipulación directa por SQL puede dejar en la columna
-                        //Accion un valor que no es ninguno de los del enum (ej. "hacked"). Si acá se usara Parse,
-                        //esa fila tiraría abajo toda la lectura de la bitácora (y con ella, la verificación de
-                        //integridad que corre en el login) en vez de quedar detectada como fila modificada.
                         Bitacora.Accion = Enum.TryParse(Lector.GetString(3), out AccionBitacora accion)
                             ? accion
                             : AccionBitacora.ACCION_INVALIDA;
@@ -104,7 +97,7 @@ namespace DAL
             {
                 throw new Exception($"Error al obtener bitácora: {ex.Message}", ex);
             }
-           
+
         }
 
         public DataTable FiltrarBitacora(DateTime? Desde, DateTime? Hasta, int? idUsuario, string Modulo, string Ip, string Criticidad)

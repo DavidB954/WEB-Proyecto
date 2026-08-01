@@ -7,7 +7,6 @@ namespace SERVICIOS
 {
     public class EncryptionHelper
     {
-        //Clave y IV fijos: encriptación reversible simétrica (AES) para las tablas donde hace falta poder recuperar el valor original, a diferencia de HashHelper (irreversible).
         private static readonly byte[] Clave = Encoding.UTF8.GetBytes("GestionWeb_DVH_Key_32Bytes!!!!!!");
         private static readonly byte[] VI = Encoding.UTF8.GetBytes("GestionWebIV1234");
 

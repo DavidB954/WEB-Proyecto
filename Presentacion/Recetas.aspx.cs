@@ -28,7 +28,6 @@ namespace Presentacion
             }
         }
 
-        // Recetas de ejemplo hardcodeadas en el programa (no vienen de la base de datos).
         private void CargarRecetas()
         {
             DataTable dt = new DataTable();

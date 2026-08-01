@@ -17,9 +17,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            //Se revalida en CADA carga (incluidos los postbacks de los botones), no solo la primera vez:
-            //si la sesión vence mientras el Webmaster está en esta pantalla, un postback (Recalcular/BackUp/Restore)
-            //no debe poder ejecutar una operación sensible sin sesión válida.
             BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
             if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "WEBMASTER"))
@@ -45,9 +42,6 @@ namespace Presentacion
             }
         }
 
-        //Desplegable con los .bak que ya existen en la carpeta de backups de SQL Server: evita que el usuario
-        //tenga que escribir una ruta a mano (esa carpeta es la única accesible para la cuenta de servicio de SQL Server).
-        //Se muestra la fecha/hora del backup (extraída del nombre de archivo) para saber cuál restaurar, más reciente primero.
         private void CargarBackupsDisponibles()
         {
             var backups = bll_dvv.ListarBackupsDisponibles();
@@ -69,8 +63,6 @@ namespace Presentacion
             btnRestore.Enabled = true;
         }
 
-        //El archivo se llama GestionWEB_yyyyMMdd_HHmmss.bak (ver BLL_DVV.GenerarBackUp); si el nombre no respeta
-        //ese formato (ej. un .bak copiado a mano a la carpeta), se muestra el nombre tal cual.
         private string FormatearNombreBackup(string nombreArchivo)
         {
             string soloNombre = System.IO.Path.GetFileNameWithoutExtension(nombreArchivo);
@@ -85,8 +77,6 @@ namespace Presentacion
             return nombreArchivo;
         }
 
-        //Si alguna tabla protegida está corrupta, "Generar BackUp" se oculta: no tiene sentido respaldar datos comprometidos.
-        //Solo quedan disponibles "Restaurar BD" (volver a un backup sano) y "Recalcular DV" (aceptar el estado actual como válido).
         private void ConfigurarDisponibilidadBackup()
         {
             bool baseCorrupta = !bll_dvv.EstaIntegra("Usuario")
@@ -106,7 +96,6 @@ namespace Presentacion
                 lstMensajesIntegridad.DataBind();
                 pnlIntegridad.Visible = true;
 
-                //Se muestra una sola vez; la próxima verificación (siguiente login) vuelve a completarlo si el problema persiste.
                 Session.Remove("MensajesIntegridad");
             }
         }
@@ -141,8 +130,6 @@ namespace Presentacion
 
                 string rutaGenerada = bll_dvv.GenerarBackUp(usuarioLogueado);
 
-                //A diferencia de Restaurar/Recalcular, generar un backup no modifica ningún dato ni DV existente,
-                //así que no hace falta cerrar la sesión: se refresca el desplegable y listo.
                 lblMensaje.Text = $"Backup generado en: {rutaGenerada}";
                 lblMensaje.ForeColor = System.Drawing.Color.Green;
 
@@ -182,7 +169,6 @@ namespace Presentacion
             Response.Redirect("Login.aspx");
         }
 
-        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
         private void RegistrarErrorInterno(string origen, Exception ex)
         {
             try
@@ -195,7 +181,6 @@ namespace Presentacion
             }
             catch
             {
-                //Si ni el log funciona, no hay nada más para hacer acá.
             }
         }
     }

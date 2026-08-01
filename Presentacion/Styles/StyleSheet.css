@@ -1,39 +1,25 @@
-/* =========================
-   TOKENS
-   Paleta de "ficha clinica": papel calido + tinta + teal clinico,
-   en vez del azul SaaS generico. El teal es el unico color que se
-   usa para accion/foco; el resto son estados semanticos.
-========================= */
 :root {
     --ink: #17302c;
     --ink-soft: #4b625d;
     --paper: #f6f2e9;
     --card: #fffdf8;
     --line: #ddd3bd;
-
     --teal: #0e6b60;
     --teal-deep: #0a4840;
     --teal-wash: #e4efec;
-
     --sage: #2f7a56;
     --sage-deep: #1f5b3f;
     --sage-wash: #e2f2e8;
-
     --clay: #ae4b34;
     --clay-deep: #8a3a29;
     --clay-wash: #fbe8e2;
-
     --amber: #b45309;
     --amber-wash: #fef3c7;
-
     --font-display: 'Source Serif 4', Georgia, 'Times New Roman', serif;
     --font-body: 'IBM Plex Sans', 'Segoe UI', Arial, sans-serif;
     --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
 }
 
-/* =========================
-   BASE GLOBAL
-========================= */
 body {
     font-family: var(--font-body);
     color: var(--ink);
@@ -41,12 +27,10 @@ body {
     margin: 0;
     padding: 0;
 }
-
 h1, h2, h3 {
     font-family: var(--font-display);
     font-weight: 600;
 }
-
 .form-container {
     max-width: 900px;
     margin: 30px auto;
@@ -56,7 +40,6 @@ h1, h2, h3 {
     border-radius: 6px;
     box-shadow: 0 1px 2px rgba(23,48,44,0.06);
 }
-
 .form-container h2 {
     text-align: center;
     color: var(--ink);
@@ -65,7 +48,6 @@ h1, h2, h3 {
     border-bottom: 2px solid var(--teal);
     font-size: 24px;
 }
-
 .grid-container {
     max-width: 1000px;
     margin: 30px auto;
@@ -75,7 +57,6 @@ h1, h2, h3 {
     box-shadow: 0 1px 2px rgba(23,48,44,0.06);
     padding: 24px 28px;
 }
-
 .grid-container h2 {
     text-align: center;
     color: var(--ink);
@@ -84,7 +65,6 @@ h1, h2, h3 {
     border-bottom: 2px solid var(--teal);
     font-size: 24px;
 }
-
 .section-card {
     background: var(--teal-wash);
     padding: 16px 18px;
@@ -92,15 +72,6 @@ h1, h2, h3 {
     border: 1px solid var(--line);
     margin-bottom: 20px;
 }
-
-
-
-
-/* =========================
-      NAVEGATION BAR SITE.MASTER
-========================= */
-
-
 
 .navbar-custom {
     display: flex;
@@ -118,7 +89,6 @@ h1, h2, h3 {
     margin: 0;
     padding: 0;
 }
-
 .navbar-custom a {
     color: #fdfaf3;
     text-decoration: none;
@@ -126,22 +96,18 @@ h1, h2, h3 {
     letter-spacing: 0.2px;
     transition: color 0.2s;
 }
-
 .navbar-custom a:hover {
-    color: #e8c778; /* dorado suave, como una placa de nombre en bronce */
+    color: #e8c778;
 }
-
 .nav-right {
     display: flex;
     align-items: center;
     gap: 15px;
 }
-
 .usuario-logueado i {
     margin-right: 6px;
     color: #cfe3de;
 }
-
 .logout-link {
     background: var(--clay);
     padding: 6px 14px;
@@ -154,9 +120,6 @@ h1, h2, h3 {
 .logout-link:hover {
     background: var(--clay-deep);
 }
-
-/* Firma visual del sitio: un trazo de pulso (ECG) bajo la barra de navegacion.
-   Un solo elemento, una sola vez por pagina: no se repite como decoracion. */
 .vital-line {
     height: 18px;
     width: 100%;
@@ -168,36 +131,25 @@ h1, h2, h3 {
     transform-origin: left center;
     animation: vitalDrawIn 0.7s ease-out;
 }
-
 @keyframes vitalDrawIn {
     from { transform: scaleX(0); }
     to { transform: scaleX(1); }
 }
-
 @media (prefers-reduced-motion: reduce) {
     .vital-line { animation: none; }
 }
 
-
-/* =========================
-        LOGIN
-========================= */
-
-
-/* Contenedor principal: ocupa toda la pantalla y centra la caja del login. */
 .loginBody {
     min-height: 100vh;
     display: flex;
-    justify-content: center; /* centra horizontal */
-    align-items: center; /* centra vertical */
-    background: linear-gradient(160deg, var(--teal-deep), var(--ink) 130%); /* fondo solo para login */
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(160deg, var(--teal-deep), var(--ink) 130%);
     padding: 20px;
     box-sizing: border-box;
     font-family: var(--font-body);
 }
 
-/* En el login, el .form-container es solo un envoltorio: la tarjeta real es .loginContainer.
-   Anulamos su fondo/sombra para no tener "una tarjeta dentro de otra". */
 .loginBody .form-container {
     background: transparent;
     box-shadow: none;
@@ -206,8 +158,6 @@ h1, h2, h3 {
     margin: 0;
     max-width: none;
 }
-
-/* Caja del login */
 .loginContainer {
     background: var(--card);
     padding: 48px 44px;
@@ -220,12 +170,9 @@ h1, h2, h3 {
     box-sizing: border-box;
 }
 
-/* El espaciado se controla con los márgenes de cada campo, no con los <br> del markup. */
 .loginContainer br {
     display: none;
 }
-
-/* Título */
 .loginContainer h2 {
     margin: 0 0 8px 0;
     color: var(--ink);
@@ -233,16 +180,12 @@ h1, h2, h3 {
     font-size: 30px;
     font-weight: 600;
 }
-
-/* Texto informativo (ej. aviso del Login del Webmaster) */
 .loginContainer p {
     margin: 0 0 22px 0;
     color: var(--ink-soft);
     font-size: 14px;
     line-height: 1.4;
 }
-
-/* Inputs: todos iguales, ancho completo y separación pareja. */
 .loginContainer input[type="text"],
 .loginContainer input[type="password"] {
     display: block;
@@ -256,15 +199,12 @@ h1, h2, h3 {
     box-sizing: border-box;
     transition: border-color 0.3s, box-shadow 0.3s;
 }
-
 .loginContainer input[type="text"]:focus,
 .loginContainer input[type="password"]:focus {
     border-color: var(--teal);
     box-shadow: 0 0 0 3px rgba(14,107,96,0.22);
     outline: none;
 }
-
-/* Botón: ancho completo, alineado con los inputs. */
 .loginContainer .btn {
     width: 100%;
     padding: 12px;
@@ -278,26 +218,17 @@ h1, h2, h3 {
     cursor: pointer;
     transition: background 0.3s, transform 0.2s;
 }
-
 .loginContainer .btn:hover {
     background: var(--teal-deep);
     transform: translateY(-1px);
 }
-
-/* Mensaje de error o info */
 #lblMensaje {
     display: block;
     margin-top: 18px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--clay); /* rojo para errores */
+    color: var(--clay);
 }
-
-
-/* =========================
-    MENU
-========================= */
-
 .welcome-panel {
     background: var(--teal-deep);
     color: #fdfaf3;
@@ -317,7 +248,6 @@ h1, h2, h3 {
     margin: 0;
     color: #cfe3de;
 }
-
 .home-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -325,7 +255,6 @@ h1, h2, h3 {
     max-width: 1200px;
     margin: 0 auto;
 }
-
 .option-card {
     background: var(--card);
     padding: 25px;
@@ -335,7 +264,6 @@ h1, h2, h3 {
     transition: transform 0.2s, box-shadow 0.2s;
     text-align: center;
 }
-
 .option-card h2 {
     font-size: 19px;
     margin: 4px 0 8px 0;
@@ -346,15 +274,10 @@ h1, h2, h3 {
     color: var(--teal);
     margin-bottom: 15px;
 }
-
 .option-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 20px rgba(23,48,44,0.12);
 }
-
-/* =========================
-   INPUTS Y DROPDOWNLIST
-========================= */
 .input-base, .ddl-base {
     width: 100%;
     padding: 10px;
@@ -369,17 +292,11 @@ h1, h2, h3 {
     transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-
 .input-base:focus, .ddl-base:focus {
     border-color: var(--teal);
     box-shadow: 0 0 0 3px rgba(14,107,96,0.2);
     outline: none;
 }
-
-
-/* =========================
-   BOTONES
-========================= */
 .btn-base {
     padding: 10px 18px;
     border: none;
@@ -391,22 +308,16 @@ h1, h2, h3 {
     transition: background 0.2s, transform 0.2s;
     color: #fff;
 }
-
-
-/* Variantes */
 .btn-primary {
     background: var(--teal);
 }
-
 .btn-primary:hover {
     background: var(--teal-deep);
     transform: scale(1.05);
 }
-
 .btn-success {
     background: var(--sage);
 }
-
 .btn-success:hover {
     background: var(--sage-deep);
     transform: scale(1.05);
@@ -415,51 +326,35 @@ h1, h2, h3 {
 .btn-danger {
     background: var(--clay);
 }
-
 .btn-danger:hover {
     background: var(--clay-deep);
     transform: scale(1.05);
 }
-
 .btn-warning {
     background: var(--amber);
 }
-
 .btn-warning:hover {
     background: #92400e;
     transform: scale(1.05);
 }
 
-
 .acciones-seguridad {
     display: flex;
-    justify-content: center; /* Centra los botones */
-    gap: 15px; /* Espacio entre ellos */
+    justify-content: center;
+    gap: 15px;
     margin-top: 20px;
-    flex-wrap: wrap; /* Si la pantalla es chica, bajan de línea */
+    flex-wrap: wrap;
 }
 .acciones-seguridad .btn-base {
     min-width: 180px;
-
 }
 
-/* =========================
-   LABELS
-========================= */
 .label-base {
     font-weight: 600;
     margin-bottom: 6px;
     display: block;
     color: var(--ink);
 }
-
-/* =========================
-   GRID VIEW
-========================= */
-
-
-/* Contenedor general de tablas: fuente monoespaciada para que fechas, IDs, DNI e IP
-   se lean como asientos de un registro/ficha, no como texto de UI generico. */
 .grid-crud {
     width: 100%;
     border-collapse: collapse;
@@ -468,12 +363,9 @@ h1, h2, h3 {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 6px;
-    overflow: hidden; /* redondea bordes */
+    overflow: hidden;
     margin: 20px 0;
 }
-
-
-/* Encabezados */
 .grid-crud th {
     background: var(--teal-deep);
     color: #fdfaf3;
@@ -485,28 +377,19 @@ h1, h2, h3 {
     text-transform: uppercase;
     letter-spacing: 0.6px;
 }
-
-/* Celdas */
 .grid-crud td {
     padding: 10px;
     border-bottom: 1px solid var(--line);
     text-align: center;
 }
-
-/* Filas alternadas */
 .grid-crud tr:nth-child(even) {
     background-color: #faf6ec;
 }
-
-
-/* Hover fila */
 .grid-crud tr:hover {
     background-color: var(--teal-wash);
     cursor: pointer;
     transition: background 0.2s;
 }
-
-/* Links dentro del GridView (ej. Seleccionar) */
 .grid-crud a {
     display: inline-block;
     padding: 6px 12px;
@@ -517,14 +400,10 @@ h1, h2, h3 {
     text-decoration: none;
     transition: background-color 0.2s;
 }
-
-
 .grid-crud a:hover {
     background-color: var(--teal-deep);
 }
 
-
-/* Botones dentro del GridView */
 .grid-crud input[type="button"],
 .grid-crud input[type="submit"] {
     background: var(--clay);
@@ -537,14 +416,11 @@ h1, h2, h3 {
     font-size: 13px;
     transition: background 0.2s;
 }
-
 .grid-crud input[type="button"]:hover,
 .grid-crud input[type="submit"]:hover {
     background: var(--clay-deep);
 }
 
-
-/* Estilo base para todos los checkboxes */
 .grid-crud input[type="checkbox"] {
     width: 18px;
     height: 18px;
@@ -552,34 +428,24 @@ h1, h2, h3 {
     accent-color: var(--teal);
     transform: scale(1.1);
 }
-
-/* Opcional: efecto hover */
 .grid-crud input[type="checkbox"]:hover {
     box-shadow: 0 0 4px rgba(14,107,96,0.5);
 }
-
-/* Opcional: estilo deshabilitado */
 .grid-crud input[type="checkbox"]:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
 
 
-
-/* ========================================
-   FORMULARIO DE GESTION DE USUARIOS
-=========================================== */
-
-
 .form-cred {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* dos columnas iguales */
+    grid-template-columns: 1fr 1fr;
     gap: 30px;
     max-width: 1000px;
     margin: 0 auto;
 }
 .form-title {
-    grid-column: span 2; /* ocupa las dos columnas */
+    grid-column: span 2;
     text-align: center;
     margin-bottom: 20px;
     font-family: var(--font-display);
@@ -587,22 +453,15 @@ h1, h2, h3 {
     font-weight: 600;
     color: var(--ink);
 }
-
 .form-col {
     display: flex;
     flex-direction: column;
 }
-
 .form-actions {
-    grid-column: span 2; /* ocupa todo el ancho */
+    grid-column: span 2;
     text-align: right;
     margin-top: 20px;
 }
-
-
-/*=======================================
-    CHECK BOX ACTIVO
-=========================================*/
 .btn-toggle {
     padding: 10px 20px;
     border: none;
@@ -612,61 +471,36 @@ h1, h2, h3 {
     cursor: pointer;
     transition: background-color 0.2s ease, transform 0.2s ease;
 }
-
-/* Estado Activo */
 .btn-activo {
     background-color: var(--sage);
     color: white;
 }
-
 .btn-activo:hover {
     background-color: var(--sage-deep);
     transform: scale(1.05);
 }
-
-/* Estado Inactivo */
 .btn-inactivo {
     background-color: var(--clay);
     color: white;
 }
-
 .btn-inactivo:hover {
     background-color: var(--clay-deep);
     transform: scale(1.05);
 }
-
-
-
-/* ========================================
-   HORA Y DIA DE FORMULARIO TURNOS
-=========================================== */
-
-
 .horario-turno {
     display: grid;
-    grid-template-columns: 80px 1fr 80px 1fr; /* Label + campo, Label + campo */
+    grid-template-columns: 80px 1fr 80px 1fr;
     gap: 15px;
     align-items: center;
     margin: 10px 0;
 }
-
 .horario-turno label {
     font-weight: 600;
     color: var(--ink);
 }
-
-
-/* ========================================
-   FILTROS FORMULARIO BITACORA
-=========================================== */
-
-/* La bitácora tiene muchas columnas: su tarjeta necesita más ancho que el form-container estándar. */
 .form-container.bitacora {
     max-width: 1150px;
 }
-
-/* El contenedor de la grilla no debe comportarse como otra tarjeta (más ancha que el form y con su propia sombra):
-   ocupa el ancho disponible dentro del form y, si la tabla no entra, hace scroll horizontal en vez de salirse. */
 .datos-bitacora {
     max-width: none;
     width: 100%;
@@ -677,7 +511,6 @@ h1, h2, h3 {
     border: none;
     overflow-x: auto;
 }
-
 .filtros-bitacora {
     display: flex;
     flex-wrap: wrap;
@@ -685,12 +518,9 @@ h1, h2, h3 {
     margin-bottom: 20px;
     justify-content: space-between;
 }
-
 .campo-filtro {
-    flex: 1 1 180px; /* cada filtro ocupa mínimo 180px */
+    flex: 1 1 180px;
 }
-
-/* Texto de ayuda debajo de un campo. */
 .ayuda-campo {
     display: block;
     margin: -6px 0 14px 0;
@@ -698,7 +528,6 @@ h1, h2, h3 {
     font-size: 13px;
 }
 
-/* Indicador "Página X de Y" arriba de la grilla de la bitácora. */
 .info-paginas {
     display: block;
     text-align: right;
@@ -708,8 +537,6 @@ h1, h2, h3 {
     font-size: 13px;
     margin-bottom: 8px;
 }
-
-/* Botones Filtrar / Limpiar: centrados y con separación pareja. */
 .acciones-filtro {
     display: flex;
     justify-content: center;
@@ -720,11 +547,6 @@ h1, h2, h3 {
 }
 
 
-/* ========================================
-   ABM DE USUARIOS / ASIGNACION DE ROLES (CRUD_Usuarios)
-=========================================== */
-
-/* Dos columnas: izquierda Roles, derecha ABM de usuarios. En pantallas chicas se apilan. */
 .crud-2col {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -734,47 +556,35 @@ h1, h2, h3 {
     margin: 30px auto;
     padding: 0 15px;
 }
-
-/* Cada tarjeta dentro de la grilla ocupa el ancho de su columna (sin el centrado/ancho propio de .form-container). */
 .crud-col {
     max-width: none;
     margin: 0;
     width: 100%;
     box-sizing: border-box;
 }
-
 @media (max-width: 900px) {
     .crud-2col {
         grid-template-columns: 1fr;
     }
 }
-
-
-/* Campos en dos columnas parejas; en pantallas chicas pasa a una sola. */
 .abm-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0 30px;
 }
-
 .abm-field {
     display: flex;
     flex-direction: column;
     margin-bottom: 6px;
 }
-
-/* El estado (activo) ocupa el ancho completo y separa el título del control. */
 .abm-field-activo {
     grid-column: 1 / -1;
 }
-
 @media (max-width: 640px) {
     .abm-grid {
         grid-template-columns: 1fr;
     }
 }
-
-/* Botones de acción alineados a la derecha, con separación pareja. */
 .abm-actions {
     display: flex;
     justify-content: flex-end;
@@ -783,8 +593,6 @@ h1, h2, h3 {
     flex-wrap: wrap;
 }
 
-/* La fila de Estado alinea el interruptor "Usuario activo" con la ficha
-   "Resetear intentos fallidos"; en pantallas chicas se apilan. */
 .fila-estado {
     display: flex;
     flex-wrap: wrap;
@@ -792,22 +600,17 @@ h1, h2, h3 {
     gap: 10px 26px;
 }
 
-/* Checkbox "Usuario activo" convertido en interruptor (toggle): es un ESTADO del usuario.
-   El asp:CheckBox se renderiza como <span class="chk-activo"><input type="checkbox"><label>...</label></span>. */
 .chk-activo {
     display: inline-block;
     margin-top: 4px;
 }
 
-/* Ocultamos el checkbox nativo pero lo dejamos accesible (el label lo dispara por su atributo "for"). */
 .chk-activo input[type="checkbox"] {
     position: absolute;
     opacity: 0;
     width: 0;
     height: 0;
 }
-
-/* El label es a la vez el texto y el interruptor. */
 .chk-activo label {
     position: relative;
     display: inline-block;
@@ -819,7 +622,6 @@ h1, h2, h3 {
     user-select: none;
 }
 
-/* Riel del interruptor (apagado = gris verdoso de la paleta, con borde de tinta suave). */
 .chk-activo label::before {
     content: "";
     position: absolute;
@@ -833,8 +635,6 @@ h1, h2, h3 {
     border-radius: 13px;
     transition: background 0.25s, border-color 0.25s;
 }
-
-/* Perilla. */
 .chk-activo label::after {
     content: "";
     position: absolute;
@@ -847,46 +647,33 @@ h1, h2, h3 {
     box-shadow: 0 1px 3px rgba(23,48,44,0.35);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .chk-activo label:hover::before {
     background: #b5beb1;
 }
-
-/* Encendido = riel verde (estado positivo) y perilla desplazada a la derecha. */
 .chk-activo input[type="checkbox"]:checked + label::before {
     background: var(--sage);
     border-color: var(--sage-deep);
 }
-
 .chk-activo input[type="checkbox"]:checked + label::after {
     transform: translateX(22px);
 }
-
 .chk-activo input[type="checkbox"]:checked + label:hover::before {
     background: var(--sage-deep);
 }
-
-/* Foco de teclado visible. */
 .chk-activo input[type="checkbox"]:focus + label::before {
     box-shadow: 0 0 0 3px rgba(14,107,96,0.3);
 }
 
-/* Checkboxes de "orden puntual" (Restablecer contrasena / Resetear intentos fallidos):
-   no describen un estado del usuario sino algo que va a pasar UNA vez al tocar Modificar.
-   Por eso no son interruptores: son fichas con borde punteado (pendiente) que al tildarse
-   se rellenan en ambar, el color de atencion de la paleta. */
 .chk-reset {
     display: inline-flex;
     margin-top: 8px;
 }
-
 .chk-reset input[type="checkbox"] {
     position: absolute;
     opacity: 0;
     width: 0;
     height: 0;
 }
-
 .chk-reset label {
     position: relative;
     display: inline-flex;
@@ -912,8 +699,6 @@ h1, h2, h3 {
     color: var(--ink);
     box-shadow: 0 2px 5px rgba(23,48,44,0.10);
 }
-
-/* Casilla cuadrada delante del texto. */
 .chk-reset label::before {
     content: "";
     box-sizing: border-box;
@@ -926,7 +711,6 @@ h1, h2, h3 {
     transition: background 0.2s, border-color 0.2s;
 }
 
-/* Tilde de dos trazos: aparece con un pequeño "pop" al marcar. */
 .chk-reset label::after {
     content: "";
     position: absolute;
@@ -939,8 +723,6 @@ h1, h2, h3 {
     transform: translateY(-65%) rotate(45deg) scale(0);
     transition: transform 0.18s ease;
 }
-
-/* Tildado = la orden queda "sellada": borde solido y fondo ambar de atencion. */
 .chk-reset input[type="checkbox"]:checked + label {
     border-style: solid;
     border-color: var(--amber);
@@ -948,22 +730,16 @@ h1, h2, h3 {
     color: #8a4207;
     box-shadow: 0 1px 3px rgba(180,83,9,0.25);
 }
-
 .chk-reset input[type="checkbox"]:checked + label::before {
     background: var(--amber);
     border-color: var(--amber);
 }
-
 .chk-reset input[type="checkbox"]:checked + label::after {
     transform: translateY(-65%) rotate(45deg) scale(1);
 }
-
-/* Foco de teclado visible. */
 .chk-reset input[type="checkbox"]:focus + label {
     box-shadow: 0 0 0 3px rgba(14,107,96,0.3);
 }
-
-/* Sin animaciones para quien pide movimiento reducido. */
 @media (prefers-reduced-motion: reduce) {
     .chk-activo label::before,
     .chk-activo label::after,
@@ -973,16 +749,12 @@ h1, h2, h3 {
         transition: none;
     }
 }
-
-/* Mensaje debajo del formulario (no rojo por defecto; el code-behind fija el color según el caso). */
 .msg-form {
     display: block;
     margin-top: 14px;
     text-align: center;
     font-weight: 600;
 }
-
-/* Toast: mensaje flotante que aparece arriba a la derecha y se cierra solo (lo inyecta el code-behind). */
 .toast {
     position: fixed;
     top: 20px;
@@ -1001,46 +773,30 @@ h1, h2, h3 {
 .toast-exito {
     background: var(--sage);
 }
-
 .toast-error {
     background: var(--clay);
 }
-
 .toast-hide {
     opacity: 0;
     transform: translateY(-12px);
 }
-
-/* La grilla puede tener muchas columnas: permitimos scroll horizontal en pantallas chicas sin romper el layout. */
 .grid-scroll {
     width: 100%;
     overflow-x: auto;
 }
-
-
-/* ========================================
-   PAGINADOR DE LA BITACORA (PagerStyle)
-=========================================== */
-
-/* Fila del paginador dentro del GridView de la bitácora. */
 .grid-pager {
     background: var(--paper);
     padding: 14px;
 }
-
-/* Anulamos el borde inferior que heredan las celdas de la grilla. */
 .grid-pager td {
     border: none;
 }
-
-/* Separación pareja entre los botones de página. */
 .grid-pager table {
     margin: 0 auto;
     border-collapse: separate;
     border-spacing: 8px 0;
 }
 
-/* Botones activos (« Primera, ‹ Anterior, Siguiente ›, Última »). */
 .grid-pager a {
     display: inline-block;
     padding: 8px 16px;
@@ -1058,7 +814,6 @@ h1, h2, h3 {
     transform: scale(1.05);
 }
 
-/* Botones no disponibles (ej. "Anterior" estando en la primera página): se ven apagados. */
 .grid-pager span {
     display: inline-block;
     padding: 8px 16px;
@@ -1070,13 +825,6 @@ h1, h2, h3 {
     cursor: default;
 }
 
-
-/* ========================================
-   PORTAL DEL PACIENTE Y DEL MEDICO
-   (Turnos.aspx, Recetas.aspx, Medicos.aspx)
-=========================================== */
-
-/* Turnos: formulario de alta a la izquierda y "Mis Turnos" a la derecha. */
 .turnos-layout {
     display: grid;
     grid-template-columns: 400px 1fr;
@@ -1086,8 +834,6 @@ h1, h2, h3 {
     margin: 30px auto;
     padding: 0 15px;
 }
-
-/* Médicos: agenda del día a la izquierda y formulario de atención a la derecha. */
 .medicos-layout {
     display: grid;
     grid-template-columns: 1.1fr 1fr;
@@ -1098,7 +844,6 @@ h1, h2, h3 {
     padding: 0 15px;
 }
 
-/* Dentro de estos layouts las tarjetas ocupan su columna (sin el centrado propio de .form-container). */
 .turnos-layout .form-container,
 .turnos-layout .grid-container,
 .medicos-layout .form-container,
@@ -1108,16 +853,12 @@ h1, h2, h3 {
     width: 100%;
     box-sizing: border-box;
 }
-
-/* En pantallas chicas las columnas se apilan. */
 @media (max-width: 950px) {
     .turnos-layout,
     .medicos-layout {
         grid-template-columns: 1fr;
     }
 }
-
-/* Títulos de las tarjetas de estas pantallas, consistentes con .form-container h2. */
 .turnos-dia h2,
 .mis-turnos h2,
 .misRecetas h2 {
@@ -1125,8 +866,6 @@ h1, h2, h3 {
     color: var(--ink);
     margin-top: 0;
 }
-
-/* Botones de acción centrados (Agendar / Limpiar / Guardar Atención). */
 .acciones-turno {
     display: flex;
     justify-content: center;
@@ -1134,8 +873,6 @@ h1, h2, h3 {
     margin-top: 15px;
     flex-wrap: wrap;
 }
-
-/* Chips de estado dentro de las grillas (Confirmado, Pendiente, Atendido, etc.). */
 .badge {
     display: inline-block;
     padding: 4px 12px;
@@ -1146,49 +883,39 @@ h1, h2, h3 {
     letter-spacing: 0.3px;
     white-space: nowrap;
 }
-
 .badge-confirmado {
     background: var(--teal-wash);
     color: var(--teal-deep);
 }
-
 .badge-pendiente,
 .badge-en-espera {
     background: var(--amber-wash);
     color: var(--amber);
 }
-
 .badge-atendido,
 .badge-vigente {
     background: var(--sage-wash);
     color: var(--sage-deep);
 }
-
 .badge-finalizada {
     background: #e5e1d4;
     color: #6b6353;
 }
-
-/* Celda de Criticidad en la bitácora (la clase la asigna gvBitacora_RowDataBound). */
 .grid-crud td.criticidad-alta {
     background: var(--clay-wash);
     color: var(--clay-deep);
     font-weight: 700;
 }
-
 .grid-crud td.criticidad-media {
     background: var(--amber-wash);
     color: var(--amber);
     font-weight: 700;
 }
-
 .grid-crud td.criticidad-baja {
     background: var(--sage-wash);
     color: var(--sage-deep);
     font-weight: 700;
 }
-
-/* Aviso con el paciente que el médico está atendiendo. */
 .paciente-seleccionado {
     display: block;
     background: var(--teal-wash);
@@ -1199,23 +926,16 @@ h1, h2, h3 {
     font-weight: 600;
     margin-bottom: 18px;
 }
-
-/* Fila seleccionada en la agenda del médico. */
 .grid-crud .fila-seleccionada,
 .grid-crud tr.fila-seleccionada:hover {
     background: var(--teal-wash);
 }
-
-/* Colores del mensaje bajo los formularios (el code-behind elige la clase). */
 .msg-exito {
     color: var(--sage-deep);
 }
-
 .msg-error {
     color: var(--clay);
 }
-
-/* Texto que muestran las grillas cuando no hay datos. */
 .sin-datos {
     text-align: center;
     color: var(--ink-soft);
@@ -1223,23 +943,14 @@ h1, h2, h3 {
     padding: 25px 10px;
     font-size: 15px;
 }
-
-/* Título del bloque Receta dentro de la atención médica. */
 .section-card h3 {
     margin: 0 0 12px 0;
     color: var(--ink);
 }
 
-
-/* ========================================
-   SEGURIDAD / INTEGRIDAD DE DATOS (Seguridad.aspx)
-=========================================== */
-
 .grid-container.seguridad h2 {
     border-bottom-color: var(--clay);
 }
-
-/* Banner de alerta cuando se detectan problemas de integridad (DVV) en tablas protegidas. */
 .alerta-integridad {
     display: block;
     background: var(--clay-wash);
@@ -1249,7 +960,6 @@ h1, h2, h3 {
     padding: 16px 20px;
     margin-bottom: 22px;
 }
-
 .alerta-integridad h3 {
     margin: 0 0 10px 0;
     color: var(--clay-deep);
@@ -1262,7 +972,6 @@ h1, h2, h3 {
     content: "\26A0";
     margin-right: 8px;
 }
-
 .lista-integridad {
     margin: 0;
     padding-left: 22px;
@@ -1271,12 +980,6 @@ h1, h2, h3 {
     font-size: 13px;
     line-height: 1.6;
 }
-
-
-/* ========================================
-   PAGINA DE ACCESO DENEGADO
-=========================================== */
-
 .acceso-denegado {
     max-width: 480px;
     margin: 70px auto;
@@ -1292,7 +995,6 @@ h1, h2, h3 {
     font-size: 44px;
     margin-bottom: 12px;
 }
-
 .acceso-denegado h2 {
     margin: 0 0 10px 0;
     color: var(--clay);
@@ -1306,7 +1008,6 @@ h1, h2, h3 {
     line-height: 1.5;
 }
 
-/* Link con aspecto de botón, consistente con .btn-base. */
 .btn-volver {
     display: inline-block;
     padding: 12px 26px;
@@ -1319,7 +1020,6 @@ h1, h2, h3 {
     text-decoration: none;
     transition: background 0.2s, transform 0.2s;
 }
-
 .btn-volver:hover {
     background: var(--teal-deep);
     transform: translateY(-1px);

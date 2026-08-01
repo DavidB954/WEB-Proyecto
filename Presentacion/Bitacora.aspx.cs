@@ -17,9 +17,6 @@ namespace Presentacion
         BLL_Usuario bll_usuarios = new BLL_Usuario();
         protected void Page_Load(object sender, EventArgs e)
         {
-            //Se revalida en CADA carga (incluidos los postbacks de Filtrar/Limpiar/paginado), no solo la primera vez:
-            //si la sesión vence mientras el usuario está en esta pantalla, un postback no debe poder seguir
-            //trayendo datos de la bitácora sin sesión válida.
             BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
             if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "WEBMASTER", "ADMINISTRADOR"))
@@ -59,7 +56,7 @@ namespace Presentacion
 
         private void CargarModulos()
         {
-            ddlModulos.Items.Clear(); 
+            ddlModulos.Items.Clear();
 
             ddlModulos.Items.Add(new ListItem("Todos", ""));
 
@@ -80,7 +77,6 @@ namespace Presentacion
             ddlCriticidad.Items.Add(new ListItem("BAJA", CriticidadBitacora.BAJA));
         }
 
-        //Carga la grilla respetando los filtros actuales. La usan el primer load, Filtrar, Limpiar y el cambio de página: así al pasar de página no se pierden los filtros aplicados.
         private void CargarGrilla()
         {
             DateTime? desde = string.IsNullOrEmpty(fechaDesde.Text) ? (DateTime?)null : DateTime.Parse(fechaDesde.Text).Date;
@@ -93,8 +89,6 @@ namespace Presentacion
 
             bool sinFiltros = desde == null && hasta == null && idUsuario == null && modulo == null && ip == null && criticidad == null;
 
-            //Se ordena de más reciente a más antiguo SOLO para mostrar. No se cambia el orden en ObtenerBitacora
-            //porque el cálculo del DVV concatena las filas en orden, y alterarlo haría fallar la verificación de integridad.
             if (sinFiltros)
             {
                 gvBitacora.DataSource = bll_bitacora.ObtenerBitacora()
@@ -110,7 +104,6 @@ namespace Presentacion
 
             gvBitacora.DataBind();
 
-            //Indicador de paginación: cuántas páginas hay y en cuál estamos.
             if (gvBitacora.PageCount == 0)
             {
                 lblPaginas.Text = "Sin resultados";
@@ -125,7 +118,6 @@ namespace Presentacion
         {
             try
             {
-                //Al cambiar el filtro se vuelve a la primera página, porque el resultado puede tener menos páginas que la actual.
                 gvBitacora.PageIndex = 0;
                 CargarGrilla();
             }
@@ -171,7 +163,6 @@ namespace Presentacion
             }
         }
 
-        //Pinta la celda de Criticidad según su valor para identificar de un vistazo los eventos graves.
         protected void gvBitacora_RowDataBound(object sender, GridViewRowEventArgs e)
         {
             if (e.Row.RowType != DataControlRowType.DataRow)
@@ -179,9 +170,6 @@ namespace Presentacion
                 return;
             }
 
-            //OJO: la columna "ID" (IdBitacora) tiene Visible="false" en el markup. Una columna invisible no genera
-            //celda en absoluto (GridView la excluye de Cells), así que el índice NO es "ID=0, ID Usuario=1,
-            //Fecha y Hora=2, Accion=3, Criticidad=4": es IdUsuario=0, FechaHora=1, Accion=2, Criticidad=3.
             TableCell celda = e.Row.Cells[3];
 
             switch (celda.Text)
@@ -198,7 +186,6 @@ namespace Presentacion
             }
         }
 
-        //Deja rastro en el mismo log que usa Global.asax, sin mostrarle al usuario el detalle interno de la excepción.
         private void RegistrarErrorInterno(string origen, Exception ex)
         {
             try
@@ -211,7 +198,6 @@ namespace Presentacion
             }
             catch
             {
-                //Si ni el log funciona, no hay nada más para hacer acá.
             }
         }
     }

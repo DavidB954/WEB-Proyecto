@@ -5,7 +5,6 @@
     ContentPlaceHolderID="ContentPlaceHolder1"
     runat="server">
 
-    <%-- ===================== ARRIBA: GESTIÓN DE USUARIOS (ABM) ===================== --%>
     <div class="form-container">
 
         <h2>Gestion de Usuarios</h2>
@@ -34,9 +33,6 @@
 
             <div class="abm-field">
                 <asp:Label CssClass="label-base" runat="server">DNI</asp:Label>
-                <%-- autocomplete="off": sin esto, el navegador a veces autocompleta con un valor viejo
-                     recordado de pruebas anteriores (ej. con puntos) al tabular o hacer click en Guardar,
-                     y el validador lo rechaza aunque lo que el usuario tipeó haya sido correcto. --%>
                 <asp:TextBox ID="txtDNI" CssClass="input-base" runat="server" autocomplete="off"></asp:TextBox>
                 <asp:RegularExpressionValidator ID="valDNI" runat="server"
                     ControlToValidate="txtDNI"
@@ -44,7 +40,6 @@
                     ValidationExpression="^\s*\d{7,8}\s*$" ForeColor="Red" Display="Dynamic">
                 </asp:RegularExpressionValidator>
             </div>
-
             <div class="abm-field">
                 <asp:Label CssClass="label-base" runat="server">Email</asp:Label>
                 <asp:TextBox ID="txtEmail" CssClass="input-base" runat="server"></asp:TextBox>
@@ -54,7 +49,6 @@
                     ValidationExpression="^[^@\s]+@[^@\s]+\.[^@\s]+$" ForeColor="Red" Display="Dynamic">
                 </asp:RegularExpressionValidator>
             </div>
-
             <div class="abm-field">
                 <asp:Label CssClass="label-base" runat="server">Contrasena</asp:Label>
                 <asp:TextBox ID="txtPassword" CssClass="input-base" runat="server" TextMode="Password"></asp:TextBox>
@@ -63,20 +57,15 @@
                     ErrorMessage="La contraseña debe tener al menos 8 caracteres, una mayuscula, una minuscula, un numero y un simbolo."
                     ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$" ForeColor="Red" Display="Dynamic">
                 </asp:RegularExpressionValidator>
-                <%-- Solo aplica a "Modificar": sin tildar, se preserva la contraseña actual y no hace falta reescribirla. En "Guardar" (alta) la contraseña siempre es obligatoria. --%>
                 <asp:CheckBox ID="chkResetearPassword" runat="server" Text="Restablecer contrasena" CssClass="chk-reset" />
             </div>
-
             <div class="abm-field abm-field-activo">
                 <asp:Label CssClass="label-base" runat="server">Estado</asp:Label>
-               
                 <div class="fila-estado">
                     <asp:CheckBox ID="chkActivo" runat="server" Text="Usuario activo" CssClass="chk-activo" Checked="true" />
-                    <%-- Solo aplica a "Modificar": sin tildar, se preserva el contador actual; tildado, vuelve a 0. --%>
                     <asp:CheckBox ID="chkResetearIntentos" runat="server" Text="Resetear intentos fallidos" CssClass="chk-reset" />
                 </div>
             </div>
-
         </div>
 
         <div class="abm-actions">
@@ -85,14 +74,11 @@
             <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar" OnClick="btnModificar_Click" />
             <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" OnClick="btnEliminar_Click" />
         </div>
-
         <asp:Label ID="lblMensaje" runat="server" CssClass="msg-form"></asp:Label>
 
     </div>
 
-    <%-- ===================== LISTADO COMPLETO DE USUARIOS ===================== --%>
     <div class="form-container">
-
         <h2>Usuarios registrados</h2>
 
         <div class="grid-scroll">
@@ -111,12 +97,9 @@
                 </Columns>
             </asp:GridView>
         </div>
-
     </div>
 
-    <%-- ===================== ABAJO: ASIGNACIÓN DE ROLES ===================== --%>
     <div class="form-container">
-
         <h2>Asignacion de Roles</h2>
 
         <div class="grid-scroll">
@@ -130,24 +113,20 @@
                 </Columns>
             </asp:GridView>
         </div>
-
         <div class="abm-field">
             <asp:Label CssClass="label-base" runat="server">Usuario</asp:Label>
             <asp:TextBox ID="txtUsuarioRol" CssClass="input-base" runat="server" ReadOnly="true"></asp:TextBox>
         </div>
-
         <div class="abm-field">
             <asp:Label CssClass="label-base" runat="server">Rol</asp:Label>
             <asp:DropDownList CssClass="ddl-base" runat="server" ID="ddlRoles"></asp:DropDownList>
         </div>
-
         <div class="abm-actions">
             <asp:HiddenField ID="hiddenIdUsuarioRol" runat="server" />
             <asp:Button ID="btnGuardarRol" CssClass="btn-base btn-success" runat="server" Text="Asignar Rol" OnClick="btnGuardarRol_Click" />
             <asp:Button ID="btnModificarRol" CssClass="btn-base btn-primary" runat="server" Text="Modificar Rol" OnClick="btnModificarRol_Click" />
             <asp:Button ID="btnEliminarRol" CssClass="btn-base btn-danger" runat="server" Text="Eliminar Rol" OnClick="btnEliminarRol_Click" />
         </div>
-
         <asp:Label ID="lblMensajeRol" runat="server" CssClass="msg-form"></asp:Label>
 
     </div>
