@@ -21,9 +21,11 @@
                 </asp:TemplateField>
             </Columns>
             <EmptyDataTemplate>
-                <div class="sin-datos">Todavia no tenés recetas emitidas.</div>
+                <div class="sin-datos">Todavia no tenes recetas emitidas.</div>
             </EmptyDataTemplate>
         </asp:GridView>
+
+        <asp:Label ID="lblMensaje" runat="server" CssClass="msg-form"></asp:Label>
 
     </div>
 

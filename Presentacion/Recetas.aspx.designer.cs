@@ -7,5 +7,7 @@ namespace Presentacion
     {
 
         protected global::System.Web.UI.WebControls.GridView gvRecetas;
+
+        protected global::System.Web.UI.WebControls.Label lblMensaje;
     }
 }

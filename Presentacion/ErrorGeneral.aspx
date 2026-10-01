@@ -20,8 +20,8 @@
         <div class="loginBody">
             <div class="acceso-denegado">
                 <div class="acceso-denegado-icono">&#9888;</div>
-                <h2>Ocurrió un error inesperado</h2>
-                <p>El sistema no pudo completar la operación. Si el problema persiste, contactá al administrador.</p>
+                <h2>Ocurrio un error inesperado</h2>
+                <p>El sistema no pudo completar la operacion. Si el problema persiste, contacta al administrador.</p>
                 <a class="btn-volver" href="Login.aspx">Volver al inicio</a>
             </div>
         </div>

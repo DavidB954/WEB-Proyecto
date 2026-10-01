@@ -10,7 +10,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Gestión Médica</title>
+    <title>Gestion Medica</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,11 +23,11 @@
     </asp:ContentPlaceHolder>
 
     <script type="text/javascript">
-    // Tiempo de sesión en minutos (coincidir con Web.config)
+    // Tiempo de sesion en minutos (coincidir con Web.config)
     var timeout = 20 * 60 * 1000; // 20 minutos en milisegundos
 
     setTimeout(function () {
-        alert("Su sesión ha expirado por inactividad. Será redirigido al login.");
+        alert("Su sesion ha expirado por inactividad. Sera redirigido al login.");
         window.location.href = 'Login.aspx';
     }, timeout);
 </script>
@@ -47,30 +47,42 @@
                 <ul>
 
                     <li>
-                        <a href="Menu.aspx">Inicio</a>
+                        <a id="aInicio" runat="server" data-i18n="1" href="Menu.aspx">Inicio</a>
                     </li>
 
                     <li id="liUsuarios" runat="server">
-                        <a href="CRUD_Usuarios.aspx">Usuarios</a>
+                        <a id="aUsuarios" runat="server" data-i18n="1" href="CRUD_Usuarios.aspx">Usuarios</a>
                     </li>
 
                     <li id="liTurnos" runat="server">
-                        <a href="Turnos.aspx">Turnos</a>
+                        <a id="aTurnos" runat="server" data-i18n="1" href="Turnos.aspx">Turnos</a>
                     </li>
 
                     <li id="liRecetas" runat="server">
-                        <a href="Recetas.aspx">Mis Recetas</a>
+                        <a id="aRecetas" runat="server" data-i18n="1" href="Recetas.aspx">Mis Recetas</a>
                     </li>
 
                     <li id="liMedicos" runat="server">
-                        <a href="Medicos.aspx">Médicos</a>
+                        <a id="aMedicos" runat="server" data-i18n="1" href="Medicos.aspx">Medicos</a>
                     </li>
 
                     <li id="liBitacora" runat="server">
-                        <a href="Bitacora.aspx">Bitácora</a>
+                        <a id="aBitacora" runat="server" data-i18n="1" href="Bitacora.aspx">Bitacora</a>
                     </li>
                      <li id="liSeguridad" runat="server">
-                         <a href="Seguridad.aspx">Seguridad</a>
+                         <a id="aSeguridad" runat="server" data-i18n="1" href="Seguridad.aspx">Seguridad</a>
+                     </li>
+                     <li id="liIdiomas" runat="server">
+                         <a id="aIdiomas" runat="server" data-i18n="1" href="FormIdiomas.aspx">Idiomas</a>
+                     </li>
+                     <li id="liTraducciones" runat="server">
+                         <a id="aTraducciones" runat="server" data-i18n="1" href="FormTraducciones.aspx">Traducciones</a>
+                     </li>
+                     <li id="liRolesPermisos" runat="server">
+                         <a id="aRolesPermisos" runat="server" data-i18n="1" href="GestionRolesPermisos.aspx">Roles y Permisos</a>
+                     </li>
+                     <li id="liAsignacionSeguridad" runat="server">
+                         <a id="aAsignacionSeguridad" runat="server" data-i18n="1" href="AsignacionSeguridad.aspx">Asignacion de Seguridad</a>
                      </li>
                 </ul>
 
@@ -79,15 +91,21 @@
 
             <div class="user-info">
                 <div class="nav-right">
+
+                    <asp:DropDownList ID="ddlIdioma" runat="server" CssClass="ddl-idioma"
+                        DataTextField="Nombre" DataValueField="IdIdioma"
+                        AutoPostBack="true" OnSelectedIndexChanged="ddlIdioma_SelectedIndexChanged">
+                    </asp:DropDownList>
+
                     <span class="usuario-logueado">
                         <i class="fa-solid fa-user-doctor" aria-hidden="true"></i>
-                        Bienvenido,
+                        <span id="spanBienvenido" runat="server" data-i18n="1">Bienvenido,</span>
                         <asp:Label ID="lblUsuario" runat="server">
 
                         </asp:Label>
 
                     </span>
-                    <a class="logout-link" href="CerrarSesion.aspx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Cerrar Sesión </a>
+                    <a class="logout-link" href="CerrarSesion.aspx"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> <span id="spanCerrarSesion" runat="server" data-i18n="1">Cerrar Sesion</span></a>
 
                 </div>
 

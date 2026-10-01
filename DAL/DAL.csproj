@@ -44,7 +44,10 @@
     <Compile Include="DAL_Bitacora.cs" />
     <Compile Include="DAL_Conexion.cs" />
     <Compile Include="DAL_DVV.cs" />
+    <Compile Include="DAL_Idioma.cs" />
+    <Compile Include="DAL_Permiso.cs" />
     <Compile Include="DAL_Rol.cs" />
+    <Compile Include="DAL_Traduccion.cs" />
     <Compile Include="DAL_Usuario.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

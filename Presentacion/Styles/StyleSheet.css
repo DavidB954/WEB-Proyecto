@@ -104,6 +104,15 @@ h1, h2, h3 {
     align-items: center;
     gap: 15px;
 }
+.ddl-idioma {
+    padding: 6px 10px;
+    border-radius: 5px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: var(--teal-deep);
+    color: #fdfaf3;
+    font-family: var(--font-body);
+    font-size: 13px;
+}
 .usuario-logueado i {
     margin-right: 6px;
     color: #cfe3de;

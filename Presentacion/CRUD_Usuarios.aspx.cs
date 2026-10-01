@@ -1,4 +1,5 @@
 using BE;
+using BE.Seguridad;
 using BLL;
 using SERVICIOS;
 using System;
@@ -10,16 +11,16 @@ using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    public partial class WebForm1 : System.Web.UI.Page
+    public partial class WebForm1 : PaginaBase
     {
         BLL_Usuario bll_usuario = new BLL_Usuario();
-        BLL_Rol bll_rol = new BLL_Rol();
 
         protected void Page_Load(object sender, EventArgs e)
         {
             BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
 
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "ADMINISTRADOR"))
+            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ABM_USUARIO"))
             {
                 Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
                 return;
@@ -29,13 +30,12 @@ namespace Presentacion
             {
                 try
                 {
-                    CargarRoles();
                     RefrescarGrillas();
                 }
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("CRUD_Usuarios.Page_Load", ex);
-                    lblMensaje.Text = "No se pudieron cargar los datos. Intentá nuevamente más tarde.";
+                    lblMensaje.Text = "No se pudieron cargar los datos. Intenta nuevamente mas tarde.";
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                 }
             }
@@ -47,19 +47,6 @@ namespace Presentacion
 
             gvUsuarios.DataSource = usuarios;
             gvUsuarios.DataBind();
-
-            gvUsuariosRoles.DataSource = usuarios;
-            gvUsuariosRoles.DataBind();
-        }
-
-        private void CargarRoles()
-        {
-            ddlRoles.DataSource = bll_rol.ObtenerRoles();
-            ddlRoles.DataTextField = "Nombre";
-            ddlRoles.DataValueField = "IdRol";
-            ddlRoles.DataBind();
-
-            ddlRoles.Items.Insert(0, new ListItem("-- Seleccionar Rol --", ""));
         }
 
         private void MostrarToast(string mensaje, bool exito)
@@ -134,29 +121,38 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnGuardar_Click", ex);
-                string mensaje = System.Web.HttpUtility.JavaScriptStringEncode("No se pudo guardar el usuario. Verificá los datos e intentá nuevamente.");
+                string mensaje = System.Web.HttpUtility.JavaScriptStringEncode("No se pudo guardar el usuario. Verifica los datos e intenta nuevamente.");
                 ScriptManager.RegisterStartupScript(this, GetType(), "errorAlert", $"alert('{mensaje}');", true);
             }
         }
 
         protected void gvUsuarios_SelectedIndexChanged(object sender, EventArgs e)
         {
-            GridViewRow fila = gvUsuarios.SelectedRow;
-
-            hiddenIdUsuario.Value = fila.Cells[1].Text;
-            txtNombre.Text = fila.Cells[2].Text;
-            txtApellido.Text = fila.Cells[3].Text;
-            txtDNI.Text = fila.Cells[4].Text;
-            txtEmail.Text = fila.Cells[5].Text;
-
-            if (fila.Cells[8].Controls.Count > 0 && fila.Cells[8].Controls[0] is CheckBox chk)
+            try
             {
-                chkActivo.Checked = chk.Checked;
-            }
+                GridViewRow fila = gvUsuarios.SelectedRow;
 
-            txtPassword.Text = string.Empty;
-            chkResetearPassword.Checked = false;
-            chkResetearIntentos.Checked = false;
+                hiddenIdUsuario.Value = fila.Cells[1].Text;
+                txtNombre.Text = fila.Cells[2].Text;
+                txtApellido.Text = fila.Cells[3].Text;
+                txtDNI.Text = fila.Cells[4].Text;
+                txtEmail.Text = fila.Cells[5].Text;
+
+                if (fila.Cells[8].Controls.Count > 0 && fila.Cells[8].Controls[0] is CheckBox chk)
+                {
+                    chkActivo.Checked = chk.Checked;
+                }
+
+                txtPassword.Text = string.Empty;
+                chkResetearPassword.Checked = false;
+                chkResetearIntentos.Checked = false;
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("CRUD_Usuarios.gvUsuarios_SelectedIndexChanged", ex);
+                lblMensaje.Text = "No se pudo cargar el usuario seleccionado.";
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
+            }
         }
 
         protected void btnModificar_Click(object sender, EventArgs e)
@@ -216,7 +212,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnModificar_Click", ex);
-                lblMensaje.Text = "No se pudo modificar el usuario. Intentá nuevamente más tarde.";
+                lblMensaje.Text = "No se pudo modificar el usuario. Intenta nuevamente mas tarde.";
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -245,164 +241,11 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnEliminar_Click", ex);
-                lblMensaje.Text = "No se pudo eliminar el usuario. Intentá nuevamente más tarde.";
+                lblMensaje.Text = "No se pudo eliminar el usuario. Intenta nuevamente mas tarde.";
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
 
-
-        protected void gvUsuariosRoles_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            GridViewRow fila = gvUsuariosRoles.SelectedRow;
-
-            hiddenIdUsuarioRol.Value = gvUsuariosRoles.DataKeys[fila.RowIndex].Value.ToString();
-
-            txtUsuarioRol.Text = $"{fila.Cells[1].Text} {fila.Cells[2].Text}";
-
-            BE_Rol rolActual = bll_rol.ObtenerRolDeUsuario(int.Parse(hiddenIdUsuarioRol.Value));
-            ddlRoles.SelectedValue = rolActual != null ? rolActual.IdRol.ToString() : "";
-        }
-
-        private bool HayUsuarioRolSeleccionado()
-        {
-            if (string.IsNullOrWhiteSpace(hiddenIdUsuarioRol.Value))
-            {
-                lblMensajeRol.Text = "Seleccione un usuario de la lista antes de operar sobre su rol.";
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-                return false;
-            }
-            return true;
-        }
-
-        private bool HayRolSeleccionado()
-        {
-            if (string.IsNullOrEmpty(ddlRoles.SelectedValue))
-            {
-                lblMensajeRol.Text = "Seleccione un rol del listado.";
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-                return false;
-            }
-            return true;
-        }
-
-        protected void btnGuardarRol_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!HayUsuarioRolSeleccionado() || !HayRolSeleccionado())
-                {
-                    return;
-                }
-
-                int idUsuarioDestino = int.Parse(hiddenIdUsuarioRol.Value);
-                int idRol = int.Parse(ddlRoles.SelectedValue);
-
-                BE_Rol rolActual = bll_rol.ObtenerRolDeUsuario(idUsuarioDestino);
-                if (rolActual != null && rolActual.IdRol == idRol)
-                {
-                    lblMensajeRol.Text = $"El usuario ya tiene asignado el rol {rolActual.Nombre}.";
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-                    return;
-                }
-
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_rol.AsignarRol(usuarioLogueado, idUsuarioDestino, idRol);
-
-                RefrescarGrillas();
-
-                lblMensajeRol.Text = string.Empty;
-                MostrarToast("Rol asignado correctamente.", true);
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("CRUD_Usuarios.btnGuardarRol_Click", ex);
-                lblMensajeRol.Text = "No se pudo asignar el rol. Intentá nuevamente más tarde.";
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-        protected void btnModificarRol_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!HayUsuarioRolSeleccionado() || !HayRolSeleccionado())
-                {
-                    return;
-                }
-
-                int idUsuarioDestino = int.Parse(hiddenIdUsuarioRol.Value);
-                int idRol = int.Parse(ddlRoles.SelectedValue);
-
-                BE_Rol rolActual = bll_rol.ObtenerRolDeUsuario(idUsuarioDestino);
-
-                if (rolActual == null)
-                {
-                    lblMensajeRol.Text = "El usuario no tiene un rol para modificar. Use 'Asignar Rol'.";
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-                    return;
-                }
-
-                if (rolActual.IdRol == idRol)
-                {
-                    lblMensajeRol.Text = $"El usuario ya tiene asignado el rol {rolActual.Nombre}.";
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-                    return;
-                }
-
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_rol.ModificarRol(usuarioLogueado, idUsuarioDestino, idRol);
-
-                RefrescarGrillas();
-
-                lblMensajeRol.Text = string.Empty;
-                MostrarToast("Rol modificado correctamente.", true);
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("CRUD_Usuarios.btnModificarRol_Click", ex);
-                lblMensajeRol.Text = "No se pudo modificar el rol. Intentá nuevamente más tarde.";
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-        protected void btnEliminarRol_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!HayUsuarioRolSeleccionado())
-                {
-                    return;
-                }
-
-                int idUsuarioDestino = int.Parse(hiddenIdUsuarioRol.Value);
-
-                BE_Rol rolActual = bll_rol.ObtenerRolDeUsuario(idUsuarioDestino);
-
-                if (rolActual == null)
-                {
-                    lblMensajeRol.Text = "El usuario no tiene ningún rol asignado.";
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-                    return;
-                }
-
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_rol.EliminarRol(usuarioLogueado, idUsuarioDestino, rolActual.IdRol);
-
-                RefrescarGrillas();
-
-                lblMensajeRol.Text = string.Empty;
-                MostrarToast($"Se quitó el rol {rolActual.Nombre} al usuario.", true);
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("CRUD_Usuarios.btnEliminarRol_Click", ex);
-                lblMensajeRol.Text = "No se pudo quitar el rol. Intentá nuevamente más tarde.";
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
-            }
-        }
 
         private void RegistrarErrorInterno(string origen, Exception ex)
         {

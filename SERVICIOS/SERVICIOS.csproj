@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="EncryptionHelper.cs" />
     <Compile Include="HashHelper.cs" />
+    <Compile Include="IIdiomaObservador.cs" />
     <Compile Include="SeguridadHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

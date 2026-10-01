@@ -52,10 +52,12 @@ namespace DAL
             {
                 conexion.Open();
 
-                SqlCommand cmd = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.DNI, u.Email, u.IntentosFallidos, u.Activo, r.Nombre As NombreRol
+                SqlCommand cmd = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.DNI, u.Email, u.IntentosFallidos, u.Activo,
+                                                       STRING_AGG(r.Nombre, ', ') WITHIN GROUP (ORDER BY r.Nombre) As NombreRol
                                                 From Usuario u
                                                 Left Join UsuarioRol ur On ur.IdUsuario = u.IdUsuario
-                                                Left Join Rol r On r.IdRol = ur.IdRol", conexion);
+                                                Left Join Rol r On r.IdRol = ur.IdRol
+                                                Group By u.IdUsuario, u.Nombre, u.Apellido, u.DNI, u.Email, u.IntentosFallidos, u.Activo", conexion);
 
                 SqlDataReader Lector = cmd.ExecuteReader();
 
@@ -83,7 +85,7 @@ namespace DAL
             {
                 conexion.Open();
 
-                SqlCommand cmdUsuEmail = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.Email, u.HashPassword, u.DNI, u.DVH, u.IntentosFallidos, u.Activo, r.IdRol, r.Nombre As NombreRol
+                SqlCommand cmdUsuEmail = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.Email, u.HashPassword, u.DNI, u.DVH, u.IntentosFallidos, u.Activo, r.IdRol, r.Nombre As NombreRol, u.IdIdiomaPreferido
                                                         From Usuario u
                                                         Left Join UsuarioRol ur On ur.IdUsuario = u.IdUsuario
                                                         Left Join Rol r On r.IdRol = ur.IdRol
@@ -112,7 +114,8 @@ namespace DAL
                         IntentosFallidos = Lector.GetInt32(7),
                         Activo = Lector.GetBoolean(8),
                         IdRol = Lector.IsDBNull(9) ? 0 : Lector.GetInt32(9),
-                        NombreRol = Lector.IsDBNull(10) ? null : Lector.GetString(10)
+                        NombreRol = Lector.IsDBNull(10) ? null : Lector.GetString(10),
+                        IdIdiomaPreferido = Lector.IsDBNull(11) ? (int?)null : Lector.GetInt32(11)
                     };
             }
         }
@@ -218,6 +221,21 @@ namespace DAL
                 SqlCommand comando = new SqlCommand("Update Usuario Set DVH=@dvh Where IdUsuario=@id", conexion);
 
                 comando.Parameters.Add("@dvh", SqlDbType.VarChar, 255).Value = dvh;
+                comando.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
+
+                comando.ExecuteNonQuery();
+            }
+        }
+
+        public void ActualizarIdiomaPreferido(int idUsuario, int idIdioma)
+        {
+            using (SqlConnection conexion = conex.ObtenerConexion())
+            {
+                conexion.Open();
+
+                SqlCommand comando = new SqlCommand("Update Usuario Set IdIdiomaPreferido=@idIdioma Where IdUsuario=@id", conexion);
+
+                comando.Parameters.Add("@idIdioma", SqlDbType.Int).Value = idIdioma;
                 comando.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
 
                 comando.ExecuteNonQuery();

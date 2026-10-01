@@ -20,7 +20,7 @@
             <div class="form-container">
             <div class="loginContainer" runat="server" >
                 <h2>Se detecto un problema de integridad en la base de datos</h2>
-                <p>Solo el Webmaster puede ingresar mientras la base esté comprometida.</p>
+                <p>Solo el Webmaster puede ingresar mientras la base este comprometida.</p>
                 <asp:TextBox
                     ID="txtEmail"
                     runat="server"
