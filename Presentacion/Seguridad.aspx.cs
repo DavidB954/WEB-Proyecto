@@ -1,4 +1,5 @@
 ﻿using BE;
+using BE.Seguridad;
 using BLL;
 using SERVICIOS;
 using System;
@@ -11,15 +12,16 @@ using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    public partial class Seguridad : System.Web.UI.Page
+    public partial class Seguridad : PaginaBase
     {
         BLL_DVV bll_dvv = new BLL_DVV();
 
         protected void Page_Load(object sender, EventArgs e)
         {
             BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
 
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "WEBMASTER"))
+            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ACCESO_SEGURIDAD"))
             {
                 Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
                 return;
@@ -36,7 +38,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("Seguridad.Page_Load", ex);
-                    lblMensaje.Text = "No se pudo cargar la pantalla de seguridad. Intentá nuevamente más tarde.";
+                    lblMensaje.Text = "No se pudo cargar la pantalla de seguridad. Intenta nuevamente mas tarde.";
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                 }
             }
@@ -112,12 +114,12 @@ namespace Presentacion
                 bll_dvv.ActualizarDVV("Rol");
                 bll_dvv.ActualizarDVV("Bitacora");
 
-                CerrarSesionYVolverALogin("Se recalcularon los dígitos verificadores correctamente. Tenés que volver a iniciar sesión.");
+                CerrarSesionYVolverALogin("Se recalcularon los digitos verificadores correctamente. Tenes que volver a iniciar sesion.");
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnRecalcular_Click", ex);
-                lblMensaje.Text = "No se pudieron recalcular los dígitos verificadores. Intentá nuevamente más tarde.";
+                lblMensaje.Text = "No se pudieron recalcular los digitos verificadores. Intenta nuevamente mas tarde.";
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -138,7 +140,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnBackUp_Click", ex);
-                lblMensaje.Text = "No se pudo generar el backup. Intentá nuevamente más tarde.";
+                lblMensaje.Text = "No se pudo generar el backup. Intenta nuevamente mas tarde.";
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -151,12 +153,12 @@ namespace Presentacion
 
                 bll_dvv.RestaurarBackup(usuarioLogueado, ddlBackups.SelectedValue);
 
-                CerrarSesionYVolverALogin("Se restauró la base de datos correctamente. Tenés que volver a iniciar sesión.");
+                CerrarSesionYVolverALogin("Se restauro la base de datos correctamente. Tenes que volver a iniciar sesion.");
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnRestore_Click", ex);
-                lblMensaje.Text = "No se pudo restaurar el backup. Intentá nuevamente más tarde.";
+                lblMensaje.Text = "No se pudo restaurar el backup. Intenta nuevamente mas tarde.";
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }

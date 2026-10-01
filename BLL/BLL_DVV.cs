@@ -51,7 +51,7 @@ namespace BLL
                         null,
                         AccionBitacora.INTEGRIDAD_ERROR,
                         "SEGURIDAD",
-                        $"Fallo de integridad del DVV en la tabla '{nombreTabla}' detectado al iniciar la aplicación."
+                        $"Fallo de integridad del DVV en la tabla '{nombreTabla}' detectado al iniciar la aplicacion."
                     );
                 }
 
@@ -113,7 +113,7 @@ namespace BLL
                     return dal_bitacora.ObtenerBitacora().Select(b => EncryptionHelper.Encriptar(CadenaBitacora(b))).ToList();
 
                 default:
-                    throw new Exception($"Tabla no soportada para cálculo de DV: {nombreTabla}");
+                    throw new Exception($"Tabla no soportada para calculo de DV: {nombreTabla}");
             }
         }
 
@@ -152,12 +152,12 @@ namespace BLL
                     break;
 
                 default:
-                    throw new Exception($"Tabla no soportada para detección de cambios: {nombreTabla}");
+                    throw new Exception($"Tabla no soportada para deteccion de cambios: {nombreTabla}");
             }
 
             if (mensajes.Count == 0)
             {
-                mensajes.Add($"Se eliminó un registro de la tabla '{nombreTabla}'.");
+                mensajes.Add($"Se elimino un registro de la tabla '{nombreTabla}'.");
             }
 
             return mensajes;
@@ -177,7 +177,7 @@ namespace BLL
                 }
                 else if (usuario.DVH != dvhEsperado)
                 {
-                    mensajes.Add($"Se modificó el usuario {usuario.NombreApellido} (ID {usuario.IdUsuario}).");
+                    mensajes.Add($"Se modifico el usuario {usuario.NombreApellido} (ID {usuario.IdUsuario}).");
                 }
             }
 
@@ -243,7 +243,7 @@ namespace BLL
             {
                 if (!idsAceptados.Contains(fantasma.Key))
                 {
-                    mensajes.Add($"Se eliminó el usuario {fantasma.Value} (ID {fantasma.Key}) sin registro de baja en la bitácora.");
+                    mensajes.Add($"Se elimino el usuario {fantasma.Value} (ID {fantasma.Key}) sin registro de baja en la bitacora.");
                 }
             }
         }
@@ -262,7 +262,7 @@ namespace BLL
                 }
                 else if (rol.DVH != dvhEsperado)
                 {
-                    mensajes.Add($"Se modificó el rol {rol.Nombre} (ID {rol.IdRol}).");
+                    mensajes.Add($"Se modifico el rol {rol.Nombre} (ID {rol.IdRol}).");
                 }
             }
 
@@ -332,7 +332,7 @@ namespace BLL
                     break;
 
                 default:
-                    throw new Exception($"Tabla no soportada para recálculo de DV: {nombreTabla}");
+                    throw new Exception($"Tabla no soportada para recalculo de DV: {nombreTabla}");
             }
         }
 
@@ -346,11 +346,11 @@ namespace BLL
 
                 if (evento.DVH == null)
                 {
-                    mensajes.Add($"El registro de bitácora ID {evento.IdBitacora} no tiene firma de integridad: parece haber sido insertado por fuera del sistema.");
+                    mensajes.Add($"El registro de bitacora ID {evento.IdBitacora} no tiene firma de integridad: parece haber sido insertado por fuera del sistema.");
                 }
                 else if (evento.DVH != dvhEsperado)
                 {
-                    mensajes.Add($"Se modificó el registro de bitácora ID {evento.IdBitacora}.");
+                    mensajes.Add($"Se modifico el registro de bitacora ID {evento.IdBitacora}.");
                 }
             }
 
@@ -368,7 +368,7 @@ namespace BLL
                     null,
                     AccionBitacora.INTEGRIDAD_ERROR,
                     "SEGURIDAD",
-                    "Fallo de integridad del DVV en la tabla 'Bitacora' detectado al iniciar la aplicación."
+                    "Fallo de integridad del DVV en la tabla 'Bitacora' detectado al iniciar la aplicacion."
                 );
             }
 
@@ -394,7 +394,7 @@ namespace BLL
 
             if (faltantes.Count > 0)
             {
-                mensajes.Add($"Faltan {faltantes.Count} registro(s) en la bitácora (IDs: {string.Join(", ", faltantes)}).");
+                mensajes.Add($"Faltan {faltantes.Count} registro(s) en la bitacora (IDs: {string.Join(", ", faltantes)}).");
             }
         }
 
@@ -413,7 +413,7 @@ namespace BLL
                    usuarioLogueado?.IdUsuario,
                     AccionBitacora.BACKUP_GENERADO,
                     "SEGURIDAD",
-                    $"Se generó un backup de la base de datos en: {rutaCompleta}"
+                    $"Se genero un backup de la base de datos en: {rutaCompleta}"
                 );
 
                 return rutaCompleta;
@@ -436,7 +436,7 @@ namespace BLL
             {
                 if (string.IsNullOrWhiteSpace(nombreArchivo) || nombreArchivo.IndexOfAny(new[] { '\\', '/' }) >= 0 || nombreArchivo.Contains(".."))
                 {
-                    throw new Exception("Debe seleccionar un backup válido de la lista.");
+                    throw new Exception("Debe seleccionar un backup valido de la lista.");
                 }
 
                 string carpetaBackup = dal_dvv.ObtenerCarpetaBackupPorDefecto();
@@ -448,7 +448,7 @@ namespace BLL
                    usuarioLogueado?.IdUsuario,
                     AccionBitacora.BACKUP_RESTAURADO,
                     "SEGURIDAD",
-                    $"Se restauró la base de datos desde el backup: {rutaCompleta}"
+                    $"Se restauro la base de datos desde el backup: {rutaCompleta}"
                 );
             }
             catch (Exception ex)

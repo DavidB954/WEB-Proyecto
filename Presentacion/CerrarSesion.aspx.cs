@@ -9,7 +9,7 @@ using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    public partial class CerrarSesion : System.Web.UI.Page
+    public partial class CerrarSesion : PaginaBase
     {
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
@@ -22,7 +22,7 @@ namespace Presentacion
             {
                 try
                 {
-                    bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.LOGOUT, "LOGIN", $"Cierre de sesión del usuario: {usuarioLogueado.NombreApellido}, ID: {usuarioLogueado.IdUsuario}");
+                    bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.LOGOUT, "LOGIN", $"Cierre de sesion del usuario: {usuarioLogueado.NombreApellido}, ID: {usuarioLogueado.IdUsuario}");
                 }
                 catch (Exception ex)
                 {
@@ -32,7 +32,7 @@ namespace Presentacion
                         System.IO.Directory.CreateDirectory(carpetaLogs);
                         System.IO.File.AppendAllText(
                             System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                            $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - CerrarSesion - Fallo al registrar bitácora: {ex}{Environment.NewLine}");
+                            $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - CerrarSesion - Fallo al registrar bitacora: {ex}{Environment.NewLine}");
                     }
                     catch
                     {

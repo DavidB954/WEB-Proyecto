@@ -12,6 +12,7 @@ namespace BLL
     public class BLL_Usuario
     {
         DAL_Usuario dal_usuario = new DAL_Usuario();
+        DAL_Rol dal_rol = new DAL_Rol();
         DAL_DVV dal_dvv = new DAL_DVV();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
@@ -95,29 +96,43 @@ namespace BLL
 
         public BE_LoginResultado ValidarWebmaster(string Email, string Password)
         {
-            if (string.IsNullOrEmpty(Password))
+            try
             {
-                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Debe ingresar contraseña" };
+                if (string.IsNullOrEmpty(Password))
+                {
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Debe ingresar contraseña" };
+                }
+
+                BE_Usuario usuario = dal_usuario.ObtenerUsuarioPorEmail(Email);
+
+                if (usuario == null)
+                {
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+                }
+
+                // No alcanza con usuario.NombreRol: ese campo trae "un" rol del
+                // usuario (el primero que devuelva el join, sin orden definido),
+                // y un usuario puede tener varios. Hay que preguntar si WEBMASTER
+                // esta entre TODOS sus roles, no solo en el primero que aparezca.
+                bool esWebmaster = dal_rol.ObtenerRolesDeUsuario(usuario.IdUsuario)
+                    .Any(r => string.Equals(r.Nombre, "WEBMASTER", StringComparison.OrdinalIgnoreCase));
+
+                if (!esWebmaster)
+                {
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Solo el Webmaster puede ingresar en este momento." };
+                }
+
+                if (usuario.HashPassword != HashHelper.GenerarHash(Password))
+                {
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+                }
+
+                return new BE_LoginResultado { ExitoLogin = true, Usuario = usuario, Mensaje = "Login de Webmaster correcto" };
             }
-
-            BE_Usuario usuario = dal_usuario.ObtenerUsuarioPorEmail(Email);
-
-            if (usuario == null)
+            catch (Exception ex)
             {
-                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+                throw new Exception($"Error al validar el login de webmaster: {ex.Message}", ex);
             }
-
-            if (usuario.NombreRol != "WEBMASTER")
-            {
-                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Solo el Webmaster puede ingresar en este momento." };
-            }
-
-            if (usuario.HashPassword != HashHelper.GenerarHash(Password))
-            {
-                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
-            }
-
-            return new BE_LoginResultado { ExitoLogin = true, Usuario = usuario, Mensaje = "Login de Webmaster correcto" };
         }
 
 
@@ -164,12 +179,26 @@ namespace BLL
 
         public List<BE_Usuario> Usuarios()
         {
-            return dal_usuario.Usuarios();
+            try
+            {
+                return dal_usuario.Usuarios();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al obtener usuarios: {ex.Message}", ex);
+            }
         }
 
         public List<BE_Usuario> UsuariosConRol()
         {
-            return dal_usuario.UsuariosConRol();
+            try
+            {
+                return dal_usuario.UsuariosConRol();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al obtener usuarios con rol: {ex.Message}", ex);
+            }
         }
 
         public void AgregarUsuario(BE_Usuario UsuarioLogueado, BE_Usuario usuario)
@@ -264,6 +293,18 @@ namespace BLL
             catch (Exception ex)
             {
                 throw new Exception($"Error al resetear contraseña: {ex.Message}", ex);
+            }
+        }
+
+        public void ActualizarIdiomaPreferido(int idUsuario, int idIdioma)
+        {
+            try
+            {
+                dal_usuario.ActualizarIdiomaPreferido(idUsuario, idIdioma);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al guardar el idioma preferido: {ex.Message}", ex);
             }
         }
 

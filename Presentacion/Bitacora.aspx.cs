@@ -1,4 +1,5 @@
 ﻿using BE;
+using BE.Seguridad;
 using BLL;
 using SERVICIOS;
 using System;
@@ -11,15 +12,16 @@ using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    public partial class bITACORA : System.Web.UI.Page
+    public partial class bITACORA : PaginaBase
     {
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
         BLL_Usuario bll_usuarios = new BLL_Usuario();
         protected void Page_Load(object sender, EventArgs e)
         {
             BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
 
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, "WEBMASTER", "ADMINISTRADOR"))
+            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "VER_BITACORA"))
             {
                 Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
                 return;
@@ -37,7 +39,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("Bitacora.Page_Load", ex);
-                    lblPaginas.Text = "No se pudo cargar la bitácora. Intentá nuevamente más tarde.";
+                    lblPaginas.Text = "No se pudo cargar la bitacora. Intenta nuevamente mas tarde.";
                 }
             }
         }
@@ -110,7 +112,7 @@ namespace Presentacion
             }
             else
             {
-                lblPaginas.Text = $"Página {gvBitacora.PageIndex + 1} de {gvBitacora.PageCount}";
+                lblPaginas.Text = $"Pagina {gvBitacora.PageIndex + 1} de {gvBitacora.PageCount}";
             }
         }
 
@@ -124,7 +126,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.btnFiltrar_Click", ex);
-                lblPaginas.Text = "No se pudo aplicar el filtro. Intentá nuevamente más tarde.";
+                lblPaginas.Text = "No se pudo aplicar el filtro. Intenta nuevamente mas tarde.";
             }
         }
 
@@ -145,7 +147,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.btnLimpiar_Click", ex);
-                lblPaginas.Text = "No se pudieron limpiar los filtros. Intentá nuevamente más tarde.";
+                lblPaginas.Text = "No se pudieron limpiar los filtros. Intenta nuevamente mas tarde.";
             }
         }
 
@@ -159,7 +161,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.gvBitacora_PageIndexChanging", ex);
-                lblPaginas.Text = "No se pudo cambiar de página. Intentá nuevamente más tarde.";
+                lblPaginas.Text = "No se pudo cambiar de pagina. Intenta nuevamente mas tarde.";
             }
         }
 

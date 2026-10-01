@@ -95,7 +95,7 @@ namespace DAL
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error al obtener bitácora: {ex.Message}", ex);
+                throw new Exception($"Error al obtener bitacora: {ex.Message}", ex);
             }
 
         }
@@ -131,7 +131,7 @@ namespace DAL
             catch (Exception ex)
             {
 
-                throw new Exception($"Error al filtrar bitácora: {ex.Message}", ex);
+                throw new Exception($"Error al filtrar bitacora: {ex.Message}", ex);
             }
 
         }

@@ -82,6 +82,10 @@
     <Content Include="Web.config" />
     <Content Include="CRUD_Usuarios.aspx" />
     <Content Include="Medicos.aspx" />
+    <Content Include="FormIdiomas.aspx" />
+    <Content Include="FormTraducciones.aspx" />
+    <Content Include="GestionRolesPermisos.aspx" />
+    <Content Include="AsignacionSeguridad.aspx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccesoDenegado.aspx.cs">
@@ -137,6 +141,8 @@
       <DependentUpon>Menu.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="GestorIdioma.cs" />
+    <Compile Include="PaginaBase.cs" />
     <Compile Include="CRUD_Usuarios.aspx.cs">
       <DependentUpon>CRUD_Usuarios.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -178,6 +184,34 @@
     </Compile>
     <Compile Include="Medicos.aspx.designer.cs">
       <DependentUpon>Medicos.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="FormIdiomas.aspx.cs">
+      <DependentUpon>FormIdiomas.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="FormIdiomas.aspx.designer.cs">
+      <DependentUpon>FormIdiomas.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="FormTraducciones.aspx.cs">
+      <DependentUpon>FormTraducciones.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="FormTraducciones.aspx.designer.cs">
+      <DependentUpon>FormTraducciones.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="GestionRolesPermisos.aspx.cs">
+      <DependentUpon>GestionRolesPermisos.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="GestionRolesPermisos.aspx.designer.cs">
+      <DependentUpon>GestionRolesPermisos.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="AsignacionSeguridad.aspx.cs">
+      <DependentUpon>AsignacionSeguridad.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AsignacionSeguridad.aspx.designer.cs">
+      <DependentUpon>AsignacionSeguridad.aspx</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

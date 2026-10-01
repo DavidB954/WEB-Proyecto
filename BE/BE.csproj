@@ -43,10 +43,17 @@
   <ItemGroup>
     <Compile Include="AccionBitacora.cs" />
     <Compile Include="BE_Bitacora.cs" />
+    <Compile Include="BE_Idioma.cs" />
     <Compile Include="BE_LoginResultado.cs" />
+    <Compile Include="BE_Permiso.cs" />
     <Compile Include="BE_RegistrosCorruptos.cs" />
     <Compile Include="BE_Rol.cs" />
+    <Compile Include="BE_Traduccion.cs" />
     <Compile Include="BE_Usuario.cs" />
+    <Compile Include="Seguridad\IComponentePermiso.cs" />
+    <Compile Include="Seguridad\PermisoComponente.cs" />
+    <Compile Include="Seguridad\RolComponente.cs" />
+    <Compile Include="Seguridad\UsuarioComponente.cs" />
     <Compile Include="CriticidadBitacora.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

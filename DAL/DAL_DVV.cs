@@ -140,11 +140,14 @@ namespace DAL
             {
                 conexion.Open();
 
-                SqlCommand cmdSingleUser = new SqlCommand("ALTER DATABASE GestionWEB SET SINGLE_USER WITH ROLLBACK IMMEDIATE", conexion);
-                cmdSingleUser.ExecuteNonQuery();
+                bool enModoSingleUser = false;
 
                 try
                 {
+                    SqlCommand cmdSingleUser = new SqlCommand("ALTER DATABASE GestionWEB SET SINGLE_USER WITH ROLLBACK IMMEDIATE", conexion);
+                    cmdSingleUser.ExecuteNonQuery();
+                    enModoSingleUser = true;
+
                     SqlCommand cmdRestauracion = new SqlCommand("RESTORE DATABASE GestionWEB FROM DISK = @ruta WITH REPLACE", conexion);
                     cmdRestauracion.Parameters.AddWithValue("@ruta", rutaBackup);
                     cmdRestauracion.CommandTimeout = 120;
@@ -152,8 +155,11 @@ namespace DAL
                 }
                 finally
                 {
-                    SqlCommand cmdMultiUser = new SqlCommand("ALTER DATABASE GestionWEB SET MULTI_USER", conexion);
-                    cmdMultiUser.ExecuteNonQuery();
+                    if (enModoSingleUser)
+                    {
+                        SqlCommand cmdMultiUser = new SqlCommand("ALTER DATABASE GestionWEB SET MULTI_USER", conexion);
+                        cmdMultiUser.ExecuteNonQuery();
+                    }
                 }
             }
         }

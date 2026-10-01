@@ -43,21 +43,5 @@ namespace Presentacion
         protected global::System.Web.UI.WebControls.Label lblMensaje;
 
         protected global::System.Web.UI.WebControls.GridView gvUsuarios;
-
-        protected global::System.Web.UI.WebControls.GridView gvUsuariosRoles;
-
-        protected global::System.Web.UI.WebControls.TextBox txtUsuarioRol;
-
-        protected global::System.Web.UI.WebControls.DropDownList ddlRoles;
-
-        protected global::System.Web.UI.WebControls.HiddenField hiddenIdUsuarioRol;
-
-        protected global::System.Web.UI.WebControls.Button btnGuardarRol;
-
-        protected global::System.Web.UI.WebControls.Button btnModificarRol;
-
-        protected global::System.Web.UI.WebControls.Button btnEliminarRol;
-
-        protected global::System.Web.UI.WebControls.Label lblMensajeRol;
     }
 }

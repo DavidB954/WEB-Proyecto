@@ -18,29 +18,39 @@ namespace BLL
 
         public void RegistrarEvento(int? IdUsuario, AccionBitacora accion, string modulo, string descripcion)
         {
-
-            if (IdUsuario == 0)
+            // Un fallo al auditar (ej. no se pudo resolver el nombre de maquina, o la
+            // base esta momentaneamente caida) no debe ocultar que la operacion
+            // principal (alta de usuario, login, etc.) si se completo: por eso este
+            // metodo nunca relanza, solo deja constancia via Trace y sigue.
+            try
             {
-                IdUsuario = null;
+                if (IdUsuario == 0)
+                {
+                    IdUsuario = null;
+                }
+
+                BE_Bitacora objBitacora = new BE_Bitacora()
+                {
+                    IdUsuario = IdUsuario,
+                    FechaHora = DateTime.Now,
+                    Accion = accion,
+                    Modulo = modulo,
+                    IP = ObtenerIP(),
+                    NombreMaquina = Dns.GetHostName(),
+                    Descripcion = descripcion,
+                    Criticidad = CriticidadBitacora.Obtener(accion)
+                };
+
+                objBitacora.DVH = EncryptionHelper.Encriptar(CadenaBitacora(objBitacora));
+
+                dal_bitacora.RegistrarEvento(objBitacora);
+
+                RefrescarDVVBitacora();
             }
-
-            BE_Bitacora objBitacora = new BE_Bitacora()
+            catch (Exception ex)
             {
-                IdUsuario = IdUsuario,
-                FechaHora = DateTime.Now,
-                Accion = accion,
-                Modulo = modulo,
-                IP = ObtenerIP(),
-                NombreMaquina = Dns.GetHostName(),
-                Descripcion = descripcion,
-                Criticidad = CriticidadBitacora.Obtener(accion)
-            };
-
-            objBitacora.DVH = EncryptionHelper.Encriptar(CadenaBitacora(objBitacora));
-
-            dal_bitacora.RegistrarEvento(objBitacora);
-
-            RefrescarDVVBitacora();
+                System.Diagnostics.Trace.TraceError($"Fallo al registrar bitacora ({modulo}/{accion}): {ex}");
+            }
         }
 
         public void RefrescarDVHDeFilas(IEnumerable<int> idsBitacora)

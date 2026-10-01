@@ -51,7 +51,7 @@ namespace Presentacion
             }
             catch (Exception)
             {
-                lblMensaje.Text = "No se pudo verificar la integridad del sistema. Intentá nuevamente más tarde.";
+                lblMensaje.Text = "No se pudo verificar la integridad del sistema. Intenta nuevamente mas tarde.";
                 return false;
             }
 
@@ -98,6 +98,15 @@ namespace Presentacion
                 {
                     Session["Usuario"] = Obj_Usuario.Usuario;
 
+                    if (Obj_Usuario.Usuario.IdUsuario > 0)
+                    {
+                        Session["Permisos"] = new BLL_Permiso().ConstruirArbolUsuario(Obj_Usuario.Usuario);
+                    }
+
+                    if (Obj_Usuario.Usuario.IdIdiomaPreferido.HasValue)
+                    {
+                        GestorIdioma.CambiarIdioma(Obj_Usuario.Usuario.IdIdiomaPreferido.Value);
+                    }
 
                     Response.Redirect("Menu.aspx");
                 }
@@ -110,7 +119,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Login.btnLogin_Click", ex);
-                lblMensaje.Text = "No se pudo iniciar sesión. Intentá nuevamente más tarde.";
+                lblMensaje.Text = "No se pudo iniciar sesion. Intenta nuevamente mas tarde.";
             }
 
         }

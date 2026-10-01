@@ -7,8 +7,8 @@
     <div class="medicos-layout">
 
         <div class="grid-container turnos-dia">
-            <h2>Turnos del dia</h2>
-            <span class="ayuda-campo">Selecciona un paciente con "Atender" para registrar su atencion.</span>
+            <h2 id="hTurnosDelDia" runat="server" data-i18n="1">Turnos del dia</h2>
+            <span id="spanAyudaAtender" runat="server" class="ayuda-campo" data-i18n="1">Selecciona un paciente con "Atender" para registrar su atencion.</span>
 
             <asp:GridView ID="gvTurnosMedicos" runat="server" AutoGenerateColumns="false" CssClass="grid-crud"
                 OnSelectedIndexChanged="gvTurnosMedicos_SelectedIndexChanged">
@@ -28,33 +28,33 @@
         </div>
 
         <div class="form-container atencion-medica">
-            <h2>Atencion medica</h2>
+            <h2 id="hAtencionMedica" runat="server" data-i18n="1">Atencion medica</h2>
 
             <asp:Label ID="lblPacienteSeleccionado" runat="server" CssClass="paciente-seleccionado"
                 Text="Ningun paciente seleccionado."></asp:Label>
 
-            <asp:Label runat="server" CssClass="label-base" Text="Motivo de la consulta:"></asp:Label>
+            <asp:Label ID="lblMotivoConsulta" runat="server" CssClass="label-base" Text="Motivo de la consulta:" data-i18n="1"></asp:Label>
             <asp:TextBox ID="txtMotivoConsulta" CssClass="input-base" runat="server" TextMode="MultiLine" Rows="2"></asp:TextBox>
 
-            <asp:Label runat="server" CssClass="label-base" Text="Diagnostico:"></asp:Label>
+            <asp:Label ID="lblDiagnostico" runat="server" CssClass="label-base" Text="Diagnostico:" data-i18n="1"></asp:Label>
             <asp:TextBox ID="txtDiagnostico" CssClass="input-base" runat="server" TextMode="MultiLine" Rows="2"></asp:TextBox>
 
-            <asp:Label runat="server" CssClass="label-base" Text="Observaciones:"></asp:Label>
+            <asp:Label ID="lblObservaciones" runat="server" CssClass="label-base" Text="Observaciones:" data-i18n="1"></asp:Label>
             <asp:TextBox ID="txtObservaciones" CssClass="input-base" runat="server" TextMode="MultiLine" Rows="2"></asp:TextBox>
 
             <div id="Receta" class="section-card">
-                <h3>Receta</h3>
+                <h3 id="hReceta" runat="server" data-i18n="1">Receta</h3>
 
-                <asp:Label runat="server" CssClass="label-base" Text="Medicamento:"></asp:Label>
+                <asp:Label ID="lblMedicamento" runat="server" CssClass="label-base" Text="Medicamento:" data-i18n="1"></asp:Label>
                 <asp:TextBox ID="txtMedicamento" CssClass="input-base" runat="server"></asp:TextBox>
 
-                <asp:Label runat="server" CssClass="label-base" Text="Indicaciones:"></asp:Label>
+                <asp:Label ID="lblIndicacionesReceta" runat="server" CssClass="label-base" Text="Indicaciones:" data-i18n="1"></asp:Label>
                 <asp:TextBox ID="txtObservacionesReceta" CssClass="input-base" runat="server" TextMode="MultiLine" Rows="2"></asp:TextBox>
             </div>
 
             <div class="acciones-turno">
                 <asp:Button ID="btnGuardarAtencion" CssClass="btn-base btn-success" runat="server"
-                    Text="Guardar Atencion Medica" OnClick="btnGuardarAtencion_Click" />
+                    Text="Guardar Atencion Medica" data-i18n="1" OnClick="btnGuardarAtencion_Click" />
             </div>
 
             <asp:Label ID="lblMensajeAtencion" runat="server" CssClass="msg-form" EnableViewState="false"></asp:Label>

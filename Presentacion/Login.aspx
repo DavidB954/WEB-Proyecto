@@ -20,7 +20,7 @@
             <div class="form-container">
             <div class="loginContainer" runat="server" >
                 <h2>Bienvenido</h2>
-                <p>Iniciá sesión para continuar</p>
+                <p>Inicia sesion para continuar</p>
                 <asp:TextBox
                     ID="txtEmail"
                     runat="server"
@@ -38,7 +38,7 @@
                     Class="btn"
                     ID="btnLogin"                 
                     runat="server" 
-                    Text="Iniciar Sesión" 
+                    Text="Iniciar Sesion" 
                     OnClick="btnLogin_Click" />
                 <br /><br />
                 <asp:Label ID="lblMensaje" runat="server"></asp:Label>

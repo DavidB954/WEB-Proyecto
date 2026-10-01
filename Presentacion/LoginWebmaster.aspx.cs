@@ -46,12 +46,23 @@ namespace Presentacion
                 }
 
                 Session["Usuario"] = resultado.Usuario;
+
+                if (resultado.Usuario.IdUsuario > 0)
+                {
+                    Session["Permisos"] = new BLL_Permiso().ConstruirArbolUsuario(resultado.Usuario);
+                }
+
+                if (resultado.Usuario.IdIdiomaPreferido.HasValue)
+                {
+                    GestorIdioma.CambiarIdioma(resultado.Usuario.IdIdiomaPreferido.Value);
+                }
+
                 Response.Redirect("Seguridad.aspx");
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("LoginWebmaster.btnLogin_Click", ex);
-                lblMensaje.Text = "No se pudo iniciar sesión. Intentá nuevamente más tarde.";
+                lblMensaje.Text = "No se pudo iniciar sesion. Intenta nuevamente mas tarde.";
             }
         }
 
