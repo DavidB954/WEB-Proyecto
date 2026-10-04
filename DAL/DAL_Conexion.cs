@@ -9,10 +9,11 @@ namespace DAL
 {
     public class DAL_Conexion
     {
-        private static string connetionString = " Data Source=localhost\\SQLEXPRESS;Initial Catalog=GestionWEB ;Integrated Security= True;";
+        private static string connetionString = "Data Source=localhost\\SQLEXPRESS;Initial Catalog=GestionWEB ;Integrated Security= True;";
 
 
-    public SqlConnection ObtenerConexion()
+
+        public SqlConnection ObtenerConexion()
         {
             return new SqlConnection(connetionString);
         }
