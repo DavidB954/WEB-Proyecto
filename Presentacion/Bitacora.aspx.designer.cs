@@ -22,6 +22,8 @@ namespace Presentacion
 
         protected global::System.Web.UI.WebControls.Button btnLimpiar;
 
+        protected global::System.Web.UI.WebControls.Button btnExportarXml;
+
         protected global::System.Web.UI.WebControls.Label lblPaginas;
 
         protected global::System.Web.UI.WebControls.GridView gvBitacora;

@@ -33,7 +33,7 @@
         </div>
 
         <div class="abm-actions">
-            <asp:Button ID="btnGuardarTraducciones" CssClass="btn-base btn-success" runat="server" Text="Guardar Traducciones" data-i18n="1" OnClick="btnGuardarTraducciones_Click" />
+            <asp:Button ID="btnGuardarTraducciones" CssClass="btn-base btn-success" runat="server" Text="Guardar Traducciones" data-i18n="1" OnClick="btnGuardarTraducciones_Click" data-permiso="TRADUCCION_EDITAR" />
         </div>
         <asp:Label ID="lblMensaje" runat="server" CssClass="msg-form"></asp:Label>
 

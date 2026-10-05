@@ -24,14 +24,15 @@ namespace Presentacion
 
             UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
 
-            cardTurnos.Visible = SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ACCESO_TURNOS");
-            cardUsuarios.Visible = SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ABM_USUARIO");
-            cardRecetas.Visible = SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ACCESO_RECETAS");
-            cardMedicos.Visible = SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ACCESO_MEDICOS");
-            cardBitacora.Visible = SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "VER_BITACORA");
-            cardSeguridad.Visible = SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ACCESO_SEGURIDAD");
-            cardRolesPermisos.Visible = SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "GESTION_ROLES_PERMISOS");
-            cardAsignacionSeguridad.Visible = SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ASIGNACION_SEGURIDAD");
+            cardTurnos.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Turnos.aspx");
+            cardUsuarios.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "CRUD_Usuarios.aspx");
+            cardRecetas.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Recetas.aspx");
+            cardMedicos.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Medicos.aspx");
+            cardBitacora.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Bitacora.aspx");
+            cardSeguridad.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Seguridad.aspx");
+            cardRolesPermisos.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "GestionRolesPermisos.aspx");
+            cardAsignacionSeguridad.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "AsignacionSeguridad.aspx");
         }
+
     }
 }

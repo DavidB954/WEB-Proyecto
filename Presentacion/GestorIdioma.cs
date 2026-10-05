@@ -113,6 +113,67 @@ namespace Presentacion
             }
         }
 
+        /// <summary>
+        /// Segundo paso, llamado desde PaginaBase.OnPreRender: las filas de las
+        /// grillas (controles de TemplateField y EmptyDataTemplate) recien existen
+        /// despues del DataBind, asi que no estan cuando se traduce en OnInit.
+        /// La clave de esos controles es Pagina.IdGrilla_IdControl.
+        /// </summary>
+        public static void AplicarTraduccionesGrillas(Control pagina)
+        {
+            try
+            {
+                string nombrePagina = (pagina.GetType().BaseType ?? pagina.GetType()).Name;
+                Dictionary<string, string> traducciones = ObtenerTraduccionesDeCache(ObtenerIdiomaActual());
+
+                RecorrerGrillas(pagina, nombrePagina, nombrePagina, traducciones);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorSilencioso("GestorIdioma.AplicarTraduccionesGrillas", ex);
+            }
+        }
+
+        private static void RecorrerGrillas(Control control, string paginaActual, string paginaContenido, Dictionary<string, string> traducciones)
+        {
+            if (control is MasterPage)
+            {
+                paginaActual = PaginaMaster;
+            }
+            else if (control is ContentPlaceHolder)
+            {
+                paginaActual = paginaContenido;
+            }
+
+            if (control is GridView gridView)
+            {
+                foreach (Control fila in gridView.Controls)
+                {
+                    TraducirContenidoGrilla(fila, gridView.ID, paginaActual, traducciones);
+                }
+
+                return;
+            }
+
+            foreach (Control hijo in control.Controls)
+            {
+                RecorrerGrillas(hijo, paginaActual, paginaContenido, traducciones);
+            }
+        }
+
+        private static void TraducirContenidoGrilla(Control control, string idGrilla, string pagina, Dictionary<string, string> traducciones)
+        {
+            if (EsTraducible(control))
+            {
+                AplicarAlControl(control, pagina, idGrilla + "_" + control.ID, traducciones);
+            }
+
+            foreach (Control hijo in control.Controls)
+            {
+                TraducirContenidoGrilla(hijo, idGrilla, pagina, traducciones);
+            }
+        }
+
         private static void RecorrerControl(Control control, string paginaActual, string paginaContenido, Dictionary<string, string> traducciones)
         {
             if (control is MasterPage)
@@ -132,7 +193,7 @@ namespace Presentacion
 
             if (EsTraducible(control))
             {
-                AplicarAlControl(control, paginaActual, traducciones);
+                AplicarAlControl(control, paginaActual, control.ID, traducciones);
             }
 
             foreach (Control hijo in control.Controls)
@@ -161,12 +222,16 @@ namespace Presentacion
             return false;
         }
 
-        private static void AplicarAlControl(Control control, string pagina, Dictionary<string, string> traducciones)
+        private static void AplicarAlControl(Control control, string pagina, string controlId, Dictionary<string, string> traducciones)
         {
-            string clave = pagina + "." + control.ID;
+            string clave = pagina + "." + controlId;
 
             switch (control)
             {
+                // Antes que Label: los validadores heredan de Label.
+                case BaseValidator validador:
+                    validador.ErrorMessage = ResolverTexto(clave, validador.ErrorMessage, traducciones);
+                    break;
                 case Label lbl:
                     lbl.Text = ResolverTexto(clave, lbl.Text, traducciones);
                     break;
@@ -193,9 +258,26 @@ namespace Presentacion
 
         private static void TraducirEncabezadosGrilla(GridView gridView, string pagina, Dictionary<string, string> traducciones)
         {
+            if (gridView.AllowPaging)
+            {
+                PagerSettings paginador = gridView.PagerSettings;
+                string prefijo = $"{pagina}.{gridView.ID}_pag";
+
+                paginador.FirstPageText = ResolverTexto(prefijo + "Primera", paginador.FirstPageText, traducciones);
+                paginador.PreviousPageText = ResolverTexto(prefijo + "Anterior", paginador.PreviousPageText, traducciones);
+                paginador.NextPageText = ResolverTexto(prefijo + "Siguiente", paginador.NextPageText, traducciones);
+                paginador.LastPageText = ResolverTexto(prefijo + "Ultima", paginador.LastPageText, traducciones);
+            }
+
             for (int i = 0; i < gridView.Columns.Count; i++)
             {
                 DataControlField columna = gridView.Columns[i];
+
+                // Texto del link "Seleccionar" / "Componer" de las CommandField.
+                if (columna is CommandField comando && comando.ShowSelectButton)
+                {
+                    comando.SelectText = ResolverTexto($"{pagina}.{gridView.ID}_col{i}_sel", comando.SelectText, traducciones);
+                }
 
                 if (string.IsNullOrEmpty(columna.HeaderText))
                 {

@@ -243,6 +243,21 @@ namespace BLL
                     throw new InvalidOperationException($"El rol '{arbolRol.Codigo}' ya tiene el permiso '{permiso.Nombre}' (directo o a traves de un sub-rol).");
                 }
 
+                // Una ACCION es redundante si el rol ya tiene la PAGINA completa.
+                PermisoDefinicion definicion = CatalogoPermisos.Buscar(permiso.Nombre);
+
+                if (definicion != null && definicion.Tipo == CatalogoPermisos.TipoAccion)
+                {
+                    PermisoDefinicion permisoPagina = CatalogoPermisos.DePagina(definicion.Pagina)
+                        .FirstOrDefault(p => p.Tipo == CatalogoPermisos.TipoPagina && arbolRol.TienePermiso(p.Codigo));
+
+                    if (permisoPagina != null)
+                    {
+                        throw new InvalidOperationException(
+                            $"El rol '{arbolRol.Codigo}' ya tiene la pagina completa '{definicion.Pagina}' ({permisoPagina.Codigo}), que incluye la accion '{permiso.Nombre}'.");
+                    }
+                }
+
                 dal_permiso.AgregarPermisoARol(idRol, idPermiso);
 
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.ROL_PERMISO_AGREGADO, "ROL",

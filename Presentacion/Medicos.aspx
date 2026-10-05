@@ -13,7 +13,11 @@
             <asp:GridView ID="gvTurnosMedicos" runat="server" AutoGenerateColumns="false" CssClass="grid-crud"
                 OnSelectedIndexChanged="gvTurnosMedicos_SelectedIndexChanged">
                 <Columns>
-                    <asp:CommandField ShowSelectButton="true" SelectText="Atender" />
+                    <asp:TemplateField>
+                        <ItemTemplate>
+                            <asp:LinkButton ID="lnkAtender" runat="server" data-i18n="1" CommandName="Select" Text="Atender" CausesValidation="false" data-permiso="MEDICO_ATENDER" />
+                        </ItemTemplate>
+                    </asp:TemplateField>
                     <asp:BoundField DataField="Hora" HeaderText="Hora" />
                     <asp:BoundField DataField="Paciente" HeaderText="Paciente" />
                     <asp:BoundField DataField="ObraSocial" HeaderText="Obra Social" />
@@ -54,7 +58,7 @@
 
             <div class="acciones-turno">
                 <asp:Button ID="btnGuardarAtencion" CssClass="btn-base btn-success" runat="server"
-                    Text="Guardar Atencion Medica" data-i18n="1" OnClick="btnGuardarAtencion_Click" />
+                    Text="Guardar Atencion Medica" data-i18n="1" OnClick="btnGuardarAtencion_Click" data-permiso="MEDICO_ATENDER" />
             </div>
 
             <asp:Label ID="lblMensajeAtencion" runat="server" CssClass="msg-form" EnableViewState="false"></asp:Label>

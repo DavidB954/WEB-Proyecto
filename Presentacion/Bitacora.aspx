@@ -47,6 +47,7 @@
         <div class="acciones-filtro">
             <asp:Button runat="server" Text="Filtrar" ID="btnFiltrar" CssClass="btn-base btn-primary" data-i18n="1" OnClick="btnFiltrar_Click" />
             <asp:Button runat="server" Text="Limpiar Filtros" ID="btnLimpiar" CssClass="btn-base btn-danger" data-i18n="1" OnClick="btnLimpiar_Click" />
+            <asp:Button runat="server" Text="Exportar XML" ID="btnExportarXml" CssClass="btn-base btn-success" data-i18n="1" OnClick="btnExportarXml_Click" data-permiso="BITACORA_EXPORTAR" />
         </div>
         <div class="grid-container datos-bitacora">
             <asp:Label ID="lblPaginas" runat="server" CssClass="info-paginas"></asp:Label>

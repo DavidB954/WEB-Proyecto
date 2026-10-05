@@ -29,16 +29,16 @@ namespace Presentacion
 
                         UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
 
-                        liUsuarios.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "ABM_USUARIO");
-                        liTurnos.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "ACCESO_TURNOS");
-                        liRecetas.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "ACCESO_RECETAS");
-                        liMedicos.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "ACCESO_MEDICOS");
-                        liBitacora.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "VER_BITACORA");
-                        liSeguridad.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "ACCESO_SEGURIDAD");
-                        liIdiomas.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "GESTION_IDIOMAS");
-                        liTraducciones.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "GESTION_TRADUCCIONES");
-                        liRolesPermisos.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "GESTION_ROLES_PERMISOS");
-                        liAsignacionSeguridad.Visible = SeguridadHelper.TieneAcceso(usuario, permisos, "ASIGNACION_SEGURIDAD");
+                        liUsuarios.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "CRUD_Usuarios.aspx");
+                        liTurnos.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Turnos.aspx");
+                        liRecetas.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Recetas.aspx");
+                        liMedicos.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Medicos.aspx");
+                        liBitacora.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Bitacora.aspx");
+                        liSeguridad.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Seguridad.aspx");
+                        liIdiomas.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "FormIdiomas.aspx");
+                        liTraducciones.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "FormTraducciones.aspx");
+                        liRolesPermisos.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "GestionRolesPermisos.aspx");
+                        liAsignacionSeguridad.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "AsignacionSeguridad.aspx");
                     }
                 }
                 catch (Exception ex)

@@ -45,6 +45,7 @@ namespace BE
                 case AccionBitacora.BACKUP_GENERADO:
                 case AccionBitacora.IDIOMA_ALTA:
                 case AccionBitacora.TRADUCCION_MODIFICACION:
+                case AccionBitacora.BITACORA_EXPORTADA:
                     return MEDIA;
 
                 default:

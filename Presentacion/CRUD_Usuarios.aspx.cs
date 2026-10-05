@@ -17,14 +17,7 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
-
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ABM_USUARIO"))
-            {
-                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                return;
-            }
+            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
 
             if (!IsPostBack)
             {
@@ -81,6 +74,11 @@ namespace Presentacion
 
         protected void btnGuardar_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("USUARIO_ALTA"))
+            {
+                return;
+            }
+
             try
             {
                 if (!Page.IsValid)
@@ -117,6 +115,13 @@ namespace Presentacion
 
                 lblMensaje.Text = string.Empty;
                 MostrarToast("Usuario guardado correctamente.", true);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Error de validacion (ej: DNI o email repetido): se muestra tal cual
+                // y no se registra como error interno.
+                lblMensaje.Text = ex.Message;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
             catch (Exception ex)
             {
@@ -157,6 +162,11 @@ namespace Presentacion
 
         protected void btnModificar_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("USUARIO_MODIFICACION"))
+            {
+                return;
+            }
+
             try
             {
                 if (!Page.IsValid)
@@ -209,6 +219,13 @@ namespace Presentacion
                 lblMensaje.Text = string.Empty;
                 MostrarToast("Usuario modificado correctamente.", true);
             }
+            catch (InvalidOperationException ex)
+            {
+                // Error de validacion (ej: DNI o email repetido): se muestra tal cual
+                // y no se registra como error interno.
+                lblMensaje.Text = ex.Message;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
+            }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnModificar_Click", ex);
@@ -219,6 +236,11 @@ namespace Presentacion
 
         protected void btnEliminar_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("USUARIO_BAJA"))
+            {
+                return;
+            }
+
             try
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdUsuario.Value))

@@ -91,10 +91,7 @@ namespace DAL
                 }
             }
 
-            // Nadie quedo marcado como predeterminado (tabla recien creada, o el
-            // idioma que lo era se borro/desactivo). Nos autocorregimos: tomamos el
-            // primer idioma existente y lo dejamos marcado como predeterminado para
-            // que la proxima vez ya este resuelto y no vuelva a fallar.
+            
             using (SqlConnection cn = conex.ObtenerConexion())
             {
                 cn.Open();

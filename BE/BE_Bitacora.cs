@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace BE
 {
@@ -54,6 +55,9 @@ namespace BE
             get; set;
         }
 
+        // No se expone en el Web Service ni en las exportaciones: es el
+        // digito verificador interno de la fila.
+        [XmlIgnore]
         public string DVH
         {
             get; set;

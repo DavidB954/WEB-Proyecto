@@ -30,90 +30,49 @@ namespace BLL
             }
         }
 
-        public void AgregarPermiso(BE_Usuario usuarioLogueado, BE_Permiso permiso)
+        // Da de alta en la tabla Permiso todo lo que esta en CatalogoPermisos y
+        // todavia no existe (y corrige el Tipo si no coincide). Los permisos no se
+        // crean a mano: Rol_Permiso y UsuarioPermiso necesitan su IdPermiso.
+        public void SincronizarCatalogo(BE_Usuario usuarioLogueado)
         {
             try
             {
-                ValidarNombre(permiso.Nombre);
+                List<BE_Permiso> existentes = dal_permiso.ObtenerPermisos();
 
-                if (dal_permiso.ObtenerPermisos().Any(p => string.Equals(p.Nombre, permiso.Nombre, StringComparison.OrdinalIgnoreCase)))
+                foreach (PermisoDefinicion definicion in CatalogoPermisos.Todos)
                 {
-                    throw new InvalidOperationException($"Ya existe un permiso llamado '{permiso.Nombre}'.");
+                    BE_Permiso permiso = existentes.FirstOrDefault(p => string.Equals(p.Nombre, definicion.Codigo, StringComparison.OrdinalIgnoreCase));
+
+                    if (permiso == null)
+                    {
+                        permiso = new BE_Permiso { Nombre = definicion.Codigo, Tipo = definicion.Tipo };
+
+                        dal_permiso.AgregarPermiso(permiso);
+
+                        permiso.DVH = HashHelper.GenerarHash(CadenaPermiso(permiso));
+                        dal_permiso.ActualizarDVH(permiso.IdPermiso, permiso.DVH);
+
+                        bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.PERMISO_ALTA, "PERMISO",
+                            $"Se da de alta el permiso '{permiso.Nombre}' (ID {permiso.IdPermiso}) desde el catalogo del sistema.");
+                    }
+                    else if (!string.Equals(permiso.Tipo, definicion.Tipo, StringComparison.OrdinalIgnoreCase))
+                    {
+                        permiso.Tipo = definicion.Tipo;
+                        permiso.DVH = HashHelper.GenerarHash(CadenaPermiso(permiso));
+                        dal_permiso.ModificarPermiso(permiso);
+
+                        bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.PERMISO_MODIFICACION, "PERMISO",
+                            $"Se corrige el tipo del permiso '{permiso.Nombre}' a {permiso.Tipo} segun el catalogo del sistema.");
+                    }
                 }
-
-                dal_permiso.AgregarPermiso(permiso);
-
-                permiso.DVH = HashHelper.GenerarHash(CadenaPermiso(permiso));
-                dal_permiso.ActualizarDVH(permiso.IdPermiso, permiso.DVH);
-
-                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.PERMISO_ALTA, "PERMISO",
-                    $"Se crea el permiso '{permiso.Nombre}' (ID {permiso.IdPermiso}), creado por {usuarioLogueado.NombreApellido}.");
-            }
-            catch (InvalidOperationException)
-            {
-                throw;
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error al crear el permiso: {ex.Message}", ex);
-            }
-        }
-
-        public void ModificarPermiso(BE_Usuario usuarioLogueado, BE_Permiso permiso)
-        {
-            try
-            {
-                ValidarNombre(permiso.Nombre);
-
-                if (dal_permiso.ObtenerPermisos().Any(p => p.IdPermiso != permiso.IdPermiso && string.Equals(p.Nombre, permiso.Nombre, StringComparison.OrdinalIgnoreCase)))
-                {
-                    throw new InvalidOperationException($"Ya existe un permiso llamado '{permiso.Nombre}'.");
-                }
-
-                permiso.DVH = HashHelper.GenerarHash(CadenaPermiso(permiso));
-                dal_permiso.ModificarPermiso(permiso);
-
-                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.PERMISO_MODIFICACION, "PERMISO",
-                    $"Se modifica el permiso ID {permiso.IdPermiso}, nuevo nombre: '{permiso.Nombre}'. Modificado por {usuarioLogueado.NombreApellido}.");
-            }
-            catch (InvalidOperationException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error al modificar el permiso: {ex.Message}", ex);
-            }
-        }
-
-        public void EliminarPermiso(BE_Usuario usuarioLogueado, int idPermiso)
-        {
-            try
-            {
-                BE_Permiso permiso = dal_permiso.ObtenerPermisos().FirstOrDefault(p => p.IdPermiso == idPermiso);
-
-                dal_permiso.EliminarPermiso(idPermiso);
-
-                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.PERMISO_BAJA, "PERMISO",
-                    $"Se elimina el permiso '{permiso?.Nombre}' (ID {idPermiso}). Eliminado por {usuarioLogueado.NombreApellido}.");
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error al eliminar el permiso: {ex.Message}", ex);
+                throw new Exception($"Error al sincronizar el catalogo de permisos: {ex.Message}", ex);
             }
         }
 
         private string CadenaPermiso(BE_Permiso permiso) => $"{permiso.IdPermiso}|{permiso.Nombre}|{permiso.Tipo}";
-
-        // Permiso.Nombre es VARCHAR(30): igual que en BLL_Rol, sin este chequeo
-        // un nombre mas largo se trunca en silencio al insertarlo.
-        private void ValidarNombre(string nombre)
-        {
-            if (!string.IsNullOrEmpty(nombre) && nombre.Length > 30)
-            {
-                throw new InvalidOperationException($"El nombre del permiso no puede superar los 30 caracteres (tiene {nombre.Length}).");
-            }
-        }
 
         // ---- Arbol Composite completo de un usuario (raiz): sus Roles + sus permisos directos ----
 

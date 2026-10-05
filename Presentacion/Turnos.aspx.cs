@@ -27,14 +27,7 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
-
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ACCESO_TURNOS"))
-            {
-                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                return;
-            }
+            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
 
             if (!IsPostBack)
             {
@@ -132,6 +125,11 @@ namespace Presentacion
 
         protected void btnAgendar_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("TURNO_ALTA"))
+            {
+                return;
+            }
+
             try
             {
                 foreach (DataRow fila in TurnosDelPaciente.Rows)
@@ -185,6 +183,11 @@ namespace Presentacion
             {
                 if (e.CommandName == "CancelarTurno")
                 {
+                    if (!ExigirPermiso("TURNO_CANCELAR"))
+                    {
+                        return;
+                    }
+
                     int indice = Convert.ToInt32(e.CommandArgument);
 
                     if (indice < 0 || indice >= TurnosDelPaciente.Rows.Count)

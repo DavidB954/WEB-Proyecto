@@ -17,35 +17,29 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
-
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "GESTION_ROLES_PERMISOS"))
-            {
-                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                return;
-            }
+            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
 
             if (!IsPostBack)
             {
                 try
                 {
+                    // Los permisos no se crean a mano: se dan de alta desde
+                    // CatalogoPermisos para que se puedan agregar a los roles.
+                    bll_permiso.SincronizarCatalogo(UsuarioLogueado);
+
                     CargarGrillas();
                 }
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("GestionRolesPermisos.Page_Load", ex);
-                    lblMensajePermiso.Text = "No se pudieron cargar los datos. Intenta nuevamente mas tarde.";
-                    lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
+                    lblMensajeRol.Text = "No se pudieron cargar los datos. Intenta nuevamente mas tarde.";
+                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
                 }
             }
         }
 
         private void CargarGrillas()
         {
-            gvPermisos.DataSource = bll_permiso.ObtenerPermisos();
-            gvPermisos.DataBind();
-
             gvRoles.DataSource = bll_rol.ObtenerRoles();
             gvRoles.DataBind();
         }
@@ -64,154 +58,6 @@ namespace Presentacion
             ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
         }
 
-        // ==================== ABM Permiso ====================
-
-        private void LimpiarFormularioPermiso()
-        {
-            txtNombrePermiso.Text = string.Empty;
-            ddlTipoPermiso.SelectedIndex = 0;
-            hiddenIdPermiso.Value = string.Empty;
-
-            CargarGrillas();
-        }
-
-        protected void btnGuardarPermiso_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(txtNombrePermiso.Text))
-                {
-                    lblMensajePermiso.Text = "Debe ingresar un nombre para el permiso.";
-                    lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-                    return;
-                }
-
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                BE_Permiso permiso = new BE_Permiso
-                {
-                    Nombre = txtNombrePermiso.Text.Trim(),
-                    Tipo = ddlTipoPermiso.SelectedValue
-                };
-
-                bll_permiso.AgregarPermiso(usuarioLogueado, permiso);
-
-                LimpiarFormularioPermiso();
-
-                lblMensajePermiso.Text = string.Empty;
-                MostrarToast("Permiso guardado correctamente.", true);
-            }
-            catch (InvalidOperationException ex)
-            {
-                lblMensajePermiso.Text = ex.Message;
-                lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("GestionRolesPermisos.btnGuardarPermiso_Click", ex);
-                lblMensajePermiso.Text = "No se pudo guardar el permiso. Intenta nuevamente mas tarde.";
-                lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-        protected void gvPermisos_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                GridViewRow fila = gvPermisos.SelectedRow;
-
-                hiddenIdPermiso.Value = fila.Cells[1].Text;
-                txtNombrePermiso.Text = fila.Cells[2].Text;
-                ddlTipoPermiso.SelectedValue = fila.Cells[3].Text;
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("GestionRolesPermisos.gvPermisos_SelectedIndexChanged", ex);
-                lblMensajePermiso.Text = "No se pudo cargar el permiso seleccionado.";
-                lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-        protected void btnModificarPermiso_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(hiddenIdPermiso.Value))
-                {
-                    lblMensajePermiso.Text = "Seleccione un permiso de la lista antes de modificar.";
-                    lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(txtNombrePermiso.Text))
-                {
-                    lblMensajePermiso.Text = "Debe ingresar un nombre para el permiso.";
-                    lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-                    return;
-                }
-
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                BE_Permiso permiso = new BE_Permiso
-                {
-                    IdPermiso = int.Parse(hiddenIdPermiso.Value),
-                    Nombre = txtNombrePermiso.Text.Trim(),
-                    Tipo = ddlTipoPermiso.SelectedValue
-                };
-
-                bll_permiso.ModificarPermiso(usuarioLogueado, permiso);
-
-                LimpiarFormularioPermiso();
-
-                lblMensajePermiso.Text = string.Empty;
-                MostrarToast("Permiso modificado correctamente.", true);
-            }
-            catch (InvalidOperationException ex)
-            {
-                lblMensajePermiso.Text = ex.Message;
-                lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("GestionRolesPermisos.btnModificarPermiso_Click", ex);
-                lblMensajePermiso.Text = "No se pudo modificar el permiso. Intenta nuevamente mas tarde.";
-                lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-        protected void btnEliminarPermiso_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(hiddenIdPermiso.Value))
-                {
-                    lblMensajePermiso.Text = "Seleccione un permiso de la lista antes de eliminar.";
-                    lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-                    return;
-                }
-
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_permiso.EliminarPermiso(usuarioLogueado, int.Parse(hiddenIdPermiso.Value));
-
-                LimpiarFormularioPermiso();
-
-                lblMensajePermiso.Text = string.Empty;
-                MostrarToast("Permiso eliminado correctamente.", true);
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("GestionRolesPermisos.btnEliminarPermiso_Click", ex);
-                lblMensajePermiso.Text = "No se pudo eliminar el permiso. Verifique que no este en uso por ningun rol o usuario.";
-                lblMensajePermiso.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-        protected void btnLimpiarPermiso_Click(object sender, EventArgs e)
-        {
-            LimpiarFormularioPermiso();
-        }
-
         // ==================== ABM Rol ====================
 
         private void LimpiarFormularioRol()
@@ -227,6 +73,11 @@ namespace Presentacion
 
         protected void btnGuardarRol_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("ROL_ALTA"))
+            {
+                return;
+            }
+
             try
             {
                 if (string.IsNullOrWhiteSpace(txtNombreRol.Text))
@@ -281,6 +132,11 @@ namespace Presentacion
 
         protected void btnModificarRol_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("ROL_MODIFICACION"))
+            {
+                return;
+            }
+
             try
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdRol.Value))
@@ -327,6 +183,11 @@ namespace Presentacion
 
         protected void btnEliminarRol_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("ROL_BAJA"))
+            {
+                return;
+            }
+
             try
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdRol.Value))
@@ -369,18 +230,22 @@ namespace Presentacion
 
             txtRolComponiendo.Text = arbol.Codigo;
 
-            gvPermisosDelRol.DataSource = arbol.PermisosDirectos.Select(p => p.Permiso).ToList();
+            gvPermisosDelRol.DataSource = arbol.PermisosDirectos
+                .Select(p => new
+                {
+                    p.Permiso.IdPermiso,
+                    p.Permiso.Nombre,
+                    p.Permiso.Tipo,
+                    Pagina = CatalogoPermisos.Buscar(p.Permiso.Nombre)?.Pagina ?? "-"
+                })
+                .ToList();
             gvPermisosDelRol.DataBind();
 
             gvSubRolesDelRol.DataSource = arbol.SubRoles.Select(r => r.Rol).ToList();
             gvSubRolesDelRol.DataBind();
 
-            HashSet<int> idsPermisosDirectos = new HashSet<int>(arbol.PermisosDirectos.Select(p => p.Permiso.IdPermiso));
-
-            ddlPermisoAAgregar.DataSource = bll_permiso.ObtenerPermisos().Where(p => !idsPermisosDirectos.Contains(p.IdPermiso)).ToList();
-            ddlPermisoAAgregar.DataTextField = "Nombre";
-            ddlPermisoAAgregar.DataValueField = "IdPermiso";
-            ddlPermisoAAgregar.DataBind();
+            CargarPaginas();
+            CargarPermisosDePagina(arbol);
 
             HashSet<int> idsSubRolesDirectos = new HashSet<int>(arbol.SubRoles.Select(r => r.Rol.IdRol));
 
@@ -390,6 +255,75 @@ namespace Presentacion
             ddlSubRolAAgregar.DataBind();
 
             CargarArbolVisual(arbol);
+        }
+
+        // Conserva la pagina elegida entre recargas (ej: despues de agregar un
+        // permiso se sigue viendo la misma pagina).
+        private void CargarPaginas()
+        {
+            string paginaSeleccionada = ddlPaginaAAgregar.SelectedValue;
+
+            ddlPaginaAAgregar.Items.Clear();
+
+            foreach (string pagina in CatalogoPermisos.Todos.Select(p => p.Pagina).Distinct())
+            {
+                ddlPaginaAAgregar.Items.Add(new ListItem(pagina, pagina));
+            }
+
+            if (ddlPaginaAAgregar.Items.FindByValue(paginaSeleccionada) != null)
+            {
+                ddlPaginaAAgregar.SelectedValue = paginaSeleccionada;
+            }
+        }
+
+        // Permisos de la pagina elegida: primero "toda la pagina" (PAGINA) y despues
+        // cada ACCION por separado. Se omiten los que el rol ya tiene directos.
+        private void CargarPermisosDePagina(RolComponente arbol)
+        {
+            HashSet<string> nombresDirectos = new HashSet<string>(
+                arbol.PermisosDirectos.Select(p => p.Codigo), StringComparer.OrdinalIgnoreCase);
+
+            Dictionary<string, int> idsPorNombre = bll_permiso.ObtenerPermisos()
+                .GroupBy(p => p.Nombre, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First().IdPermiso, StringComparer.OrdinalIgnoreCase);
+
+            IEnumerable<PermisoDefinicion> definiciones = CatalogoPermisos.DePagina(ddlPaginaAAgregar.SelectedValue)
+                .OrderBy(p => p.Tipo == CatalogoPermisos.TipoPagina ? 0 : 1);
+
+            ddlPermisoAAgregar.Items.Clear();
+
+            foreach (PermisoDefinicion definicion in definiciones)
+            {
+                if (nombresDirectos.Contains(definicion.Codigo) || !idsPorNombre.TryGetValue(definicion.Codigo, out int idPermiso))
+                {
+                    continue;
+                }
+
+                string texto = definicion.Tipo == CatalogoPermisos.TipoPagina
+                    ? $"Toda la pagina ({definicion.Codigo})"
+                    : $"Solo: {definicion.Descripcion} ({definicion.Codigo})";
+
+                ddlPermisoAAgregar.Items.Add(new ListItem(texto, idPermiso.ToString()));
+            }
+        }
+
+        protected void ddlPaginaAAgregar_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(hiddenIdRol.Value))
+                {
+                    return;
+                }
+
+                CargarPermisosDePagina(bll_rol.ConstruirArbolRol(int.Parse(hiddenIdRol.Value)));
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("GestionRolesPermisos.ddlPaginaAAgregar_SelectedIndexChanged", ex);
+                lblMensajeComposicion.Text = "No se pudieron cargar los permisos de la pagina.";
+                lblMensajeComposicion.ForeColor = System.Drawing.Color.Red;
+            }
         }
 
         private void CargarArbolVisual(RolComponente arbol)
@@ -409,7 +343,7 @@ namespace Presentacion
             {
                 if (hijo is PermisoComponente permisoHijo)
                 {
-                    nodoPadre.ChildNodes.Add(new TreeNode("Permiso: " + permisoHijo.Codigo));
+                    nodoPadre.ChildNodes.Add(new TreeNode(DescribirPermiso(permisoHijo.Codigo)));
                 }
                 else if (hijo is RolComponente rolHijo)
                 {
@@ -420,8 +354,27 @@ namespace Presentacion
             }
         }
 
+        private static string DescribirPermiso(string codigo)
+        {
+            PermisoDefinicion definicion = CatalogoPermisos.Buscar(codigo);
+
+            if (definicion == null)
+            {
+                return "Permiso: " + codigo;
+            }
+
+            return definicion.Tipo == CatalogoPermisos.TipoPagina
+                ? $"Pagina completa: {definicion.Pagina} ({definicion.Codigo})"
+                : $"Accion: {definicion.Descripcion} en {definicion.Pagina} ({definicion.Codigo})";
+        }
+
         protected void btnAgregarPermisoARol_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("ROL_COMPONER"))
+            {
+                return;
+            }
+
             try
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdRol.Value) || string.IsNullOrEmpty(ddlPermisoAAgregar.SelectedValue))
@@ -460,6 +413,11 @@ namespace Presentacion
                 return;
             }
 
+            if (!ExigirPermiso("ROL_COMPONER"))
+            {
+                return;
+            }
+
             try
             {
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
@@ -483,6 +441,11 @@ namespace Presentacion
 
         protected void btnAgregarSubRol_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("ROL_COMPONER"))
+            {
+                return;
+            }
+
             try
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdRol.Value) || string.IsNullOrEmpty(ddlSubRolAAgregar.SelectedValue))
@@ -517,6 +480,11 @@ namespace Presentacion
         protected void gvSubRolesDelRol_RowCommand(object sender, GridViewCommandEventArgs e)
         {
             if (e.CommandName != "Quitar")
+            {
+                return;
+            }
+
+            if (!ExigirPermiso("ROL_COMPONER"))
             {
                 return;
             }

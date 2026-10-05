@@ -101,7 +101,7 @@ namespace DAL
             }
         }
 
-        // ---- UsuarioRol: ahora es N:M, un usuario puede tener varios roles ----
+        // ---- UsuarioRol ----
 
         public List<BE_Rol> ObtenerRolesDeUsuario(int idUsuario)
         {

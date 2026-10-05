@@ -25,8 +25,8 @@
 
         <div class="abm-actions">
             <asp:HiddenField ID="hiddenIdIdioma" runat="server" />
-            <asp:Button ID="btnAgregar" CssClass="btn-base btn-success" runat="server" Text="Agregar Idioma" data-i18n="1" OnClick="btnAgregar_Click" />
-            <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar Idioma Seleccionado" data-i18n="1" OnClick="btnEliminar_Click" />
+            <asp:Button ID="btnAgregar" CssClass="btn-base btn-success" runat="server" Text="Agregar Idioma" data-i18n="1" OnClick="btnAgregar_Click" data-permiso="IDIOMA_ALTA" />
+            <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar Idioma Seleccionado" data-i18n="1" OnClick="btnEliminar_Click" data-permiso="IDIOMA_BAJA" />
         </div>
         <asp:Label ID="lblMensaje" runat="server" CssClass="msg-form"></asp:Label>
 

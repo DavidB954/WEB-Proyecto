@@ -18,19 +18,14 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
-
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ASIGNACION_SEGURIDAD"))
-            {
-                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                return;
-            }
+            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
 
             if (!IsPostBack)
             {
                 try
                 {
+                    bll_permiso.SincronizarCatalogo(UsuarioLogueado);
+
                     CargarUsuarios();
                 }
                 catch (Exception ex)
@@ -167,6 +162,11 @@ namespace Presentacion
 
         protected void btnAsignarRol_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("ASIGNAR_ROL_USUARIO"))
+            {
+                return;
+            }
+
             try
             {
                 int? idUsuario = ObtenerIdUsuarioSeleccionado();
@@ -207,6 +207,11 @@ namespace Presentacion
                 return;
             }
 
+            if (!ExigirPermiso("ASIGNAR_ROL_USUARIO"))
+            {
+                return;
+            }
+
             try
             {
                 int? idUsuario = ObtenerIdUsuarioSeleccionado();
@@ -237,6 +242,11 @@ namespace Presentacion
 
         protected void btnAsignarPermiso_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("ASIGNAR_PERMISO_USUARIO"))
+            {
+                return;
+            }
+
             try
             {
                 int? idUsuario = ObtenerIdUsuarioSeleccionado();
@@ -272,6 +282,11 @@ namespace Presentacion
         protected void gvPermisosDelUsuario_RowCommand(object sender, GridViewCommandEventArgs e)
         {
             if (e.CommandName != "Quitar")
+            {
+                return;
+            }
+
+            if (!ExigirPermiso("ASIGNAR_PERMISO_USUARIO"))
             {
                 return;
             }

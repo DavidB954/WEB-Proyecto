@@ -41,6 +41,7 @@ namespace BE
         IDIOMA_BAJA,
         IDIOMA_CAMBIO,
         TRADUCCION_MODIFICACION,
+        BITACORA_EXPORTADA,
 
         ACCION_INVALIDA
     }

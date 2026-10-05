@@ -3,6 +3,7 @@ using DAL;
 using SERVICIOS;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -205,6 +206,8 @@ namespace BLL
         {
             try
             {
+                ValidarDniYEmailUnicos(usuario);
+
                 usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
 
                 usuario.DVH = HashHelper.GenerarHash(CadenaUsuario(usuario));
@@ -216,6 +219,14 @@ namespace BLL
 
                 bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_ALTA, "USUARIO", $"Se crea un nuevo usuario: {usuario.Nombre} {usuario.Apellido} (ID: {usuario.IdUsuario}), creado por {UsuarioLogueado.NombreApellido}");
             }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+            catch (SqlException ex) when (EsClaveDuplicada(ex))
+            {
+                throw new InvalidOperationException("Ya existe un usuario con ese DNI o email.", ex);
+            }
             catch (Exception ex)
             {
                 throw new Exception("Error al agregar usuario: " + ex.Message, ex);
@@ -226,6 +237,8 @@ namespace BLL
         {
             try
             {
+                ValidarDniYEmailUnicos(usuario);
+
                 if (actualizarPassword)
                 {
                     usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
@@ -244,6 +257,14 @@ namespace BLL
 
 
                 bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_MODIFICACION, "USUARIO", $"Se modifica al usuario: {usuario.Nombre}, ID: {usuario.IdUsuario}. Modificado por: {UsuarioLogueado.NombreApellido}");
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+            catch (SqlException ex) when (EsClaveDuplicada(ex))
+            {
+                throw new InvalidOperationException("Ya existe un usuario con ese DNI o email.", ex);
             }
             catch (Exception ex)
             {
@@ -306,6 +327,35 @@ namespace BLL
             {
                 throw new Exception($"Error al guardar el idioma preferido: {ex.Message}", ex);
             }
+        }
+
+        // DNI y Email tienen UNIQUE en la tabla Usuario: se valida antes de ir a la
+        // base para poder decirle al usuario cual de los dos esta repetido. Al
+        // modificar, se excluye al propio usuario (puede conservar sus datos).
+        private void ValidarDniYEmailUnicos(BE_Usuario usuario)
+        {
+            usuario.DNI = usuario.DNI?.Trim();
+            usuario.Email = usuario.Email?.Trim();
+
+            List<BE_Usuario> otros = dal_usuario.Usuarios().Where(u => u.IdUsuario != usuario.IdUsuario).ToList();
+
+            if (otros.Any(u => string.Equals(u.DNI?.Trim(), usuario.DNI, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException($"Ya existe un usuario con el DNI {usuario.DNI}.");
+            }
+
+            if (otros.Any(u => string.Equals(u.Email?.Trim(), usuario.Email, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException($"Ya existe un usuario con el email {usuario.Email}.");
+            }
+        }
+
+        // Respaldo de la validacion de arriba: si otro usuario se carga con el mismo
+        // dato entre la validacion y el insert, la base lo rechaza (2627 = UNIQUE
+        // constraint, 2601 = indice unico).
+        private static bool EsClaveDuplicada(SqlException ex)
+        {
+            return ex.Number == 2627 || ex.Number == 2601;
         }
 
         private void RefrescarDVH(BE_Usuario usuario)

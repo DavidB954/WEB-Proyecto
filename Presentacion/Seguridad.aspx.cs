@@ -18,14 +18,7 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
-
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ACCESO_SEGURIDAD"))
-            {
-                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                return;
-            }
+            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
 
             if (!IsPostBack)
             {
@@ -104,6 +97,11 @@ namespace Presentacion
 
         protected void btnRecalcular_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("DV_RECALCULAR"))
+            {
+                return;
+            }
+
             try
             {
                 bll_dvv.RecalcularDVHFilas("Usuario");
@@ -126,6 +124,11 @@ namespace Presentacion
 
         protected void btnBackUp_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("BACKUP_GENERAR"))
+            {
+                return;
+            }
+
             try
             {
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
@@ -147,6 +150,11 @@ namespace Presentacion
 
         protected void btnRestore_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("BACKUP_RESTAURAR"))
+            {
+                return;
+            }
+
             try
             {
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
@@ -168,7 +176,12 @@ namespace Presentacion
         {
             Session.Clear();
             Session["MensajeLogout"] = mensaje;
-            Response.Redirect("Login.aspx");
+
+            // Se llama dentro de un try/catch: con Redirect(url) a secas, la
+            // ThreadAbortException caia en el catch y una restauracion o recalculo
+            // exitoso quedaba registrado como error.
+            Response.Redirect("Login.aspx", false);
+            Context.ApplicationInstance.CompleteRequest();
         }
 
         private void RegistrarErrorInterno(string origen, Exception ex)

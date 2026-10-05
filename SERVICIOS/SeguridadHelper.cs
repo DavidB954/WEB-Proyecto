@@ -23,5 +23,34 @@ namespace SERVICIOS
 
             return permisos != null && codigosPermiso.Any(permisos.TienePermiso);
         }
+
+        // Se puede entrar a una pagina teniendo cualquiera de sus permisos del
+        // catalogo: el de tipo PAGINA (solo ver) o alguna de sus ACCIONES.
+        public static bool TieneAccesoPagina(BE_Usuario usuario, UsuarioComponente permisos, string pagina)
+        {
+            string[] codigos = CatalogoPermisos.DePagina(pagina).Select(p => p.Codigo).ToArray();
+
+            return TieneAcceso(usuario, permisos, codigos);
+        }
+
+        // Una ACCION se permite si el usuario la tiene puntualmente o si tiene el
+        // permiso PAGINA de la pagina a la que pertenece (que habilita todo).
+        public static bool TieneAccesoAccion(BE_Usuario usuario, UsuarioComponente permisos, string codigoAccion)
+        {
+            PermisoDefinicion definicion = CatalogoPermisos.Buscar(codigoAccion);
+
+            if (definicion == null)
+            {
+                return TieneAcceso(usuario, permisos, codigoAccion);
+            }
+
+            string[] codigos = CatalogoPermisos.DePagina(definicion.Pagina)
+                .Where(p => p.Tipo == CatalogoPermisos.TipoPagina)
+                .Select(p => p.Codigo)
+                .Concat(new[] { definicion.Codigo })
+                .ToArray();
+
+            return TieneAcceso(usuario, permisos, codigos);
+        }
     }
 }

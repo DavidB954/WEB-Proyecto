@@ -4,8 +4,8 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 
     <div class="grid-container misRecetas">
-        <h2>Mis Recetas</h2>
-        <span class="ayuda-campo">Aca podes consultar las recetas que te emitieron tus medicos.</span>
+        <h2 id="hMisRecetas" runat="server" data-i18n="1">Mis Recetas</h2>
+        <span id="spanAyudaRecetas" runat="server" class="ayuda-campo" data-i18n="1">Aca podes consultar las recetas que te emitieron tus medicos.</span>
 
         <asp:GridView ID="gvRecetas" runat="server" AutoGenerateColumns="False" CssClass="grid-crud">
             <Columns>
@@ -21,7 +21,7 @@
                 </asp:TemplateField>
             </Columns>
             <EmptyDataTemplate>
-                <div class="sin-datos">Todavia no tenes recetas emitidas.</div>
+                <div id="divSinRecetas" runat="server" class="sin-datos" data-i18n="1">Todavia no tenes recetas emitidas.</div>
             </EmptyDataTemplate>
         </asp:GridView>
 

@@ -25,7 +25,7 @@
             </div>
 
             <div class="acciones-turno">
-                <asp:Button ID="btnAgendar" CssClass="btn-base btn-success" runat="server" Text="Agendar Turno" data-i18n="1" OnClick="btnAgendar_Click" />
+                <asp:Button ID="btnAgendar" CssClass="btn-base btn-success" runat="server" Text="Agendar Turno" data-i18n="1" OnClick="btnAgendar_Click" data-permiso="TURNO_ALTA" />
                 <asp:Button ID="btnCancelar" CssClass="btn-base btn-danger" runat="server" Text="Limpiar" data-i18n="1" OnClick="btnCancelar_Click" />
             </div>
 
@@ -46,10 +46,14 @@
                             <span class='<%# "badge badge-" + Eval("Estado").ToString().ToLower() %>'><%# Eval("Estado") %></span>
                         </ItemTemplate>
                     </asp:TemplateField>
-                    <asp:ButtonField ButtonType="Button" CommandName="CancelarTurno" Text="Cancelar Turno" />
+                    <asp:TemplateField>
+                        <ItemTemplate>
+                            <asp:Button ID="btnCancelarTurno" runat="server" data-i18n="1" CommandName="CancelarTurno" CommandArgument='<%# Container.DataItemIndex %>' Text="Cancelar Turno" CausesValidation="false" data-permiso="TURNO_CANCELAR" />
+                        </ItemTemplate>
+                    </asp:TemplateField>
                 </Columns>
                 <EmptyDataTemplate>
-                    <div class="sin-datos">No tenes turnos agendados. Crea uno desde el formulario.</div>
+                    <div id="divSinTurnos" runat="server" class="sin-datos" data-i18n="1">No tenes turnos agendados. Crea uno desde el formulario.</div>
                 </EmptyDataTemplate>
             </asp:GridView>
         </div>

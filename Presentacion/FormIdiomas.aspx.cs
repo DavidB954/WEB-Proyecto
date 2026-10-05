@@ -17,14 +17,7 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
-
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "GESTION_IDIOMAS"))
-            {
-                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                return;
-            }
+            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
 
             if (!IsPostBack)
             {
@@ -72,6 +65,11 @@ namespace Presentacion
 
         protected void btnAgregar_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("IDIOMA_ALTA"))
+            {
+                return;
+            }
+
             try
             {
                 if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text))
@@ -127,6 +125,11 @@ namespace Presentacion
 
         protected void btnEliminar_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("IDIOMA_BAJA"))
+            {
+                return;
+            }
+
             try
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdIdioma.Value))

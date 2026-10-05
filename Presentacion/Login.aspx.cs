@@ -108,7 +108,11 @@ namespace Presentacion
                         GestorIdioma.CambiarIdioma(Obj_Usuario.Usuario.IdIdiomaPreferido.Value);
                     }
 
-                    Response.Redirect("Menu.aspx");
+                    // Redirect(url, false) + CompleteRequest: sin cortar el hilo con
+                    // ThreadAbortException, que el catch de abajo registraba como
+                    // error en cada login exitoso.
+                    Response.Redirect("Menu.aspx", false);
+                    Context.ApplicationInstance.CompleteRequest();
                 }
                 else
                 {

@@ -57,7 +57,9 @@ namespace Presentacion
                     GestorIdioma.CambiarIdioma(resultado.Usuario.IdIdiomaPreferido.Value);
                 }
 
-                Response.Redirect("Seguridad.aspx");
+                // Sin ThreadAbortException: ver Login.btnLogin_Click.
+                Response.Redirect("Seguridad.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
             }
             catch (Exception ex)
             {

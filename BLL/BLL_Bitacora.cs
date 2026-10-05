@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace BLL
 {
@@ -125,6 +126,74 @@ namespace BLL
         public DataTable FiltrarBitacora(DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
         {
             return dal_bitacora.FiltrarBitacora(desde, hasta, idUsuario, modulo, ip, criticidad);
+        }
+
+        // Misma consulta que la grilla de Bitacora.aspx, pero devuelta como lista de
+        // entidades (la usan el Web Service y la exportacion a XML), mas nuevo primero.
+        public List<BE_Bitacora> ConsultarBitacora(DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
+        {
+            bool sinFiltros = desde == null && hasta == null && idUsuario == null && modulo == null && ip == null && criticidad == null;
+
+            IEnumerable<BE_Bitacora> eventos = sinFiltros
+                ? (IEnumerable<BE_Bitacora>)dal_bitacora.ObtenerBitacora()
+                : dal_bitacora.FiltrarBitacora(desde, hasta, idUsuario, modulo, ip, criticidad).AsEnumerable().Select(MapearFila);
+
+            return eventos.OrderByDescending(e => e.IdBitacora).ToList();
+        }
+
+        public string GenerarXml(List<BE_Bitacora> eventos, DateTime? desde, DateTime? hasta, int? idUsuario,
+                                 string modulo, string ip, string criticidad, string generadoPor)
+        {
+            XDocument documento = new XDocument(
+                new XDeclaration("1.0", "utf-8", null),
+                new XElement("Bitacora",
+                    new XAttribute("generado", DateTime.Now.ToString("s")),
+                    new XAttribute("generadoPor", generadoPor ?? string.Empty),
+                    new XElement("Filtros",
+                        AtributoOpcional("desde", desde?.ToString("yyyy-MM-dd")),
+                        AtributoOpcional("hasta", hasta?.ToString("yyyy-MM-dd")),
+                        AtributoOpcional("idUsuario", idUsuario?.ToString()),
+                        AtributoOpcional("modulo", modulo),
+                        AtributoOpcional("ip", ip),
+                        AtributoOpcional("criticidad", criticidad)),
+                    new XElement("Eventos",
+                        new XAttribute("cantidad", eventos.Count),
+                        eventos.Select(e => new XElement("Evento",
+                            new XAttribute("id", e.IdBitacora),
+                            AtributoOpcional("idUsuario", e.IdUsuario?.ToString()),
+                            new XAttribute("fechaHora", e.FechaHora.ToString("s")),
+                            AtributoOpcional("criticidad", e.Criticidad),
+                            new XElement("Accion", e.Accion.ToString()),
+                            new XElement("Modulo", e.Modulo ?? string.Empty),
+                            new XElement("IP", e.IP ?? string.Empty),
+                            new XElement("NombreMaquina", e.NombreMaquina ?? string.Empty),
+                            new XElement("Descripcion", e.Descripcion ?? string.Empty))))));
+
+            // XDocument.ToString() omite la declaracion <?xml ...?>: se agrega a mano.
+            return documento.Declaration + Environment.NewLine + documento.ToString();
+        }
+
+        // Un filtro vacio no se escribe como atributo (en vez de quedar desde="").
+        private static XAttribute AtributoOpcional(string nombre, string valor)
+        {
+            return string.IsNullOrEmpty(valor) ? null : new XAttribute(nombre, valor);
+        }
+
+        // Columnas que devuelve el SP dbo.FiltrarBitacora.
+        private static BE_Bitacora MapearFila(DataRow fila)
+        {
+            return new BE_Bitacora
+            {
+                IdBitacora = fila.Field<int>("IdBitacora"),
+                IdUsuario = fila.Field<int?>("IdUsuario"),
+                FechaHora = fila.Field<DateTime>("FechaHora"),
+                Accion = Enum.TryParse(fila.Field<string>("Accion"), out AccionBitacora accion) ? accion : AccionBitacora.ACCION_INVALIDA,
+                Criticidad = fila.Field<string>("Criticidad"),
+                Modulo = fila.Field<string>("Modulo"),
+                IP = fila.Field<string>("IP"),
+                Descripcion = fila.Field<string>("Descripcion"),
+                NombreMaquina = fila.Field<string>("NombreMaquina")
+            };
         }
     }
 }

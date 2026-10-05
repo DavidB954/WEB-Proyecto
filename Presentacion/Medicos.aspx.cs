@@ -15,14 +15,7 @@ namespace Presentacion
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
-
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "ACCESO_MEDICOS"))
-            {
-                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                return;
-            }
+            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
 
             if (!IsPostBack)
             {
@@ -72,6 +65,11 @@ namespace Presentacion
 
         protected void gvTurnosMedicos_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("MEDICO_ATENDER"))
+            {
+                return;
+            }
+
             try
             {
                 if (gvTurnosMedicos.SelectedIndex < 0 || gvTurnosMedicos.SelectedIndex >= TurnosDelDia.Rows.Count)
@@ -92,6 +90,11 @@ namespace Presentacion
 
         protected void btnGuardarAtencion_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("MEDICO_ATENDER"))
+            {
+                return;
+            }
+
             try
             {
                 if (gvTurnosMedicos.SelectedIndex < 0 || gvTurnosMedicos.SelectedIndex >= TurnosDelDia.Rows.Count)

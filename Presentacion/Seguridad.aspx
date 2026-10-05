@@ -16,14 +16,14 @@
                 </asp:Panel>
 
                  <div class="acciones-seguridad">
-                     <asp:Button ID="btnBackUp" CssClass="btn-base btn-success" runat="server" Text="Generar BackUp" data-i18n="1" OnClick="btnBackUp_Click"/>
-                     <asp:Button ID="btnRecalcular" CssClass="btn-base btn-success" runat="server" Text="Recalcular DV" data-i18n="1" OnClick="btnRecalcular_Click"/>
+                     <asp:Button ID="btnBackUp" CssClass="btn-base btn-success" runat="server" Text="Generar BackUp" data-i18n="1" OnClick="btnBackUp_Click" data-permiso="BACKUP_GENERAR" />
+                     <asp:Button ID="btnRecalcular" CssClass="btn-base btn-success" runat="server" Text="Recalcular DV" data-i18n="1" OnClick="btnRecalcular_Click" data-permiso="DV_RECALCULAR" />
                  </div>
 
                  <div class="acciones-seguridad">
                      <asp:Label ID="lblBackupARestaurar" CssClass="label-base" runat="server" data-i18n="1">Backup a restaurar: </asp:Label>
                      <asp:DropDownList ID="ddlBackups" CssClass="ddl-base" runat="server"></asp:DropDownList>
-                     <asp:Button ID="btnRestore" CssClass="btn-base btn-success" runat="server" Text="Restaurar BD" data-i18n="1" OnClick="btnRestore_Click"/>
+                     <asp:Button ID="btnRestore" CssClass="btn-base btn-success" runat="server" Text="Restaurar BD" data-i18n="1" OnClick="btnRestore_Click" data-permiso="BACKUP_RESTAURAR" />
                  </div>
 
                  <asp:Label ID="lblMensaje" runat="server" CssClass="label-base"></asp:Label>

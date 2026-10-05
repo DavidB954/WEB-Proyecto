@@ -7,7 +7,7 @@
 
     <div class="form-container">
         <h2 id="hAsignacionSeguridad" runat="server" data-i18n="1">Asignacion de Seguridad</h2>
-        <p data-i18n="1">Elegi un usuario de la lista para asignarle o quitarle roles y permisos.</p>
+        <p id="pAyudaAsignacion" runat="server" data-i18n="1">Elegi un usuario de la lista para asignarle o quitarle roles y permisos.</p>
 
         <div class="grid-scroll">
             <asp:GridView CssClass="grid-crud" ID="gvUsuarios" runat="server" AutoGenerateColumns="false"
@@ -26,7 +26,7 @@
     <div class="form-container">
 
         <asp:Panel ID="pnlSinUsuarioSeleccionado" runat="server">
-            <p data-i18n="1">Selecciona un usuario de la grilla de arriba para ver y editar su seguridad.</p>
+            <p id="pSinUsuario" runat="server" data-i18n="1">Selecciona un usuario de la grilla de arriba para ver y editar su seguridad.</p>
         </asp:Panel>
 
         <asp:Panel ID="pnlAsignacion" runat="server" Visible="false">
@@ -36,10 +36,10 @@
                 <asp:TextBox ID="txtUsuarioSeleccionado" CssClass="input-base" runat="server" ReadOnly="true"></asp:TextBox>
             </div>
 
-            <h3 data-i18n="1">Roles asignados</h3>
+            <h3 id="hRolesAsignados" runat="server" data-i18n="1">Roles asignados</h3>
             <div class="abm-field">
                 <asp:DropDownList ID="ddlRolAAsignar" CssClass="ddl-base" runat="server"></asp:DropDownList>
-                <asp:Button ID="btnAsignarRol" CssClass="btn-base btn-success" runat="server" Text="Asignar Rol" data-i18n="1" OnClick="btnAsignarRol_Click" CausesValidation="false" />
+                <asp:Button ID="btnAsignarRol" CssClass="btn-base btn-success" runat="server" Text="Asignar Rol" data-i18n="1" OnClick="btnAsignarRol_Click" CausesValidation="false" data-permiso="ASIGNAR_ROL_USUARIO" />
             </div>
             <div class="grid-scroll">
                 <asp:GridView CssClass="grid-crud" ID="gvRolesDelUsuario" runat="server" AutoGenerateColumns="false"
@@ -48,17 +48,17 @@
                         <asp:BoundField DataField="Nombre" HeaderText="Rol" />
                         <asp:TemplateField HeaderText="Accion">
                             <ItemTemplate>
-                                <asp:LinkButton runat="server" CommandName="Quitar" CommandArgument='<%# Eval("IdRol") %>' Text="Quitar" CausesValidation="false" />
+                                <asp:LinkButton ID="lnkQuitar" runat="server" data-i18n="1" CommandName="Quitar" CommandArgument='<%# Eval("IdRol") %>' data-permiso="ASIGNAR_ROL_USUARIO" Text="Quitar" CausesValidation="false" />
                             </ItemTemplate>
                         </asp:TemplateField>
                     </Columns>
                 </asp:GridView>
             </div>
 
-            <h3 data-i18n="1">Permisos directos (sin pasar por un rol)</h3>
+            <h3 id="hPermisosDirectos" runat="server" data-i18n="1">Permisos directos (sin pasar por un rol)</h3>
             <div class="abm-field">
                 <asp:DropDownList ID="ddlPermisoAAsignar" CssClass="ddl-base" runat="server"></asp:DropDownList>
-                <asp:Button ID="btnAsignarPermiso" CssClass="btn-base btn-success" runat="server" Text="Asignar Permiso" data-i18n="1" OnClick="btnAsignarPermiso_Click" CausesValidation="false" />
+                <asp:Button ID="btnAsignarPermiso" CssClass="btn-base btn-success" runat="server" Text="Asignar Permiso" data-i18n="1" OnClick="btnAsignarPermiso_Click" CausesValidation="false" data-permiso="ASIGNAR_PERMISO_USUARIO" />
             </div>
             <div class="grid-scroll">
                 <asp:GridView CssClass="grid-crud" ID="gvPermisosDelUsuario" runat="server" AutoGenerateColumns="false"
@@ -68,7 +68,7 @@
                         <asp:BoundField DataField="Tipo" HeaderText="Tipo" />
                         <asp:TemplateField HeaderText="Accion">
                             <ItemTemplate>
-                                <asp:LinkButton runat="server" CommandName="Quitar" CommandArgument='<%# Eval("IdPermiso") %>' Text="Quitar" CausesValidation="false" />
+                                <asp:LinkButton ID="lnkQuitar" runat="server" data-i18n="1" CommandName="Quitar" CommandArgument='<%# Eval("IdPermiso") %>' data-permiso="ASIGNAR_PERMISO_USUARIO" Text="Quitar" CausesValidation="false" />
                             </ItemTemplate>
                         </asp:TemplateField>
                     </Columns>
@@ -77,7 +77,7 @@
 
             <asp:Label ID="lblMensajeAsignacion" runat="server" CssClass="msg-form"></asp:Label>
 
-            <h3 data-i18n="1">Arbol de seguridad resultante</h3>
+            <h3 id="hArbolSeguridad" runat="server" data-i18n="1">Arbol de seguridad resultante</h3>
             <asp:TreeView ID="trvArbolUsuario" runat="server"></asp:TreeView>
 
         </asp:Panel>

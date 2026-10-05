@@ -17,14 +17,7 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-            UsuarioComponente permisos = Session["Permisos"] as UsuarioComponente;
-
-            if (!SeguridadHelper.TieneAcceso(usuarioLogueado, permisos, "GESTION_TRADUCCIONES"))
-            {
-                Response.Redirect(usuarioLogueado == null ? "Login.aspx" : "AccesoDenegado.aspx");
-                return;
-            }
+            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
 
             if (!IsPostBack)
             {
@@ -94,6 +87,11 @@ namespace Presentacion
 
         protected void btnGuardarTraducciones_Click(object sender, EventArgs e)
         {
+            if (!ExigirPermiso("TRADUCCION_EDITAR"))
+            {
+                return;
+            }
+
             try
             {
                 int idIdioma = int.Parse(ddlIdiomaEditar.SelectedValue);

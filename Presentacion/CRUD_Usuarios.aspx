@@ -14,7 +14,7 @@
             <div class="abm-field">
                 <asp:Label ID="lblNombre" CssClass="label-base" runat="server" data-i18n="1">Nombre</asp:Label>
                 <asp:TextBox ID="txtNombre" CssClass="input-base" runat="server"></asp:TextBox>
-                <asp:RegularExpressionValidator ID="valNombre" runat="server"
+                <asp:RegularExpressionValidator ID="valNombre" runat="server" data-i18n="1"
                     ControlToValidate="txtNombre"
                     ErrorMessage="El nombre debe contener solo letras y espacios."
                     ValidationExpression="^[a-zA-Z\s]+$" ForeColor="Red" Display="Dynamic">
@@ -24,7 +24,7 @@
             <div class="abm-field">
                 <asp:Label ID="lblApellido" CssClass="label-base" runat="server" data-i18n="1">Apellido</asp:Label>
                 <asp:TextBox ID="txtApellido" CssClass="input-base" runat="server"></asp:TextBox>
-                <asp:RegularExpressionValidator ID="valApellido" runat="server"
+                <asp:RegularExpressionValidator ID="valApellido" runat="server" data-i18n="1"
                     ControlToValidate="txtApellido"
                     ErrorMessage="El apellido debe contener solo letras y espacios."
                     ValidationExpression="^[a-zA-Z\s]+$" ForeColor="Red" Display="Dynamic">
@@ -34,7 +34,7 @@
             <div class="abm-field">
                 <asp:Label ID="lblDNI" CssClass="label-base" runat="server" data-i18n="1">DNI</asp:Label>
                 <asp:TextBox ID="txtDNI" CssClass="input-base" runat="server" autocomplete="off"></asp:TextBox>
-                <asp:RegularExpressionValidator ID="valDNI" runat="server"
+                <asp:RegularExpressionValidator ID="valDNI" runat="server" data-i18n="1"
                     ControlToValidate="txtDNI"
                     ErrorMessage="El DNI debe contener solo numeros sin punto."
                     ValidationExpression="^\s*\d{7,8}\s*$" ForeColor="Red" Display="Dynamic">
@@ -43,7 +43,7 @@
             <div class="abm-field">
                 <asp:Label ID="lblEmail" CssClass="label-base" runat="server" data-i18n="1">Email</asp:Label>
                 <asp:TextBox ID="txtEmail" CssClass="input-base" runat="server"></asp:TextBox>
-                <asp:RegularExpressionValidator ID="valEmail" runat="server"
+                <asp:RegularExpressionValidator ID="valEmail" runat="server" data-i18n="1"
                     ControlToValidate="txtEmail"
                     ErrorMessage="Formato de correo invalido. Ejemplo: usuario@gmail.com"
                     ValidationExpression="^[^@\s]+@[^@\s]+\.[^@\s]+$" ForeColor="Red" Display="Dynamic">
@@ -52,7 +52,7 @@
             <div class="abm-field">
                 <asp:Label ID="lblContrasena" CssClass="label-base" runat="server" data-i18n="1">Contrasena</asp:Label>
                 <asp:TextBox ID="txtPassword" CssClass="input-base" runat="server" TextMode="Password"></asp:TextBox>
-                <asp:RegularExpressionValidator ID="valPassword" runat="server"
+                <asp:RegularExpressionValidator ID="valPassword" runat="server" data-i18n="1"
                     ControlToValidate="txtPassword"
                     ErrorMessage="La contraseña debe tener al menos 8 caracteres, una mayuscula, una minuscula, un numero y un simbolo."
                     ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$" ForeColor="Red" Display="Dynamic">
@@ -70,9 +70,9 @@
 
         <div class="abm-actions">
             <asp:HiddenField ID="hiddenIdUsuario" runat="server" />
-            <asp:Button ID="btnGuardar" CssClass="btn-base btn-success" runat="server" Text="Guardar" data-i18n="1" OnClick="btnGuardar_Click" />
-            <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar" data-i18n="1" OnClick="btnModificar_Click" />
-            <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" data-i18n="1" OnClick="btnEliminar_Click" />
+            <asp:Button ID="btnGuardar" CssClass="btn-base btn-success" runat="server" Text="Guardar" data-permiso="USUARIO_ALTA" data-i18n="1" OnClick="btnGuardar_Click" />
+            <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar" data-permiso="USUARIO_MODIFICACION" data-i18n="1" OnClick="btnModificar_Click" />
+            <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" data-permiso="USUARIO_BAJA" data-i18n="1" OnClick="btnEliminar_Click" />
         </div>
         <asp:Label ID="lblMensaje" runat="server" CssClass="msg-form"></asp:Label>
 
@@ -100,7 +100,7 @@
     </div>
 
     <div class="form-container">
-        <p data-i18n="1">La asignacion de roles y permisos de cada usuario ahora se gestiona desde <a href="AsignacionSeguridad.aspx">Asignacion de Seguridad</a>.</p>
+        <p><span id="spanAvisoAsignacion" runat="server" data-i18n="1">La asignacion de roles y permisos de cada usuario ahora se gestiona desde</span> <a id="aAvisoAsignacion" runat="server" href="AsignacionSeguridad.aspx" data-i18n="1">Asignacion de Seguridad</a>.</p>
     </div>
 
 </asp:Content>
