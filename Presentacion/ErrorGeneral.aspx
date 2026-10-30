@@ -20,9 +20,9 @@
         <div class="loginBody">
             <div class="acceso-denegado">
                 <div class="acceso-denegado-icono">&#9888;</div>
-                <h2>Ocurrio un error inesperado</h2>
-                <p>El sistema no pudo completar la operacion. Si el problema persiste, contacta al administrador.</p>
-                <a class="btn-volver" href="Login.aspx">Volver al inicio</a>
+                <h2 id="hError" runat="server" data-i18n="1">Ocurrio un error inesperado</h2>
+                <p id="pError" runat="server" data-i18n="1">El sistema no pudo completar la operacion. Si el problema persiste, contacta al administrador.</p>
+                <a id="aVolverInicio" runat="server" data-i18n="1" class="btn-volver" href="Login.aspx">Volver al inicio</a>
             </div>
         </div>
     </form>

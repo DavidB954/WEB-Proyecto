@@ -19,18 +19,24 @@
         <div class="loginBody" runat="server">
             <div class="form-container">
             <div class="loginContainer" runat="server" >
-                <h2>Se detecto un problema de integridad en la base de datos</h2>
-                <p>Solo el Webmaster puede ingresar mientras la base este comprometida.</p>
+                <div class="selector-idioma-login">
+                    <asp:DropDownList ID="ddlIdioma" runat="server" CssClass="ddl-idioma"
+                        DataTextField="Nombre" DataValueField="IdIdioma"
+                        AutoPostBack="true" OnSelectedIndexChanged="ddlIdioma_SelectedIndexChanged">
+                    </asp:DropDownList>
+                </div>
+                <h2 id="hProblemaIntegridad" runat="server" data-i18n="1">Se detecto un problema de integridad en la base de datos</h2>
+                <p id="pSoloWebmaster" runat="server" data-i18n="1">Solo el Webmaster puede ingresar mientras la base este comprometida.</p>
                 <asp:TextBox
                     ID="txtEmail"
                     runat="server"
-                    Placeholder="Email">
+                    Placeholder="Email" data-i18n="1">
                 </asp:TextBox>
                 <br /><br />
                 <asp:TextBox
                     ID="txtPassword"
                     runat="server"
-                    PlaceHolder="Contraseña"
+                    PlaceHolder="Contraseña" data-i18n="1"
                     TextMode="Password">
                 </asp:TextBox>
                 <br /><br />
@@ -38,7 +44,7 @@
                     Class="btn"
                     ID="btnLogin"
                     runat="server"
-                    Text="Iniciar Sesion"
+                    Text="Iniciar Sesion" data-i18n="1"
                     OnClick="btnLogin_Click" />
                 <br /><br />
                 <asp:Label ID="lblMensaje" runat="server"></asp:Label>

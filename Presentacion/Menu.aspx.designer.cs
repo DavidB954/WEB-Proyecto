@@ -177,6 +177,42 @@ namespace Presentacion
         protected global::System.Web.UI.WebControls.Button btnIrAgenda;
 
         /// <summary>
+        /// cardAgendaMedicos control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl cardAgendaMedicos;
+
+        /// <summary>
+        /// hAgendaMedicos control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl hAgendaMedicos;
+
+        /// <summary>
+        /// pAgendaMedicos control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl pAgendaMedicos;
+
+        /// <summary>
+        /// btnIrAgendaMedicos control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button btnIrAgendaMedicos;
+
+        /// <summary>
         /// cardBitacora control.
         /// </summary>
         /// <remarks>

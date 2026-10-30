@@ -35,6 +35,13 @@
         <asp:Button ID="btnIrAgenda" runat="server" Text="Ir a Mi Agenda" data-i18n="1" CssClass="btn-base btn-primary" PostBackUrl="~/Medicos.aspx" />
     </div>
 
+    <div id="cardAgendaMedicos" runat="server" class="option-card">
+        <i class="fas fa-calendar-check"></i>
+        <h2 id="hAgendaMedicos" runat="server" data-i18n="1">Agenda de Medicos</h2>
+        <p id="pAgendaMedicos" runat="server" data-i18n="1">Asigne especialidades, dias y horarios de atencion.</p>
+        <asp:Button ID="btnIrAgendaMedicos" runat="server" Text="Ir a Agenda de Medicos" data-i18n="1" CssClass="btn-base btn-primary" PostBackUrl="~/AgendaMedicos.aspx" />
+    </div>
+
     <div id="cardBitacora" runat="server" class="option-card">
         <i class="fas fa-clipboard-list"></i>
         <h2 id="hBitacora" runat="server" data-i18n="1">Bitacora</h2>

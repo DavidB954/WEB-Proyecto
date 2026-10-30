@@ -8,6 +8,8 @@ namespace Presentacion
 
         protected global::System.Web.UI.HtmlControls.HtmlForm form1;
 
+        protected global::System.Web.UI.WebControls.DropDownList ddlIdioma;
+
         protected global::System.Web.UI.WebControls.TextBox txtEmail;
 
         protected global::System.Web.UI.WebControls.TextBox txtPassword;

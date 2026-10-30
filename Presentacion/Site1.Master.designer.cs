@@ -28,6 +28,10 @@ namespace Presentacion
 
         protected global::System.Web.UI.HtmlControls.HtmlAnchor aMedicos;
 
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl liAgendaMedicos;
+
+        protected global::System.Web.UI.HtmlControls.HtmlAnchor aAgendaMedicos;
+
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl liBitacora;
 
         protected global::System.Web.UI.HtmlControls.HtmlAnchor aBitacora;

@@ -31,7 +31,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("AsignacionSeguridad.Page_Load", ex);
-                    lblMensajeAsignacion.Text = "No se pudieron cargar los usuarios. Intenta nuevamente mas tarde.";
+                    lblMensajeAsignacion.Text = T("No se pudieron cargar los usuarios. Intenta nuevamente mas tarde.");
                     lblMensajeAsignacion.ForeColor = System.Drawing.Color.Red;
                 }
             }
@@ -67,7 +67,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("AsignacionSeguridad.gvUsuarios_SelectedIndexChanged", ex);
-                lblMensajeAsignacion.Text = "No se pudo cargar el usuario seleccionado.";
+                lblMensajeAsignacion.Text = T("No se pudo cargar el usuario seleccionado.");
                 lblMensajeAsignacion.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -185,7 +185,7 @@ namespace Presentacion
                 CargarUsuarios();
 
                 lblMensajeAsignacion.Text = string.Empty;
-                MostrarToast("Rol asignado correctamente.", true);
+                MostrarToast(T("Rol asignado correctamente."), true);
             }
             catch (InvalidOperationException ex)
             {
@@ -195,7 +195,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("AsignacionSeguridad.btnAsignarRol_Click", ex);
-                lblMensajeAsignacion.Text = "No se pudo asignar el rol.";
+                lblMensajeAsignacion.Text = T("No se pudo asignar el rol.");
                 lblMensajeAsignacion.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -230,12 +230,12 @@ namespace Presentacion
                 CargarUsuarios();
 
                 lblMensajeAsignacion.Text = string.Empty;
-                MostrarToast("Rol quitado correctamente.", true);
+                MostrarToast(T("Rol quitado correctamente."), true);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("AsignacionSeguridad.gvRolesDelUsuario_RowCommand", ex);
-                lblMensajeAsignacion.Text = "No se pudo quitar el rol.";
+                lblMensajeAsignacion.Text = T("No se pudo quitar el rol.");
                 lblMensajeAsignacion.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -264,7 +264,7 @@ namespace Presentacion
                 CargarAsignacion(idUsuario.Value);
 
                 lblMensajeAsignacion.Text = string.Empty;
-                MostrarToast("Permiso asignado correctamente.", true);
+                MostrarToast(T("Permiso asignado correctamente."), true);
             }
             catch (InvalidOperationException ex)
             {
@@ -274,7 +274,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("AsignacionSeguridad.btnAsignarPermiso_Click", ex);
-                lblMensajeAsignacion.Text = "No se pudo asignar el permiso.";
+                lblMensajeAsignacion.Text = T("No se pudo asignar el permiso.");
                 lblMensajeAsignacion.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -308,12 +308,12 @@ namespace Presentacion
                 CargarAsignacion(idUsuario.Value);
 
                 lblMensajeAsignacion.Text = string.Empty;
-                MostrarToast("Permiso quitado correctamente.", true);
+                MostrarToast(T("Permiso quitado correctamente."), true);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("AsignacionSeguridad.gvPermisosDelUsuario_RowCommand", ex);
-                lblMensajeAsignacion.Text = "No se pudo quitar el permiso.";
+                lblMensajeAsignacion.Text = T("No se pudo quitar el permiso.");
                 lblMensajeAsignacion.ForeColor = System.Drawing.Color.Red;
             }
         }

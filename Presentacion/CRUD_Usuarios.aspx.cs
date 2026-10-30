@@ -28,7 +28,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("CRUD_Usuarios.Page_Load", ex);
-                    lblMensaje.Text = "No se pudieron cargar los datos. Intenta nuevamente mas tarde.";
+                    lblMensaje.Text = T("No se pudieron cargar los datos. Intenta nuevamente mas tarde.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                 }
             }
@@ -92,7 +92,7 @@ namespace Presentacion
                 string.IsNullOrWhiteSpace(txtEmail.Text) ||
                 string.IsNullOrWhiteSpace(txtPassword.Text))
                 {
-                    lblMensaje.Text = "Debe completar todos los campos antes de guardar.";
+                    lblMensaje.Text = T("Debe completar todos los campos antes de guardar.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                     return;
                 }
@@ -114,7 +114,7 @@ namespace Presentacion
                 LimpiarFormularioUsuario();
 
                 lblMensaje.Text = string.Empty;
-                MostrarToast("Usuario guardado correctamente.", true);
+                MostrarToast(T("Usuario guardado correctamente."), true);
             }
             catch (InvalidOperationException ex)
             {
@@ -126,7 +126,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnGuardar_Click", ex);
-                string mensaje = System.Web.HttpUtility.JavaScriptStringEncode("No se pudo guardar el usuario. Verifica los datos e intenta nuevamente.");
+                string mensaje = System.Web.HttpUtility.JavaScriptStringEncode(T("No se pudo guardar el usuario. Verifica los datos e intenta nuevamente."));
                 ScriptManager.RegisterStartupScript(this, GetType(), "errorAlert", $"alert('{mensaje}');", true);
             }
         }
@@ -155,7 +155,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.gvUsuarios_SelectedIndexChanged", ex);
-                lblMensaje.Text = "No se pudo cargar el usuario seleccionado.";
+                lblMensaje.Text = T("No se pudo cargar el usuario seleccionado.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -176,7 +176,7 @@ namespace Presentacion
 
                 if (string.IsNullOrWhiteSpace(hiddenIdUsuario.Value))
                 {
-                    lblMensaje.Text = "Seleccione un usuario de la lista antes de modificar.";
+                    lblMensaje.Text = T("Seleccione un usuario de la lista antes de modificar.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                     return;
                 }
@@ -185,7 +185,7 @@ namespace Presentacion
 
                 if (restablecerPassword && string.IsNullOrWhiteSpace(txtPassword.Text))
                 {
-                    lblMensaje.Text = "Ingrese la nueva contraseña para restablecerla.";
+                    lblMensaje.Text = T("Ingrese la nueva contraseña para restablecerla.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                     return;
                 }
@@ -217,7 +217,7 @@ namespace Presentacion
                 LimpiarFormularioUsuario();
 
                 lblMensaje.Text = string.Empty;
-                MostrarToast("Usuario modificado correctamente.", true);
+                MostrarToast(T("Usuario modificado correctamente."), true);
             }
             catch (InvalidOperationException ex)
             {
@@ -229,7 +229,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnModificar_Click", ex);
-                lblMensaje.Text = "No se pudo modificar el usuario. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudo modificar el usuario. Intenta nuevamente mas tarde.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -245,7 +245,7 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdUsuario.Value))
                 {
-                    lblMensaje.Text = "Seleccione un usuario de la lista antes de eliminar.";
+                    lblMensaje.Text = T("Seleccione un usuario de la lista antes de eliminar.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                     return;
                 }
@@ -258,12 +258,17 @@ namespace Presentacion
                 LimpiarFormularioUsuario();
 
                 lblMensaje.Text = string.Empty;
-                MostrarToast("Usuario eliminado correctamente.", true);
+                MostrarToast(T("Usuario eliminado correctamente."), true);
+            }
+            catch (InvalidOperationException ex)
+            {
+                lblMensaje.Text = ex.Message;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnEliminar_Click", ex);
-                lblMensaje.Text = "No se pudo eliminar el usuario. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudo eliminar el usuario. Intenta nuevamente mas tarde.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }

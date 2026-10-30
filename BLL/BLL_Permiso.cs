@@ -108,14 +108,14 @@ namespace BLL
 
                 if (usuarioDestino == null)
                 {
-                    throw new InvalidOperationException("El usuario seleccionado no existe.");
+                    throw new InvalidOperationException(TextoLocalizado.T("El usuario seleccionado no existe."));
                 }
 
                 UsuarioComponente arbolUsuario = ConstruirArbolUsuario(usuarioDestino);
 
                 if (arbolUsuario.RolesAsignados.Any(r => r.Rol.IdRol == idRol))
                 {
-                    throw new InvalidOperationException($"El usuario {usuarioDestino.NombreApellido} ya tiene asignado ese rol.");
+                    throw new InvalidOperationException(TextoLocalizado.T("El usuario {0} ya tiene asignado ese rol.", usuarioDestino.NombreApellido));
                 }
 
                 RolComponente rol = bll_rol.ConstruirArbolRol(idRol);
@@ -165,14 +165,14 @@ namespace BLL
 
                 if (usuarioDestino == null)
                 {
-                    throw new InvalidOperationException("El usuario seleccionado no existe.");
+                    throw new InvalidOperationException(TextoLocalizado.T("El usuario seleccionado no existe."));
                 }
 
                 BE_Permiso permiso = dal_permiso.ObtenerPermisos().FirstOrDefault(p => p.IdPermiso == idPermiso);
 
                 if (permiso == null)
                 {
-                    throw new InvalidOperationException("El permiso seleccionado no existe.");
+                    throw new InvalidOperationException(TextoLocalizado.T("El permiso seleccionado no existe."));
                 }
 
                 UsuarioComponente arbolUsuario = ConstruirArbolUsuario(usuarioDestino);

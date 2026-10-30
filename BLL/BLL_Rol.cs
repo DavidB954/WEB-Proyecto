@@ -14,6 +14,7 @@ namespace BLL
     {
         DAL_Rol dal_rol = new DAL_Rol();
         DAL_Permiso dal_permiso = new DAL_Permiso();
+        DAL_DVV dal_dvv = new DAL_DVV();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
         public List<BE_Rol> ObtenerRoles()
@@ -48,13 +49,15 @@ namespace BLL
 
                 if (dal_rol.ObtenerRoles().Any(r => string.Equals(r.Nombre, rol.Nombre, StringComparison.OrdinalIgnoreCase)))
                 {
-                    throw new InvalidOperationException($"Ya existe un rol llamado '{rol.Nombre}'.");
+                    throw new InvalidOperationException(TextoLocalizado.T("Ya existe un rol llamado '{0}'.", rol.Nombre));
                 }
 
                 dal_rol.AgregarRol(rol);
 
                 rol.DVH = HashHelper.GenerarHash(CadenaRol(rol));
                 dal_rol.ActualizarDVH(rol.IdRol, rol.DVH);
+
+                RefrescarDVVRol();
 
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.ROL_ALTA, "ROL", $"Se crea el rol '{rol.Nombre}' (ID {rol.IdRol}), creado por {usuarioLogueado.NombreApellido}.");
             }
@@ -76,11 +79,13 @@ namespace BLL
 
                 if (dal_rol.ObtenerRoles().Any(r => r.IdRol != rol.IdRol && string.Equals(r.Nombre, rol.Nombre, StringComparison.OrdinalIgnoreCase)))
                 {
-                    throw new InvalidOperationException($"Ya existe un rol llamado '{rol.Nombre}'.");
+                    throw new InvalidOperationException(TextoLocalizado.T("Ya existe un rol llamado '{0}'.", rol.Nombre));
                 }
 
                 rol.DVH = HashHelper.GenerarHash(CadenaRol(rol));
                 dal_rol.ModificarRol(rol);
+
+                RefrescarDVVRol();
 
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.ROL_MODIFICACION, "ROL", $"Se modifica el rol ID {rol.IdRol}, nuevo nombre: '{rol.Nombre}'. Modificado por {usuarioLogueado.NombreApellido}.");
             }
@@ -102,6 +107,8 @@ namespace BLL
 
                 dal_rol.EliminarRolPorId(idRol);
 
+                RefrescarDVVRol();
+
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.ROL_BAJA, "ROL", $"Se elimina el rol '{rol?.Nombre}' (ID {idRol}). Eliminado por {usuarioLogueado.NombreApellido}.");
             }
             catch (Exception ex)
@@ -112,6 +119,23 @@ namespace BLL
 
         private string CadenaRol(BE_Rol rol) => $"{rol.IdRol}|{rol.Nombre}";
 
+        // Sin esto, cualquier alta, cambio o baja de un rol hecha desde el sistema
+        // dejaba el DVV desactualizado y el proximo login lo tomaba como una
+        // alteracion de la base. Mismo calculo que BLL_DVV.CalcularDVV("Rol").
+        private void RefrescarDVVRol()
+        {
+            List<BE_Rol> roles = dal_rol.ObtenerRoles();
+
+            StringBuilder concatenacion = new StringBuilder();
+            foreach (var rol in roles)
+            {
+                concatenacion.Append(HashHelper.GenerarHash(CadenaRol(rol)));
+            }
+
+            dal_dvv.ActualizarDVV(HashHelper.GenerarHash(concatenacion.ToString()), "Rol");
+            dal_dvv.ActualizarIdsVigentes("Rol", string.Join(",", roles.Select(r => r.IdRol)));
+        }
+
         // La columna Rol.Nombre es VARCHAR(30): sin este chequeo, un nombre mas
         // largo se trunca en silencio del lado del cliente SQL (sin excepcion),
         // lo que podria hacer que dos roles con nombres distintos colisionen.
@@ -119,7 +143,7 @@ namespace BLL
         {
             if (!string.IsNullOrEmpty(nombre) && nombre.Length > 30)
             {
-                throw new InvalidOperationException($"El nombre del rol no puede superar los 30 caracteres (tiene {nombre.Length}).");
+                throw new InvalidOperationException(TextoLocalizado.T("El nombre del rol no puede superar los 30 caracteres (tiene {0}).", nombre.Length));
             }
         }
 
@@ -179,14 +203,14 @@ namespace BLL
             {
                 if (idRolPadre == idRolHijo)
                 {
-                    throw new InvalidOperationException("Un rol no puede contenerse a si mismo.");
+                    throw new InvalidOperationException(TextoLocalizado.T("Un rol no puede contenerse a si mismo."));
                 }
 
                 RolComponente arbolPadre = ConstruirArbolRol(idRolPadre);
 
                 if (arbolPadre.SubRoles.Any(r => r.Rol.IdRol == idRolHijo))
                 {
-                    throw new InvalidOperationException($"El rol '{arbolPadre.Codigo}' ya contiene al rol seleccionado.");
+                    throw new InvalidOperationException(TextoLocalizado.T("El rol '{0}' ya contiene al rol seleccionado.", arbolPadre.Codigo));
                 }
 
                 RolComponente arbolHijo = ConstruirArbolRol(idRolHijo);
@@ -235,12 +259,12 @@ namespace BLL
 
                 if (permiso == null)
                 {
-                    throw new InvalidOperationException("El permiso seleccionado no existe.");
+                    throw new InvalidOperationException(TextoLocalizado.T("El permiso seleccionado no existe."));
                 }
 
                 if (arbolRol.TienePermiso(permiso.Nombre))
                 {
-                    throw new InvalidOperationException($"El rol '{arbolRol.Codigo}' ya tiene el permiso '{permiso.Nombre}' (directo o a traves de un sub-rol).");
+                    throw new InvalidOperationException(TextoLocalizado.T("El rol '{0}' ya tiene el permiso '{1}' (directo o a traves de un sub-rol).", arbolRol.Codigo, permiso.Nombre));
                 }
 
                 // Una ACCION es redundante si el rol ya tiene la PAGINA completa.
@@ -253,8 +277,7 @@ namespace BLL
 
                     if (permisoPagina != null)
                     {
-                        throw new InvalidOperationException(
-                            $"El rol '{arbolRol.Codigo}' ya tiene la pagina completa '{definicion.Pagina}' ({permisoPagina.Codigo}), que incluye la accion '{permiso.Nombre}'.");
+                        throw new InvalidOperationException(TextoLocalizado.T("El rol '{0}' ya tiene la pagina completa '{1}' ({2}), que incluye la accion '{3}'.", arbolRol.Codigo, definicion.Pagina, permisoPagina.Codigo, permiso.Nombre));
                     }
                 }
 

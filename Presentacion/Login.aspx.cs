@@ -9,7 +9,7 @@ using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    public partial class Login : System.Web.UI.Page
+    public partial class Login : PaginaBase
     {
         BLL_Usuario bll_Usu = new BLL_Usuario();
         BLL_DVV bll_dvv = new BLL_DVV();
@@ -24,6 +24,8 @@ namespace Presentacion
 
             if (!IsPostBack)
             {
+                CargarSelectorIdioma();
+
                 if (Session["MensajeLogout"] != null)
                 {
                     string mensajeLogout = Session["MensajeLogout"] as string;
@@ -51,7 +53,7 @@ namespace Presentacion
             }
             catch (Exception)
             {
-                lblMensaje.Text = "No se pudo verificar la integridad del sistema. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudo verificar la integridad del sistema. Intenta nuevamente mas tarde.");
                 return false;
             }
 
@@ -75,6 +77,36 @@ namespace Presentacion
                 "setTimeout(function(){if(t.parentNode){t.parentNode.removeChild(t);}},4600);})();";
 
             ClientScript.RegisterStartupScript(GetType(), "toastLogout", script, true);
+        }
+
+        protected void ddlIdioma_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                GestorIdioma.CambiarIdioma(int.Parse(ddlIdioma.SelectedValue));
+
+                // Se recarga para regenerar todo en el idioma elegido, igual que Site1.Master.
+                Response.Redirect(Request.RawUrl, false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Login.ddlIdioma_SelectedIndexChanged", ex);
+                lblMensaje.Text = T("No se pudo cambiar el idioma. Intenta nuevamente mas tarde.");
+            }
+        }
+
+        private void CargarSelectorIdioma()
+        {
+            try
+            {
+                GestorIdioma.CargarSelector(ddlIdioma);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Login.CargarSelectorIdioma", ex);
+                ddlIdioma.Visible = false;
+            }
         }
 
         protected void btnLogin_Click(object sender, EventArgs e)
@@ -123,7 +155,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Login.btnLogin_Click", ex);
-                lblMensaje.Text = "No se pudo iniciar sesion. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudo iniciar sesion. Intenta nuevamente mas tarde.");
             }
 
         }

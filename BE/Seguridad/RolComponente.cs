@@ -36,9 +36,9 @@ namespace BE.Seguridad
 
             if (hijo is RolComponente rolHijo && rolHijo.ContieneRol(rol.IdRol))
             {
-                throw new InvalidOperationException(
-                    $"No se puede agregar el rol '{rolHijo.Codigo}' dentro de '{rol.Nombre}': " +
-                    $"generaria una referencia circular (el rol '{rol.Nombre}' ya forma parte de los sub-roles de '{rolHijo.Codigo}').");
+                throw new InvalidOperationException(TextoLocalizado.T(
+                    "No se puede agregar el rol '{0}' dentro de '{1}': generaria una referencia circular (el rol '{1}' ya forma parte de los sub-roles de '{0}').",
+                    rolHijo.Codigo, rol.Nombre));
             }
 
             hijos.Add(hijo);

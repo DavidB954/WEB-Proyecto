@@ -179,6 +179,10 @@ h1, h2, h3 {
     box-sizing: border-box;
 }
 
+.selector-idioma-login {
+    text-align: right;
+    margin-bottom: 16px;
+}
 .loginContainer br {
     display: none;
 }
@@ -1032,4 +1036,181 @@ h1, h2, h3 {
 .btn-volver:hover {
     background: var(--teal-deep);
     transform: translateY(-1px);
+}
+/* ---- AgendaMedicos.aspx ---- */
+.agenda-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 25px;
+    align-items: start;
+    max-width: 1350px;
+    margin: 30px auto;
+    padding: 0 15px;
+}
+.agenda-col .form-container {
+    max-width: none;
+    margin: 0 0 25px 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+@media (max-width: 1000px) {
+    .agenda-layout {
+        grid-template-columns: 1fr;
+    }
+}
+.filtros-agenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 15px;
+}
+.fila-inline {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.fila-inline .input-base {
+    flex: 1;
+}
+.horario-franja {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 15px;
+}
+@media (max-width: 640px) {
+    .horario-franja {
+        grid-template-columns: 1fr;
+    }
+}
+.lista-opciones {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 6px 0 14px 0;
+}
+.lista-opciones input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+.lista-opciones label {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.lista-opciones label:hover {
+    border-color: var(--teal);
+}
+.lista-opciones input[type="checkbox"]:checked + label {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+}
+.lista-opciones input[type="checkbox"]:focus-visible + label {
+    box-shadow: 0 0 0 3px rgba(14,107,96,0.25);
+}
+.badge-activa {
+    background: var(--sage-wash);
+    color: var(--sage-deep);
+}
+.badge-inactiva {
+    background: var(--clay-wash);
+    color: var(--clay-deep);
+}
+.grid-crud td a + a {
+    margin-left: 10px;
+}
+.ddl-base:disabled {
+    background: #efebe1;
+    color: #9a927e;
+}
+/* ---- Turnos.aspx (paciente) ---- */
+.turnos-col .form-container + .form-container {
+    margin-top: 25px;
+}
+.mis-turnos .lista-opciones {
+    justify-content: center;
+}
+.mis-turnos .ayuda-campo {
+    margin: 0 0 14px 0;
+    text-align: center;
+}
+.lista-opciones input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+.lista-opciones input[type="radio"]:checked + label {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+}
+.lista-opciones input[type="radio"]:focus-visible + label {
+    box-shadow: 0 0 0 3px rgba(14,107,96,0.25);
+}
+.lista-opciones input[type="radio"] + label {
+    font-family: var(--font-mono);
+}
+.mis-turnos .lista-opciones input[type="radio"] + label {
+    font-family: var(--font-body);
+}
+.badge-reservado {
+    background: var(--teal-wash);
+    color: var(--teal-deep);
+}
+.badge-cancelado {
+    background: #e5e1d4;
+    color: #6b6353;
+}
+.badge-ausente {
+    background: var(--clay-wash);
+    color: var(--clay-deep);
+}
+.btn-base:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+/* ---- Medicos.aspx ---- */
+.navegacion-dia {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+.navegacion-dia .input-base {
+    width: auto;
+    margin: 0;
+}
+.navegacion-dia .btn-base {
+    margin: 0;
+}
+.turnos-dia .ayuda-campo {
+    margin: 0 0 14px 0;
+    text-align: center;
+}
+/* ---- Recetas.aspx ---- */
+.misRecetas .lista-opciones {
+    justify-content: center;
+}
+.misRecetas .lista-opciones input[type="radio"] + label {
+    font-family: var(--font-body);
+}
+.misRecetas .ayuda-campo {
+    margin: 0 0 14px 0;
+    text-align: center;
+}
+.badge-vencida {
+    background: #e5e1d4;
+    color: #6b6353;
 }

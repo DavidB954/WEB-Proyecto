@@ -194,21 +194,118 @@ namespace DAL
             }
         }
 
-        public void EliminarUsuario(int id)
+        // Error de SQL Server cuando un DELETE choca con una clave foranea.
+        private const int ErrorClaveForanea = 547;
+
+        // Borra el usuario junto con lo que depende de el, todo en una transaccion:
+        // - Como paciente: sus turnos, atenciones y recetas.
+        // - Como medico: su agenda (franjas, bloqueos, especialidades). Sus turnos
+        //   reservados pasan a Cancelado (el DVH lo arma la BLL con dvhTurnoCancelado)
+        //   y los atendidos se conservan porque son la historia clinica de otros
+        //   pacientes; quedan con el IdMedico del usuario borrado.
+        // La Bitacora no se toca: sus filas conservan el IdUsuario del eliminado.
+        // Devuelve false (sin borrar nada) si alguna otra tabla todavia lo referencia.
+        public bool EliminarUsuario(int id, Func<BE_Turno, string> dvhTurnoCancelado, out int turnosCancelados, out int turnosPacienteEliminados)
         {
-            using (SqlConnection conexion = conex.ObtenerConexion())
+            turnosCancelados = 0;
+            turnosPacienteEliminados = 0;
+
+            try
             {
-                conexion.Open();
+                using (SqlConnection conexion = conex.ObtenerConexion())
+                {
+                    conexion.Open();
 
-                SqlCommand comandoRol = new SqlCommand("Delete from UsuarioRol WHERE IdUsuario = @id", conexion);
-                comandoRol.Parameters.AddWithValue("@id", id);
-                comandoRol.ExecuteNonQuery();
+                    using (SqlTransaction tx = conexion.BeginTransaction())
+                    {
+                        // ---- Datos como paciente ----
+                        SqlCommand comandoRecetas = new SqlCommand(@"Delete r From Receta r
+                                                                   Join AtencionMedica a On a.IdAtencion = r.IdAtencion
+                                                                   Where a.IdPaciente = @id", conexion, tx);
+                        comandoRecetas.Parameters.AddWithValue("@id", id);
+                        comandoRecetas.ExecuteNonQuery();
 
-                SqlCommand comando = new SqlCommand("Delete from Usuario WHERE IdUsuario = @id", conexion);
+                        SqlCommand comandoAtenciones = new SqlCommand("Delete from AtencionMedica WHERE IdPaciente = @id", conexion, tx);
+                        comandoAtenciones.Parameters.AddWithValue("@id", id);
+                        comandoAtenciones.ExecuteNonQuery();
 
-                comando.Parameters.AddWithValue("@id", id);
+                        SqlCommand comandoTurnosPaciente = new SqlCommand("Delete from Turno WHERE IdPaciente = @id", conexion, tx);
+                        comandoTurnosPaciente.Parameters.AddWithValue("@id", id);
+                        turnosPacienteEliminados = comandoTurnosPaciente.ExecuteNonQuery();
 
-                comando.ExecuteNonQuery();
+                        SqlCommand comandoPaciente = new SqlCommand("Delete from Paciente WHERE IdPaciente = @id", conexion, tx);
+                        comandoPaciente.Parameters.AddWithValue("@id", id);
+                        comandoPaciente.ExecuteNonQuery();
+
+                        // ---- Datos como medico ----
+                        // UPDLOCK/HOLDLOCK: nadie puede reservarle un turno nuevo
+                        // mientras se cancelan los que tiene.
+                        List<BE_Turno> reservados = new List<BE_Turno>();
+
+                        SqlCommand comandoReservados = new SqlCommand(@"Select IdTurno, IdPaciente, IdMedico, FechaHora From Turno With (UPDLOCK, HOLDLOCK)
+                                                                      Where IdMedico = @id And IdEstadoTurno = @reservado", conexion, tx);
+                        comandoReservados.Parameters.AddWithValue("@id", id);
+                        comandoReservados.Parameters.AddWithValue("@reservado", (int)EstadoTurno.Reservado);
+
+                        using (SqlDataReader lector = comandoReservados.ExecuteReader())
+                        {
+                            while (lector.Read())
+                            {
+                                reservados.Add(new BE_Turno
+                                {
+                                    IdTurno = lector.GetInt32(0),
+                                    IdPaciente = lector.GetInt32(1),
+                                    IdMedico = lector.GetInt32(2),
+                                    FechaHora = lector.GetDateTime(3),
+                                    Estado = EstadoTurno.Cancelado
+                                });
+                            }
+                        }
+
+                        foreach (BE_Turno turno in reservados)
+                        {
+                            SqlCommand comandoCancelar = new SqlCommand("Update Turno Set IdEstadoTurno = @cancelado, DVH = @dvh Where IdTurno = @idTurno", conexion, tx);
+                            comandoCancelar.Parameters.AddWithValue("@cancelado", (int)EstadoTurno.Cancelado);
+                            comandoCancelar.Parameters.Add("@dvh", SqlDbType.VarChar, 255).Value = (object)dvhTurnoCancelado(turno) ?? DBNull.Value;
+                            comandoCancelar.Parameters.AddWithValue("@idTurno", turno.IdTurno);
+                            comandoCancelar.ExecuteNonQuery();
+                        }
+
+                        turnosCancelados = reservados.Count;
+
+                        foreach (string tabla in new[] { "MedicoBloqueo", "MedicoHorario", "MedicoEspecialidad", "Medico" })
+                        {
+                            SqlCommand comandoMedico = new SqlCommand($"Delete from {tabla} WHERE IdMedico = @id", conexion, tx);
+                            comandoMedico.Parameters.AddWithValue("@id", id);
+                            comandoMedico.ExecuteNonQuery();
+                        }
+
+                        // ---- Seguridad y usuario ----
+                        SqlCommand comandoPermiso = new SqlCommand("Delete from UsuarioPermiso WHERE IdUsuario = @id", conexion, tx);
+                        comandoPermiso.Parameters.AddWithValue("@id", id);
+                        comandoPermiso.ExecuteNonQuery();
+
+                        SqlCommand comandoRol = new SqlCommand("Delete from UsuarioRol WHERE IdUsuario = @id", conexion, tx);
+                        comandoRol.Parameters.AddWithValue("@id", id);
+                        comandoRol.ExecuteNonQuery();
+
+                        SqlCommand comando = new SqlCommand("Delete from Usuario WHERE IdUsuario = @id", conexion, tx);
+
+                        comando.Parameters.AddWithValue("@id", id);
+
+                        comando.ExecuteNonQuery();
+
+                        tx.Commit();
+                        return true;
+                    }
+                }
+            }
+            catch (SqlException ex) when (ex.Number == ErrorClaveForanea)
+            {
+                // La transaccion se deshace sola al cerrar la conexion sin Commit.
+                turnosCancelados = 0;
+                turnosPacienteEliminados = 0;
+                return false;
             }
         }
 

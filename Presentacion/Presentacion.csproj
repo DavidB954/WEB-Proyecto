@@ -87,6 +87,7 @@
     <Content Include="FormTraducciones.aspx" />
     <Content Include="GestionRolesPermisos.aspx" />
     <Content Include="AsignacionSeguridad.aspx" />
+    <Content Include="AgendaMedicos.aspx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccesoDenegado.aspx.cs">
@@ -219,6 +220,13 @@
     </Compile>
     <Compile Include="AsignacionSeguridad.aspx.designer.cs">
       <DependentUpon>AsignacionSeguridad.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="AgendaMedicos.aspx.cs">
+      <DependentUpon>AgendaMedicos.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="AgendaMedicos.aspx.designer.cs">
+      <DependentUpon>AgendaMedicos.aspx</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

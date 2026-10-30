@@ -1,18 +1,18 @@
 using BE;
-using BE.Seguridad;
-using SERVICIOS;
+using BLL;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
+    // Recetas del paciente logueado: los medicamentos que le recetaron en sus
+    // atenciones (Medicos.aspx).
     public partial class Recetas : PaginaBase
     {
+        BLL_Receta bll_receta = new BLL_Receta();
+
         protected void Page_Load(object sender, EventArgs e)
         {
             // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
@@ -21,35 +21,62 @@ namespace Presentacion
             {
                 try
                 {
+                    spanAyudaVigencia.InnerText = T("Cada receta vale {0} dias desde que se emite.", BLL_Receta.DiasVigencia);
                     CargarRecetas();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    pnlRecetas.Visible = false;
+                    MostrarMensaje(ex.Message, false);
                 }
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("Recetas.Page_Load", ex);
-                    lblMensaje.Text = "No se pudieron cargar las recetas. Intenta nuevamente mas tarde.";
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(T("No se pudieron cargar las recetas. Intenta nuevamente mas tarde."), false);
                 }
             }
         }
 
         private void CargarRecetas()
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Fecha", typeof(DateTime));
-            dt.Columns.Add("Medico", typeof(string));
-            dt.Columns.Add("Especialidad", typeof(string));
-            dt.Columns.Add("Medicamento", typeof(string));
-            dt.Columns.Add("Indicaciones", typeof(string));
-            dt.Columns.Add("Estado", typeof(string));
+            List<BE_Receta> recetas = bll_receta.ObtenerRecetasPaciente(UsuarioLogueado);
 
-            dt.Rows.Add(DateTime.Today.AddDays(-45), "Dr. Sosa", "Traumatologia", "Diclofenac 75mg", "Tomar cada 12 horas por 5 dias", "Finalizada");
-            dt.Rows.Add(DateTime.Today.AddDays(-30), "Dra. Romero", "Clinica Medica", "Loratadina 10mg", "Tomar 1 comprimido por dia durante 10 dias", "Finalizada");
-            dt.Rows.Add(DateTime.Today.AddDays(-10), "Dr. Perez", "Cardiologia", "Amoxicilina 500mg", "Tomar cada 8 horas por 7 dias", "Vigente");
-            dt.Rows.Add(DateTime.Today.AddDays(-5), "Dra. Gomez", "Dermatologia", "Ibuprofeno 400mg", "Tomar cada 12 horas segun dolor", "Vigente");
-            dt.Rows.Add(DateTime.Today.AddDays(-2), "Dr. Lopez", "Pediatria", "Paracetamol 1g", "Tomar cada 8 horas, maximo 3 veces al dia", "Vigente");
+            List<BE_Receta> visibles = rblVista.SelectedValue == "Todas"
+                ? recetas
+                : recetas.Where(r => r.Vigente).ToList();
 
-            gvRecetas.DataSource = dt;
+            gvRecetas.DataSource = visibles;
             gvRecetas.DataBind();
+
+            // El texto de grilla vacia dice que no hay recetas emitidas: si solo
+            // hay vencidas, se aclara para que no parezca que se perdieron.
+            if (visibles.Count == 0 && recetas.Count > 0)
+            {
+                MostrarMensaje(T("No tenes recetas vigentes. Tus {0} receta(s) anteriores estan en \"Todas\".", recetas.Count), true);
+            }
+        }
+
+        protected void rblVista_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                CargarRecetas();
+            }
+            catch (InvalidOperationException ex)
+            {
+                MostrarMensaje(ex.Message, false);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Recetas.rblVista_SelectedIndexChanged", ex);
+                MostrarMensaje(T("No se pudieron cargar las recetas. Intenta nuevamente mas tarde."), false);
+            }
+        }
+
+        private void MostrarMensaje(string texto, bool exito)
+        {
+            lblMensaje.Text = System.Web.HttpUtility.HtmlEncode(texto);
+            lblMensaje.CssClass = exito ? "msg-form msg-exito" : "msg-form msg-error";
         }
 
         private void RegistrarErrorInterno(string origen, Exception ex)

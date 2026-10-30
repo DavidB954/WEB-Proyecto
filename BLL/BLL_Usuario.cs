@@ -25,7 +25,7 @@ namespace BLL
 
                 if (string.IsNullOrEmpty(Password))
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Debe ingresar contraseña" };
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Debe ingresar contraseña") };
                 }
 
                 Password = HashHelper.GenerarHash(Password);
@@ -36,14 +36,14 @@ namespace BLL
                 {
                     bll_bitacora.RegistrarEvento(null, AccionBitacora.LOGIN_INTENTO, "LOGIN", $"Intento de Login usando el email: {Email}");
 
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
                 }
 
                 if (!Usuario.Activo)
                 {
                     bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_INTENTO, "LOGIN", $"Intento de sesion del usuario bloqueado: {Usuario.NombreApellido}, con IdUsuario = {Usuario.IdUsuario}");
 
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario bloqueado. Contactese con el Administrador" };
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario bloqueado. Contactese con el Administrador") };
                 }
 
                 if (Usuario.HashPassword != Password)
@@ -61,7 +61,7 @@ namespace BLL
 
                         bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_BLOQUEADO, "LOGIN", $"Se bloquea al usuario: {Usuario.NombreApellido}, ID: {Usuario.IdUsuario}, por superar la cantidad de intentos permitidos");
 
-                        return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario Bloqueado. Contacte Administrador" };
+                        return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario Bloqueado. Contacte Administrador") };
                     }
                     else
                     {
@@ -71,7 +71,7 @@ namespace BLL
                         dal_usuario.ActualizarIntentosFallidos(Usuario.IntentosFallidos, Usuario.IdUsuario);
                         RefrescarDVH(Usuario);
 
-                        return new BE_LoginResultado { ExitoLogin = false, Mensaje = $"Contraseña Incorrecta. Intentos fallidos: {Usuario.IntentosFallidos}" };
+                        return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Contraseña Incorrecta. Intentos fallidos: {0}", Usuario.IntentosFallidos) };
                     }
 
                 }
@@ -84,7 +84,7 @@ namespace BLL
 
                     bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_OK, "LOGIN", $"Login correcto del usuario: {Usuario.NombreApellido}, ID: {Usuario.IdUsuario}");
 
-                    return new BE_LoginResultado { ExitoLogin = true, Usuario = Usuario, Mensaje = "Login exitoso" };
+                    return new BE_LoginResultado { ExitoLogin = true, Usuario = Usuario, Mensaje = TextoLocalizado.T("Login exitoso") };
                 }
             }
             catch (Exception ex)
@@ -101,14 +101,14 @@ namespace BLL
             {
                 if (string.IsNullOrEmpty(Password))
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Debe ingresar contraseña" };
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Debe ingresar contraseña") };
                 }
 
                 BE_Usuario usuario = dal_usuario.ObtenerUsuarioPorEmail(Email);
 
                 if (usuario == null)
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
                 }
 
                 // No alcanza con usuario.NombreRol: ese campo trae "un" rol del
@@ -120,15 +120,15 @@ namespace BLL
 
                 if (!esWebmaster)
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Solo el Webmaster puede ingresar en este momento." };
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Solo el Webmaster puede ingresar en este momento.") };
                 }
 
                 if (usuario.HashPassword != HashHelper.GenerarHash(Password))
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
                 }
 
-                return new BE_LoginResultado { ExitoLogin = true, Usuario = usuario, Mensaje = "Login de Webmaster correcto" };
+                return new BE_LoginResultado { ExitoLogin = true, Usuario = usuario, Mensaje = TextoLocalizado.T("Login de Webmaster correcto") };
             }
             catch (Exception ex)
             {
@@ -155,12 +155,12 @@ namespace BLL
             }
             else
             {
-                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
             }
 
             if (string.IsNullOrEmpty(Password) || HashHelper.GenerarHash(Password) != HASH_PASSWORD_EMERGENCIA)
             {
-                return new BE_LoginResultado { ExitoLogin = false, Mensaje = "Usuario o Contraseña Incorrecto" };
+                return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
             }
 
             BE_Usuario usuarioEmergencia = new BE_Usuario
@@ -175,7 +175,7 @@ namespace BLL
 
             bll_bitacora.RegistrarEvento(null, AccionBitacora.LOGIN_OK, "LOGIN", $"Login de EMERGENCIA con rol {rol} usando el email: {Email}");
 
-            return new BE_LoginResultado { ExitoLogin = true, Usuario = usuarioEmergencia, Mensaje = "Login de emergencia exitoso" };
+            return new BE_LoginResultado { ExitoLogin = true, Usuario = usuarioEmergencia, Mensaje = TextoLocalizado.T("Login de emergencia exitoso") };
         }
 
         public List<BE_Usuario> Usuarios()
@@ -225,7 +225,7 @@ namespace BLL
             }
             catch (SqlException ex) when (EsClaveDuplicada(ex))
             {
-                throw new InvalidOperationException("Ya existe un usuario con ese DNI o email.", ex);
+                throw new InvalidOperationException(TextoLocalizado.T("Ya existe un usuario con ese DNI o email."), ex);
             }
             catch (Exception ex)
             {
@@ -264,7 +264,7 @@ namespace BLL
             }
             catch (SqlException ex) when (EsClaveDuplicada(ex))
             {
-                throw new InvalidOperationException("Ya existe un usuario con ese DNI o email.", ex);
+                throw new InvalidOperationException(TextoLocalizado.T("Ya existe un usuario con ese DNI o email."), ex);
             }
             catch (Exception ex)
             {
@@ -277,18 +277,47 @@ namespace BLL
         {
             try
             {
-                List<int> idsBitacoraAfectados = bll_bitacora.ObtenerBitacora()
-                    .Where(b => b.IdUsuario == id)
-                    .Select(b => b.IdBitacora)
-                    .ToList();
+                if (UsuarioLogueado != null && UsuarioLogueado.IdUsuario == id)
+                {
+                    throw new InvalidOperationException(TextoLocalizado.T("No podes eliminar tu propio usuario."));
+                }
 
-                dal_usuario.EliminarUsuario(id);
+                BE_Usuario eliminado = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == id);
 
-                bll_bitacora.RefrescarDVHDeFilas(idsBitacoraAfectados);
+                if (eliminado == null)
+                {
+                    throw new InvalidOperationException(TextoLocalizado.T("El usuario seleccionado ya no existe."));
+                }
+
+                // Los turnos reservados del medico pasan a Cancelado: su DVH se arma
+                // aca porque la DAL no conoce el formato de la cadena.
+                if (!dal_usuario.EliminarUsuario(id, t => HashHelper.GenerarHash(BLL_Turno.CadenaTurno(t)),
+                        out int turnosCancelados, out int turnosPacienteEliminados))
+                {
+                    throw new InvalidOperationException(TextoLocalizado.T("No se pudo eliminar el usuario porque todavia tiene registros asociados. No se borro nada."));
+                }
 
                 RefrescarDVVUsuario();
 
-                bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_BAJA, "USUARIO", $"El Usuario {UsuarioLogueado.NombreApellido}, da de baja al Usuario con ID: {id}");
+                // Las filas de bitacora del usuario se conservan con su IdUsuario: el
+                // evento de baja guarda nombre, DNI y email para poder identificarlo.
+                string detalle = $"El Usuario {UsuarioLogueado.NombreApellido}, da de baja al Usuario con ID: {id} ({eliminado.Apellido}, {eliminado.Nombre} - DNI {eliminado.DNI} - {eliminado.Email}).";
+
+                if (turnosPacienteEliminados > 0)
+                {
+                    detalle += $" Se eliminaron {turnosPacienteEliminados} turno(s) e historia clinica del paciente.";
+                }
+
+                if (turnosCancelados > 0)
+                {
+                    detalle += $" Se cancelaron {turnosCancelados} turno(s) reservado(s) con el medico.";
+                }
+
+                bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_BAJA, "USUARIO", detalle);
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -341,12 +370,12 @@ namespace BLL
 
             if (otros.Any(u => string.Equals(u.DNI?.Trim(), usuario.DNI, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new InvalidOperationException($"Ya existe un usuario con el DNI {usuario.DNI}.");
+                throw new InvalidOperationException(TextoLocalizado.T("Ya existe un usuario con el DNI {0}.", usuario.DNI));
             }
 
             if (otros.Any(u => string.Equals(u.Email?.Trim(), usuario.Email, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new InvalidOperationException($"Ya existe un usuario con el email {usuario.Email}.");
+                throw new InvalidOperationException(TextoLocalizado.T("Ya existe un usuario con el email {0}.", usuario.Email));
             }
         }
 

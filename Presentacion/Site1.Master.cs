@@ -16,6 +16,9 @@ namespace Presentacion
         BLL_Idioma bll_idioma = new BLL_Idioma();
         BLL_Usuario bll_usuario = new BLL_Usuario();
 
+        protected string MensajeSesionExpirada => HttpUtility.JavaScriptStringEncode(
+            GestorIdioma.Traducir("Su sesion ha expirado por inactividad. Sera redirigido al login."), true);
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
@@ -33,6 +36,7 @@ namespace Presentacion
                         liTurnos.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Turnos.aspx");
                         liRecetas.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Recetas.aspx");
                         liMedicos.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Medicos.aspx");
+                        liAgendaMedicos.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "AgendaMedicos.aspx");
                         liBitacora.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Bitacora.aspx");
                         liSeguridad.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "Seguridad.aspx");
                         liIdiomas.Visible = SeguridadHelper.TieneAccesoPagina(usuario, permisos, "FormIdiomas.aspx");
@@ -57,15 +61,7 @@ namespace Presentacion
         {
             try
             {
-                ddlIdioma.DataSource = bll_idioma.ObtenerIdiomasActivos();
-                ddlIdioma.DataBind();
-
-                string idIdiomaActual = GestorIdioma.ObtenerIdiomaActual().ToString();
-
-                if (ddlIdioma.Items.FindByValue(idIdiomaActual) != null)
-                {
-                    ddlIdioma.SelectedValue = idIdiomaActual;
-                }
+                GestorIdioma.CargarSelector(ddlIdioma);
             }
             catch (Exception ex)
             {
@@ -92,12 +88,17 @@ namespace Presentacion
                     bll_usuario.ActualizarIdiomaPreferido(usuarioLogueado.IdUsuario, idIdioma);
                     usuarioLogueado.IdIdiomaPreferido = idIdioma;
                 }
+
+                // Se recarga la pagina: los combos y mensajes ya cargados en ViewState
+                // estan en el idioma anterior y solo se regeneran en un GET.
+                Response.Redirect(Request.RawUrl, false);
+                Context.ApplicationInstance.CompleteRequest();
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Site1.Master.ddlIdioma_SelectedIndexChanged", ex);
 
-                string mensaje = System.Web.HttpUtility.JavaScriptStringEncode("No se pudo cambiar el idioma. Intenta nuevamente mas tarde.");
+                string mensaje = System.Web.HttpUtility.JavaScriptStringEncode(GestorIdioma.Traducir("No se pudo cambiar el idioma. Intenta nuevamente mas tarde."));
                 ScriptManager.RegisterStartupScript(Page, Page.GetType(), "errorIdioma_" + Guid.NewGuid().ToString("N"), $"alert('{mensaje}');", true);
             }
         }

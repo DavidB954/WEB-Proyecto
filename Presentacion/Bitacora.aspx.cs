@@ -32,7 +32,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("Bitacora.Page_Load", ex);
-                    lblPaginas.Text = "No se pudo cargar la bitacora. Intenta nuevamente mas tarde.";
+                    lblPaginas.Text = T("No se pudo cargar la bitacora. Intenta nuevamente mas tarde.");
                 }
             }
         }
@@ -40,20 +40,37 @@ namespace Presentacion
 
         private void CargarUsuarios()
         {
-            ddlUsuarios.DataSource = bll_usuarios.Usuarios();
+            List<BE_Usuario> usuarios = bll_usuarios.Usuarios();
+
+            ddlUsuarios.DataSource = usuarios;
             ddlUsuarios.DataTextField = "NombreApellido";
             ddlUsuarios.DataValueField = "IdUsuario";
 
             ddlUsuarios.DataBind();
 
-            ddlUsuarios.Items.Insert(0, new ListItem("Todos", ""));
+            // Los usuarios eliminados ya no estan en Usuario pero sus eventos siguen
+            // en la bitacora con su IdUsuario: se agregan para poder filtrarlos.
+            HashSet<int> idsExistentes = new HashSet<int>(usuarios.Select(u => u.IdUsuario));
+
+            IEnumerable<int> idsEliminados = bll_bitacora.ObtenerBitacora()
+                .Where(b => b.IdUsuario.HasValue && !idsExistentes.Contains(b.IdUsuario.Value))
+                .Select(b => b.IdUsuario.Value)
+                .Distinct()
+                .OrderBy(id => id);
+
+            foreach (int id in idsEliminados)
+            {
+                ddlUsuarios.Items.Add(new ListItem(T("Usuario eliminado (ID {0})", id), id.ToString()));
+            }
+
+            ddlUsuarios.Items.Insert(0, new ListItem(T("Todos"), ""));
         }
 
         private void CargarModulos()
         {
             ddlModulos.Items.Clear();
 
-            ddlModulos.Items.Add(new ListItem("Todos", ""));
+            ddlModulos.Items.Add(new ListItem(T("Todos"), ""));
 
 
             ddlModulos.Items.Add(new ListItem("LOGIN", "LOGIN"));
@@ -66,10 +83,10 @@ namespace Presentacion
         {
             ddlCriticidad.Items.Clear();
 
-            ddlCriticidad.Items.Add(new ListItem("Todas", ""));
-            ddlCriticidad.Items.Add(new ListItem("ALTA", CriticidadBitacora.ALTA));
-            ddlCriticidad.Items.Add(new ListItem("MEDIA", CriticidadBitacora.MEDIA));
-            ddlCriticidad.Items.Add(new ListItem("BAJA", CriticidadBitacora.BAJA));
+            ddlCriticidad.Items.Add(new ListItem(T("Todas"), ""));
+            ddlCriticidad.Items.Add(new ListItem(T("ALTA"), CriticidadBitacora.ALTA));
+            ddlCriticidad.Items.Add(new ListItem(T("MEDIA"), CriticidadBitacora.MEDIA));
+            ddlCriticidad.Items.Add(new ListItem(T("BAJA"), CriticidadBitacora.BAJA));
         }
 
         private void CargarGrilla()
@@ -101,11 +118,11 @@ namespace Presentacion
 
             if (gvBitacora.PageCount == 0)
             {
-                lblPaginas.Text = "Sin resultados";
+                lblPaginas.Text = T("Sin resultados");
             }
             else
             {
-                lblPaginas.Text = $"Pagina {gvBitacora.PageIndex + 1} de {gvBitacora.PageCount}";
+                lblPaginas.Text = T("Pagina {0} de {1}", gvBitacora.PageIndex + 1, gvBitacora.PageCount);
             }
         }
 
@@ -119,7 +136,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.btnFiltrar_Click", ex);
-                lblPaginas.Text = "No se pudo aplicar el filtro. Intenta nuevamente mas tarde.";
+                lblPaginas.Text = T("No se pudo aplicar el filtro. Intenta nuevamente mas tarde.");
             }
         }
 
@@ -140,7 +157,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.btnLimpiar_Click", ex);
-                lblPaginas.Text = "No se pudieron limpiar los filtros. Intenta nuevamente mas tarde.";
+                lblPaginas.Text = T("No se pudieron limpiar los filtros. Intenta nuevamente mas tarde.");
             }
         }
 
@@ -168,26 +185,11 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.btnExportarXml_Click", ex);
-                lblPaginas.Text = "No se pudo exportar la bitacora. Intenta nuevamente mas tarde.";
+                lblPaginas.Text = T("No se pudo exportar la bitacora. Intenta nuevamente mas tarde.");
                 return;
             }
 
             DescargarXml(xml, $"Bitacora_{DateTime.Now:yyyy-MM-dd_HHmm}.xml");
-        }
-
-        // Reemplaza la respuesta de la pagina por el archivo. Se evita Response.End()
-        // (corta con ThreadAbortException); SuppressContent descarta el HTML que la
-        // pagina igual va a generar despues de este evento.
-        private void DescargarXml(string xml, string nombreArchivo)
-        {
-            Response.Clear();
-            Response.ContentType = "application/xml";
-            Response.ContentEncoding = System.Text.Encoding.UTF8;
-            Response.AddHeader("Content-Disposition", $"attachment; filename={nombreArchivo}");
-            Response.Write(xml);
-            Response.Flush();
-            Response.SuppressContent = true;
-            Context.ApplicationInstance.CompleteRequest();
         }
 
         protected void gvBitacora_PageIndexChanging(object sender, GridViewPageEventArgs e)
@@ -200,7 +202,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.gvBitacora_PageIndexChanging", ex);
-                lblPaginas.Text = "No se pudo cambiar de pagina. Intenta nuevamente mas tarde.";
+                lblPaginas.Text = T("No se pudo cambiar de pagina. Intenta nuevamente mas tarde.");
             }
         }
 
@@ -232,6 +234,8 @@ namespace Presentacion
                     celda.CssClass = "criticidad-baja";
                     break;
             }
+
+            celda.Text = T(celda.Text);
         }
 
         // Por DataField y no por posicion fija: las columnas ocultas (ID) tambien

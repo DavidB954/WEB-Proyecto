@@ -43,13 +43,24 @@
   <ItemGroup>
     <Compile Include="AccionBitacora.cs" />
     <Compile Include="BE_Bitacora.cs" />
+    <Compile Include="BE_Especialidad.cs" />
+    <Compile Include="BE_Medico.cs" />
+    <Compile Include="BE_MedicoBloqueo.cs" />
+    <Compile Include="BE_MedicoHorario.cs" />
     <Compile Include="BE_Idioma.cs" />
     <Compile Include="BE_LoginResultado.cs" />
     <Compile Include="BE_Permiso.cs" />
     <Compile Include="BE_RegistrosCorruptos.cs" />
     <Compile Include="BE_Rol.cs" />
+    <Compile Include="BE_ResultadoImportacion.cs" />
     <Compile Include="BE_Traduccion.cs" />
+    <Compile Include="TextoLocalizado.cs" />
     <Compile Include="BE_Usuario.cs" />
+    <Compile Include="BE_Paciente.cs" />
+    <Compile Include="BE_Turno.cs" />
+    <Compile Include="BE_AtencionMedica.cs" />
+    <Compile Include="BE_Receta.cs" />
+    <Compile Include="EstadoTurno.cs" />
     <Compile Include="Seguridad\IComponentePermiso.cs" />
     <Compile Include="Seguridad\PermisoComponente.cs" />
     <Compile Include="Seguridad\RolComponente.cs" />

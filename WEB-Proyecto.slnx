@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="BE/BE.csproj" Id="9eeff365-7348-46cc-9c7a-b80675c2f5ca" />
   <Project Path="BLL/BLL.csproj" Id="81c6d991-f6c8-483b-97fc-4dd256cfe7ae" />
+  <Project Path="ClienteBitacoraWS/ClienteBitacoraWS.csproj" Id="6f1d2a0e-3b7c-4d55-9a1e-2c8f7b4e1d90" />
   <Project Path="DAL/DAL.csproj" Id="2c6d4bf2-2935-467a-ad6a-4557159f427c" />
   <Project Path="Presentacion/Presentacion.csproj" Id="584223ba-e341-42e9-a01f-2129fc7e741a" />
   <Project Path="SERVICIOS/SERVICIOS.csproj" Id="94141066-4416-496b-93a7-91fe28124555" />

@@ -51,6 +51,12 @@ namespace SERVICIOS
             new PermisoDefinicion("ACCESO_MEDICOS",         TipoPagina, "Medicos.aspx",              "Ver atencion medica"),
             new PermisoDefinicion("MEDICO_ATENDER",         TipoAccion, "Medicos.aspx",              "Atender pacientes"),
 
+            new PermisoDefinicion("GESTION_AGENDA_MEDICOS", TipoPagina, "AgendaMedicos.aspx",        "Ver agenda y especialidades de medicos"),
+            new PermisoDefinicion("MEDICO_DATOS_EDITAR",    TipoAccion, "AgendaMedicos.aspx",        "Modificar matricula y especialidades"),
+            new PermisoDefinicion("AGENDA_HORARIO_EDITAR",  TipoAccion, "AgendaMedicos.aspx",        "Agregar/activar/eliminar franjas horarias"),
+            new PermisoDefinicion("AGENDA_BLOQUEO_EDITAR",  TipoAccion, "AgendaMedicos.aspx",        "Bloquear dias u horarios puntuales"),
+            new PermisoDefinicion("ESPECIALIDAD_ABM",       TipoAccion, "AgendaMedicos.aspx",        "Crear/eliminar especialidades"),
+
             new PermisoDefinicion("ACCESO_RECETAS",         TipoPagina, "Recetas.aspx",              "Ver recetas"),
             new PermisoDefinicion("VER_BITACORA",           TipoPagina, "Bitacora.aspx",             "Ver bitacora"),
             new PermisoDefinicion("BITACORA_EXPORTAR",      TipoAccion, "Bitacora.aspx",             "Exportar bitacora a XML"),
@@ -66,6 +72,8 @@ namespace SERVICIOS
 
             new PermisoDefinicion("GESTION_TRADUCCIONES",   TipoPagina, "FormTraducciones.aspx",     "Ver traducciones"),
             new PermisoDefinicion("TRADUCCION_EDITAR",      TipoAccion, "FormTraducciones.aspx",     "Guardar traducciones"),
+            new PermisoDefinicion("TRADUCCION_EXPORTAR",    TipoAccion, "FormTraducciones.aspx",     "Exportar traducciones a XML"),
+            new PermisoDefinicion("TRADUCCION_IMPORTAR",    TipoAccion, "FormTraducciones.aspx",     "Importar traducciones desde XML"),
 
             new PermisoDefinicion("GESTION_ROLES_PERMISOS", TipoPagina, "GestionRolesPermisos.aspx", "Ver roles"),
             new PermisoDefinicion("ROL_ALTA",               TipoAccion, "GestionRolesPermisos.aspx", "Crear roles"),

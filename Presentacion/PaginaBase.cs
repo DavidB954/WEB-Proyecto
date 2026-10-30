@@ -33,6 +33,12 @@ namespace Presentacion
 
         protected string NombrePagina => Path.GetFileName(Request.AppRelativeCurrentExecutionFilePath);
 
+        // Texto escrito en C# traducido al idioma activo. El texto en español es la clave.
+        protected string T(string textoBase, params object[] argumentos)
+        {
+            return GestorIdioma.Traducir(textoBase, argumentos);
+        }
+
         protected override void OnInit(EventArgs e)
         {
             base.OnInit(e);
@@ -59,6 +65,7 @@ namespace Presentacion
             // Las filas de las grillas recien existen despues del DataBind: se
             // traducen aca y no en OnInit como el resto de la pagina.
             GestorIdioma.AplicarTraduccionesGrillas(this);
+            GestorIdioma.AplicarTituloPagina(this);
 
             // En PreRender (y no en Load) para cubrir tambien las filas que las
             // grillas generan al hacer DataBind dentro de los eventos.
@@ -94,10 +101,25 @@ namespace Presentacion
                 return true;
             }
 
-            string mensaje = System.Web.HttpUtility.JavaScriptStringEncode("No tiene permiso para realizar esta accion.", true);
+            string mensaje = System.Web.HttpUtility.JavaScriptStringEncode(T("No tiene permiso para realizar esta accion."), true);
             ScriptManager.RegisterStartupScript(this, GetType(), "sinPermiso_" + Guid.NewGuid().ToString("N"), $"alert({mensaje});", true);
 
             return false;
+        }
+
+        // Reemplaza la respuesta de la pagina por el archivo. Se evita Response.End()
+        // (corta con ThreadAbortException); SuppressContent descarta el HTML que la
+        // pagina igual va a generar despues de este evento.
+        protected void DescargarXml(string xml, string nombreArchivo)
+        {
+            Response.Clear();
+            Response.ContentType = "application/xml";
+            Response.ContentEncoding = System.Text.Encoding.UTF8;
+            Response.AddHeader("Content-Disposition", $"attachment; filename={nombreArchivo}");
+            Response.Write(xml);
+            Response.Flush();
+            Response.SuppressContent = true;
+            Context.ApplicationInstance.CompleteRequest();
         }
 
         private void ValidarAccesoPagina()
