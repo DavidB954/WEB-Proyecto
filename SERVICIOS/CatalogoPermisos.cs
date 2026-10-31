@@ -60,6 +60,7 @@ namespace SERVICIOS
             new PermisoDefinicion("ACCESO_RECETAS",         TipoPagina, "Recetas.aspx",              "Ver recetas"),
             new PermisoDefinicion("VER_BITACORA",           TipoPagina, "Bitacora.aspx",             "Ver bitacora"),
             new PermisoDefinicion("BITACORA_EXPORTAR",      TipoAccion, "Bitacora.aspx",             "Exportar bitacora a XML"),
+            new PermisoDefinicion("BITACORA_IMPORTAR",      TipoAccion, "Bitacora.aspx",             "Importar bitacora desde XML"),
 
             new PermisoDefinicion("ACCESO_SEGURIDAD",       TipoPagina, "Seguridad.aspx",            "Ver backup e integridad"),
             new PermisoDefinicion("BACKUP_GENERAR",         TipoAccion, "Seguridad.aspx",            "Generar backup"),

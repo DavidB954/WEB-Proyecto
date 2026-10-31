@@ -49,6 +49,25 @@
             <asp:Button runat="server" Text="Limpiar Filtros" ID="btnLimpiar" CssClass="btn-base btn-danger" data-i18n="1" OnClick="btnLimpiar_Click" />
             <asp:Button runat="server" Text="Exportar XML" ID="btnExportarXml" CssClass="btn-base btn-success" data-i18n="1" OnClick="btnExportarXml_Click" data-permiso="BITACORA_EXPORTAR" />
         </div>
+
+        <asp:Panel ID="pnlImportar" runat="server" CssClass="section-card filtros-bitacora" data-permiso="BITACORA_IMPORTAR">
+            <div class="campo-filtro">
+                <asp:Label ID="lblImportarXml" class="label-base" runat="server" Text="Importar XML de bitacora" data-i18n="1"></asp:Label>
+                <asp:FileUpload ID="fuImportarXml" runat="server" CssClass="input-base" accept=".xml" />
+                <span id="spanAyudaImportarBitacora" runat="server" class="ayuda-campo" data-i18n="1">Muestra un archivo generado con Exportar XML y aplica su filtro. Solo se consulta: no se agrega a la bitacora del sistema.</span>
+            </div>
+            <div class="campo-filtro">
+                <asp:Button runat="server" Text="Importar XML" ID="btnImportarXml" CssClass="btn-base btn-primary" data-i18n="1" OnClick="btnImportarXml_Click" />
+            </div>
+        </asp:Panel>
+
+        <asp:Panel ID="pnlArchivoImportado" runat="server" Visible="false">
+            <asp:Label ID="lblArchivoImportado" runat="server" CssClass="msg-form"></asp:Label>
+            <div class="acciones-filtro">
+                <asp:Button runat="server" Text="Volver a la bitacora del sistema" ID="btnVolverBitacora" CssClass="btn-base" data-i18n="1" OnClick="btnVolverBitacora_Click" />
+            </div>
+        </asp:Panel>
+        <asp:Label ID="lblMensajeImportar" runat="server" CssClass="msg-form msg-error" EnableViewState="false"></asp:Label>
         <div class="grid-container datos-bitacora">
             <asp:Label ID="lblPaginas" runat="server" CssClass="info-paginas"></asp:Label>
             <asp:GridView ID="gvBitacora" runat="server" AutoGenerateColumns="false" CssClass="grid-crud"

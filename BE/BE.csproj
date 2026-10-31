@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="AccionBitacora.cs" />
     <Compile Include="BE_Bitacora.cs" />
+    <Compile Include="BE_BitacoraImportada.cs" />
     <Compile Include="BE_Especialidad.cs" />
     <Compile Include="BE_Medico.cs" />
     <Compile Include="BE_MedicoBloqueo.cs" />

@@ -16,6 +16,17 @@ namespace Presentacion
     {
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
         BLL_Usuario bll_usuarios = new BLL_Usuario();
+
+        private const string ClaveSesionImportada = "BitacoraImportada";
+
+        // Archivo que se esta consultando; null = bitacora real del sistema. En sesion
+        // y no en ViewState: el archivo entero viajaria en cada postback.
+        private BE_BitacoraImportada Importada
+        {
+            get { return Session[ClaveSesionImportada] as BE_BitacoraImportada; }
+            set { Session[ClaveSesionImportada] = value; }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
@@ -24,6 +35,8 @@ namespace Presentacion
             {
                 try
                 {
+                    Importada = null;
+
                     CargarUsuarios();
                     CargarModulos();
                     CargarCriticidades();
@@ -101,7 +114,15 @@ namespace Presentacion
 
             bool sinFiltros = desde == null && hasta == null && idUsuario == null && modulo == null && ip == null && criticidad == null;
 
-            if (sinFiltros)
+            BE_BitacoraImportada importada = Importada;
+
+            MostrarOrigen(importada);
+
+            if (importada != null)
+            {
+                gvBitacora.DataSource = bll_bitacora.FiltrarEventos(importada.Eventos, desde, hasta, idUsuario, modulo, ip, criticidad);
+            }
+            else if (sinFiltros)
             {
                 gvBitacora.DataSource = bll_bitacora.ObtenerBitacora()
                     .OrderByDescending(b => b.IdBitacora)
@@ -126,6 +147,115 @@ namespace Presentacion
             }
         }
 
+        // Deja claro de donde salen los datos: un archivo se puede editar a mano y no
+        // tiene digitos verificadores. Mientras se mira uno no se ofrece exportar,
+        // porque Exportar XML siempre sale de la bitacora real.
+        private void MostrarOrigen(BE_BitacoraImportada importada)
+        {
+            pnlArchivoImportado.Visible = importada != null;
+            btnExportarXml.Visible = importada == null;
+
+            if (importada != null)
+            {
+                lblArchivoImportado.Text = HttpUtility.HtmlEncode(T(
+                    "Estas viendo el archivo {0} ({1} eventos), generado el {2} por {3}. No son datos de la bitacora del sistema y su contenido no esta verificado.",
+                    importada.NombreArchivo, importada.Eventos.Count, importada.Generado, importada.GeneradoPor));
+            }
+        }
+
+        protected void btnImportarXml_Click(object sender, EventArgs e)
+        {
+            if (!ExigirPermiso("BITACORA_IMPORTAR"))
+            {
+                return;
+            }
+
+            try
+            {
+                if (!fuImportarXml.HasFile || !string.Equals(System.IO.Path.GetExtension(fuImportarXml.FileName), ".xml", StringComparison.OrdinalIgnoreCase))
+                {
+                    lblMensajeImportar.Text = T("Selecciona un archivo .xml para importar.");
+                    return;
+                }
+
+                BE_BitacoraImportada importada = bll_bitacora.ImportarXml(
+                    UsuarioLogueado, System.IO.Path.GetFileName(fuImportarXml.FileName), fuImportarXml.PostedFile.InputStream);
+
+                Importada = importada;
+
+                AplicarFiltrosDelArchivo(importada);
+
+                gvBitacora.PageIndex = 0;
+                CargarGrilla();
+            }
+            catch (InvalidOperationException ex)
+            {
+                lblMensajeImportar.Text = HttpUtility.HtmlEncode(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Bitacora.btnImportarXml_Click", ex);
+                lblMensajeImportar.Text = T("No se pudo importar el archivo. Intenta nuevamente mas tarde.");
+            }
+        }
+
+        protected void btnVolverBitacora_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Importada = null;
+
+                LimpiarFiltros();
+
+                gvBitacora.PageIndex = 0;
+                CargarGrilla();
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Bitacora.btnVolverBitacora_Click", ex);
+                lblPaginas.Text = T("No se pudo cargar la bitacora. Intenta nuevamente mas tarde.");
+            }
+        }
+
+        private void AplicarFiltrosDelArchivo(BE_BitacoraImportada importada)
+        {
+            fechaDesde.Text = importada.Desde?.ToString("yyyy-MM-dd") ?? "";
+            fechaHasta.Text = importada.Hasta?.ToString("yyyy-MM-dd") ?? "";
+            txtIP.Text = importada.Ip ?? "";
+
+            SeleccionarFiltro(ddlUsuarios, importada.IdUsuario?.ToString(), T("Usuario eliminado (ID {0})", importada.IdUsuario));
+            SeleccionarFiltro(ddlModulos, importada.Modulo, importada.Modulo);
+            SeleccionarFiltro(ddlCriticidad, importada.Criticidad, importada.Criticidad);
+        }
+
+        // El archivo puede traer un valor que el combo no ofrece (un usuario ya borrado,
+        // un modulo que no esta en la lista): se agrega para no perder ese filtro.
+        private static void SeleccionarFiltro(DropDownList combo, string valor, string textoSiFalta)
+        {
+            if (string.IsNullOrEmpty(valor))
+            {
+                combo.SelectedIndex = 0;
+                return;
+            }
+
+            if (combo.Items.FindByValue(valor) == null)
+            {
+                combo.Items.Add(new ListItem(textoSiFalta, valor));
+            }
+
+            combo.SelectedValue = valor;
+        }
+
+        private void LimpiarFiltros()
+        {
+            fechaDesde.Text = "";
+            fechaHasta.Text = "";
+            ddlUsuarios.SelectedIndex = 0;
+            ddlModulos.SelectedIndex = 0;
+            ddlCriticidad.SelectedIndex = 0;
+            txtIP.Text = "";
+        }
+
         public void btnFiltrar_Click(object sender, EventArgs e)
         {
             try
@@ -144,12 +274,7 @@ namespace Presentacion
         {
             try
             {
-                fechaDesde.Text = "";
-                fechaHasta.Text = "";
-                ddlUsuarios.SelectedIndex = 0;
-                ddlModulos.SelectedIndex = 0;
-                ddlCriticidad.SelectedIndex = 0;
-                txtIP.Text = "";
+                LimpiarFiltros();
 
                 gvBitacora.PageIndex = 0;
                 CargarGrilla();

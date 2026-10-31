@@ -237,6 +237,7 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('Mensajes', 'm_3dfeb9eeefcdad1d', N'Atendiendo a {0} ({1} anios, HC {2}) - turno de las {3} hs.', N'Seeing {0} ({1} years old, MR {2}) - {3} appointment.'),
 ('Mensajes', 'm_406a488b415eaf4c', N'No se pudo cargar el usuario seleccionado.', N'The selected user could not be loaded.'),
 ('Mensajes', 'm_408ed7d9a0f31210', N'La especialidad seleccionada ya no existe.', N'The selected specialty no longer exists.'),
+('Mensajes', 'm_41081d07353035da', N'No se pudo importar el archivo. Intenta nuevamente mas tarde.', N'The file could not be imported. Please try again later.'),
 ('Mensajes', 'm_423236e704fa35b7', N'No se pudieron cargar los datos. Intenta nuevamente mas tarde.', N'The data could not be loaded. Please try again later.'),
 ('Mensajes', 'm_424e93aa51340639', N'Domingo', N'Sunday'),
 ('Mensajes', 'm_4323a8f9d94c68d8', N'usuario inactivo', N'inactive user'),
@@ -359,6 +360,7 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('Mensajes', 'm_a5c4c9ff3d350a13', N'No se pudo modificar el rol. Intenta nuevamente mas tarde.', N'The role could not be edited. Please try again later.'),
 ('Mensajes', 'm_a617ef942f15b340', N'No se pudo realizar la busqueda. Intenta nuevamente mas tarde.', N'The search could not be performed. Please try again later.'),
 ('Mensajes', 'm_a87e453ddd328a6e', N'No se pudo limpiar la busqueda. Intenta nuevamente mas tarde.', N'The search could not be cleared. Please try again later.'),
+('Mensajes', 'm_a90112f770d6f982', N'Importar bitacora desde XML', N'Import activity log from XML'),
 ('Mensajes', 'm_a97cf52ca500e3d4', N'No se pudo registrar el bloqueo. Intenta nuevamente mas tarde.', N'The block could not be saved. Please try again later.'),
 ('Mensajes', 'm_aa4ab56e55926361', N'Asignar/quitar permisos a usuarios', N'Assign/remove user permissions'),
 ('Mensajes', 'm_aa813ecedc3f3d4d', N'El usuario seleccionado no existe.', N'The selected user does not exist.'),
@@ -419,8 +421,10 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('Mensajes', 'm_d3e33088f2eca391', N'Login de Webmaster correcto', N'Webmaster login successful'),
 ('Mensajes', 'm_d671800ee548fa73', N'Ese horario ya no esta disponible. Elegi otro.', N'That time is no longer available. Choose another one.'),
 ('Mensajes', 'm_d749d4a9e87b0db2', N'Crear roles', N'Create roles'),
+('Mensajes', 'm_d855c166327e8901', N'El archivo tiene un evento sin ID o sin fecha valida.', N'The file has an event with no ID or valid date.'),
 ('Mensajes', 'm_d885474ce571ad6b', N'Todavia no se puede atender este turno: es de otro dia.', N'This appointment cannot be attended yet: it is on another day.'),
 ('Mensajes', 'm_d8e8508366508fb3', N'No se pudo seleccionar el idioma.', N'The language could not be selected.'),
+('Mensajes', 'm_d97bae128eeb26c6', N'Estas viendo el archivo {0} ({1} eventos), generado el {2} por {3}. No son datos de la bitacora del sistema y su contenido no esta verificado.', N'You are viewing file {0} ({1} events), generated on {2} by {3}. This is not data from the system activity log and its content is not verified.'),
 ('Mensajes', 'm_da161907c783966f', N'No se pudo eliminar la especialidad. Intenta nuevamente mas tarde.', N'The specialty could not be deleted. Please try again later.'),
 ('Mensajes', 'm_dc46ddae90f4a8d8', N'Selecciona al menos un dia de la semana.', N'Select at least one day of the week.'),
 ('Mensajes', 'm_dd5d72471db6005c', N'Agregar idiomas', N'Add languages'),
@@ -463,6 +467,7 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('Mensajes', 'm_f1ba6c7c159c3a41', N'No se pudo asignar el rol.', N'The role could not be assigned.'),
 ('Mensajes', 'm_f1fac66854b316ae', N'Ya existe un usuario con el email {0}.', N'A user with email {0} already exists.'),
 ('Mensajes', 'm_f2b097552e84df40', N'No se pudieron cargar los medicos. Intenta nuevamente mas tarde.', N'The doctors could not be loaded. Please try again later.'),
+('Mensajes', 'm_f2e535913f3f51f5', N'El archivo no tiene el formato de bitacora del sistema.', N'The file does not have the system''s activity log format.'),
 ('Mensajes', 'm_f33c2863ca138dcf', N'La traduccion de {0}.{1} supera los {2} caracteres.', N'The translation of {0}.{1} exceeds {2} characters.'),
 ('Mensajes', 'm_f3551f439d882138', N'Duracion de turno invalida.', N'Invalid appointment length.'),
 ('Mensajes', 'm_f407384e2f304cf0', N'Cancelado', N'Cancelled'),
@@ -471,6 +476,8 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('Mensajes', 'm_f7a38aa8e75c5ba7', N'Solo se puede marcar ausente un turno cuyo horario ya paso.', N'An appointment can only be marked absent after its time has passed.'),
 ('Mensajes', 'm_f7d87147c40261ea', N'No se pudo marcar el turno como ausente. Intenta nuevamente mas tarde.', N'The appointment could not be marked as absent. Please try again later.'),
 ('Mensajes', 'm_f89608197f335787', N'No se pudieron cargar los usuarios. Intenta nuevamente mas tarde.', N'The users could not be loaded. Please try again later.'),
+('Mensajes', 'm_fa0c2d183ebb786a', N'El archivo esta incompleto: la cantidad de eventos no coincide con la declarada.', N'The file is incomplete: the number of events does not match the declared count.'),
+('Mensajes', 'm_fab10500472b59e2', N'El archivo tiene un filtro de fecha invalido.', N'The file has an invalid date filter.'),
 ('Mensajes', 'm_fbf260516237e128', N'No se pudo cambiar el idioma. Intenta nuevamente mas tarde.', N'The language could not be changed. Please try again later.'),
 ('Mensajes', 'm_fd7f0836e8addb8c', N'Ausente', N'Absent'),
 ('Mensajes', 'm_fd86a0e1228da705', N'El archivo no es un XML valido.', N'The file is not valid XML.'),
@@ -510,16 +517,16 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('Menu', 'pUsuarios', N'Gestione la informacion de usuarios.', N'Manage user information.'),
 ('Recetas', 'gvRecetas_col0', N'Fecha', N'Date'),
 ('Recetas', 'gvRecetas_col1', N'Medico', N'Doctor'),
-('Recetas', 'gvRecetas_col2', N'Especialidad', N'Specialty'),
+('Recetas', 'gvRecetas_col2', N'Especialidad', N'Specialty');
+
+INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('Recetas', 'gvRecetas_col3', N'Medicamento', N'Medication'),
 ('Recetas', 'gvRecetas_col4', N'Indicaciones', N'Instructions'),
 ('Recetas', 'gvRecetas_col5', N'Estado', N'Status'),
 ('Recetas', 'gvRecetas_divSinRecetas', N'Todavia no tenes recetas emitidas.', N'You have no issued prescriptions yet.'),
 ('Recetas', 'hMisRecetas', N'Mis Recetas', N'My Prescriptions'),
 ('Recetas', 'rblVista_Todas', N'Todas', N'All'),
-('Recetas', 'rblVista_Vigentes', N'Vigentes', N'Valid');
-
-INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
+('Recetas', 'rblVista_Vigentes', N'Vigentes', N'Valid'),
 ('Recetas', 'spanAyudaRecetas', N'Aca podes consultar las recetas que te emitieron tus medicos.', N'Here you can view the prescriptions issued by your doctors.'),
 ('Seguridad', 'btnBackUp', N'Generar BackUp', N'Create Backup'),
 ('Seguridad', 'btnRecalcular', N'Recalcular DV', N'Recalculate Check Digits'),
@@ -645,7 +652,9 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('WebForm2', 'spanAyudaReceta', N'Opcional. Agrega cada medicamento con "Agregar"; se guardan junto con la atencion.', N'Optional. Add each medication with "Add"; they are saved with the consultation.'),
 ('bITACORA', 'btnExportarXml', N'Exportar XML', N'Export XML'),
 ('bITACORA', 'btnFiltrar', N'Filtrar', N'Filter'),
+('bITACORA', 'btnImportarXml', N'Importar XML', N'Import XML'),
 ('bITACORA', 'btnLimpiar', N'Limpiar Filtros', N'Clear Filters'),
+('bITACORA', 'btnVolverBitacora', N'Volver a la bitacora del sistema', N'Back to the system activity log'),
 ('bITACORA', 'gvBitacora_col0', N'ID', N'ID'),
 ('bITACORA', 'gvBitacora_col1', N'ID Usuario', N'User ID'),
 ('bITACORA', 'gvBitacora_col2', N'Fecha y Hora', N'Date and Time'),
@@ -665,7 +674,9 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('bITACORA', 'lblFiltroCriticidad', N'Criticidad', N'Severity'),
 ('bITACORA', 'lblFiltroIP', N'IP', N'IP'),
 ('bITACORA', 'lblFiltroModulo', N'Modulo', N'Module'),
-('bITACORA', 'lblFiltroUsuario', N'Usuario', N'User');
+('bITACORA', 'lblFiltroUsuario', N'Usuario', N'User'),
+('bITACORA', 'lblImportarXml', N'Importar XML de bitacora', N'Import activity log XML'),
+('bITACORA', 'spanAyudaImportarBitacora', N'Muestra un archivo generado con Exportar XML y aplica su filtro. Solo se consulta: no se agrega a la bitacora del sistema.', N'Shows a file created with Export XML and applies its filter. It is view-only: it is not added to the system activity log.');
 
 BEGIN TRANSACTION;
 

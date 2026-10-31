@@ -50,6 +50,7 @@ namespace BE
                 case AccionBitacora.TRADUCCION_EXPORTADA:
                 case AccionBitacora.TRADUCCION_IMPORTADA:
                 case AccionBitacora.BITACORA_EXPORTADA:
+                case AccionBitacora.BITACORA_IMPORTADA:
                 case AccionBitacora.MEDICO_DATOS_MODIFICACION:
                 case AccionBitacora.ESPECIALIDAD_ALTA:
                 case AccionBitacora.HORARIO_ALTA:
