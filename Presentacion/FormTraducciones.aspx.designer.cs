@@ -13,6 +13,16 @@ namespace Presentacion
 
         protected global::System.Web.UI.WebControls.DropDownList ddlIdiomaEditar;
 
+        protected global::System.Web.UI.WebControls.DropDownList ddlPaginaFiltro;
+
+        protected global::System.Web.UI.WebControls.Button btnExportarXml;
+
+        protected global::System.Web.UI.WebControls.Panel pnlImportar;
+
+        protected global::System.Web.UI.WebControls.FileUpload fuImportarXml;
+
+        protected global::System.Web.UI.WebControls.Button btnImportarXml;
+
         protected global::System.Web.UI.WebControls.GridView gvTraducciones;
 
         protected global::System.Web.UI.WebControls.Button btnGuardarTraducciones;

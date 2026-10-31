@@ -1,3 +1,4 @@
+using BE;
 using System;
 using System.IO;
 using System.Web;
@@ -6,6 +7,12 @@ namespace Presentacion
 {
     public class Global : HttpApplication
     {
+        protected void Application_Start(object sender, EventArgs e)
+        {
+            // BE y BLL no conocen la capa web: traducen a traves de este puente.
+            TextoLocalizado.Traductor = GestorIdioma.Traducir;
+        }
+
         protected void Application_Error(object sender, EventArgs e)
         {
             Exception ex = Server.GetLastError();

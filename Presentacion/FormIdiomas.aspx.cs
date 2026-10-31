@@ -28,7 +28,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("FormIdiomas.Page_Load", ex);
-                    lblMensaje.Text = "No se pudieron cargar los idiomas. Intenta nuevamente mas tarde.";
+                    lblMensaje.Text = T("No se pudieron cargar los idiomas. Intenta nuevamente mas tarde.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                 }
             }
@@ -74,7 +74,7 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text))
                 {
-                    lblMensaje.Text = "Debe completar el codigo y el nombre del idioma.";
+                    lblMensaje.Text = T("Debe completar el codigo y el nombre del idioma.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                     return;
                 }
@@ -92,12 +92,12 @@ namespace Presentacion
                 LimpiarFormulario();
 
                 lblMensaje.Text = string.Empty;
-                MostrarToast("Idioma agregado correctamente.", true);
+                MostrarToast(T("Idioma agregado correctamente."), true);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("FormIdiomas.btnAgregar_Click", ex);
-                lblMensaje.Text = "No se pudo agregar el idioma. Verifica los datos e intenta nuevamente.";
+                lblMensaje.Text = T("No se pudo agregar el idioma. Verifica los datos e intenta nuevamente.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -118,7 +118,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("FormIdiomas.gvIdiomas_SelectedIndexChanged", ex);
-                lblMensaje.Text = "No se pudo seleccionar el idioma.";
+                lblMensaje.Text = T("No se pudo seleccionar el idioma.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -134,7 +134,7 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdIdioma.Value))
                 {
-                    lblMensaje.Text = "Seleccione un idioma de la lista antes de eliminar.";
+                    lblMensaje.Text = T("Seleccione un idioma de la lista antes de eliminar.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                     return;
                 }
@@ -149,12 +149,12 @@ namespace Presentacion
                 LimpiarFormulario();
 
                 lblMensaje.Text = string.Empty;
-                MostrarToast("Idioma eliminado correctamente.", true);
+                MostrarToast(T("Idioma eliminado correctamente."), true);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("FormIdiomas.btnEliminar_Click", ex);
-                lblMensaje.Text = "No se pudo eliminar el idioma. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudo eliminar el idioma. Intenta nuevamente mas tarde.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }

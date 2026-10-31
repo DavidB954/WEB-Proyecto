@@ -9,12 +9,46 @@ using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    public partial class LoginWebmaster : System.Web.UI.Page
+    public partial class LoginWebmaster : PaginaBase
     {
         BLL_Usuario bll_Usu = new BLL_Usuario();
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            if (!IsPostBack)
+            {
+                CargarSelectorIdioma();
+            }
+        }
+
+        protected void ddlIdioma_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                GestorIdioma.CambiarIdioma(int.Parse(ddlIdioma.SelectedValue));
+
+                // Se recarga para regenerar todo en el idioma elegido, igual que Site1.Master.
+                Response.Redirect(Request.RawUrl, false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("LoginWebmaster.ddlIdioma_SelectedIndexChanged", ex);
+                lblMensaje.Text = T("No se pudo cambiar el idioma. Intenta nuevamente mas tarde.");
+            }
+        }
+
+        private void CargarSelectorIdioma()
+        {
+            try
+            {
+                GestorIdioma.CargarSelector(ddlIdioma);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("LoginWebmaster.CargarSelectorIdioma", ex);
+                ddlIdioma.Visible = false;
+            }
         }
 
         protected void btnLogin_Click(object sender, EventArgs e)
@@ -41,7 +75,7 @@ namespace Presentacion
 
                 if (resultado.Usuario.NombreRol != "WEBMASTER")
                 {
-                    lblMensaje.Text = "La base de datos tiene un problema de integridad. Solo Webmaster puede ingresar en este momento.";
+                    lblMensaje.Text = T("La base de datos tiene un problema de integridad. Solo Webmaster puede ingresar en este momento.");
                     return;
                 }
 
@@ -64,7 +98,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("LoginWebmaster.btnLogin_Click", ex);
-                lblMensaje.Text = "No se pudo iniciar sesion. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudo iniciar sesion. Intenta nuevamente mas tarde.");
             }
         }
 

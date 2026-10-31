@@ -6,8 +6,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Net;
+using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace BLL
@@ -171,6 +174,137 @@ namespace BLL
 
             // XDocument.ToString() omite la declaracion <?xml ...?>: se agrega a mano.
             return documento.Declaration + Environment.NewLine + documento.ToString();
+        }
+
+        // Lee un archivo generado por GenerarXml para consultarlo en la grilla. No inserta
+        // nada en la tabla Bitacora: la auditoria solo la escribe el sistema, y un evento
+        // importado no tendria un DVH legitimo. Lo unico que se registra es la importacion.
+        public BE_BitacoraImportada ImportarXml(BE_Usuario usuarioLogueado, string nombreArchivo, Stream contenidoXml)
+        {
+            XElement raiz = LeerXmlBitacora(contenidoXml);
+            XElement filtros = raiz.Element("Filtros");
+            XElement eventos = raiz.Element("Eventos");
+
+            if (eventos == null)
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("El archivo no tiene el formato de bitacora del sistema."));
+            }
+
+            BE_BitacoraImportada importada = new BE_BitacoraImportada
+            {
+                NombreArchivo = nombreArchivo,
+                Generado = (string)raiz.Attribute("generado"),
+                GeneradoPor = (string)raiz.Attribute("generadoPor"),
+                Desde = LeerFechaFiltro(filtros, "desde"),
+                Hasta = LeerFechaFiltro(filtros, "hasta"),
+                IdUsuario = LeerEntero((string)filtros?.Attribute("idUsuario")),
+                Modulo = (string)filtros?.Attribute("modulo"),
+                Ip = (string)filtros?.Attribute("ip"),
+                Criticidad = (string)filtros?.Attribute("criticidad"),
+                Eventos = eventos.Elements("Evento").Select(LeerEvento).ToList()
+            };
+
+            // Sin firma no se puede probar que el archivo sea autentico, pero si detectar
+            // que le faltan eventos respecto de lo que declara.
+            if (LeerEntero((string)eventos.Attribute("cantidad")) != importada.Eventos.Count)
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("El archivo esta incompleto: la cantidad de eventos no coincide con la declarada."));
+            }
+
+            RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.BITACORA_IMPORTADA, "SEGURIDAD",
+                $"{usuarioLogueado.NombreApellido} consulto el archivo '{nombreArchivo}' con {importada.Eventos.Count} eventos de bitacora.");
+
+            return importada;
+        }
+
+        // Mismas condiciones que el SP dbo.FiltrarBitacora, sobre los eventos del archivo.
+        public List<BE_Bitacora> FiltrarEventos(IEnumerable<BE_Bitacora> eventos, DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
+        {
+            return eventos
+                .Where(e => desde == null || e.FechaHora >= desde)
+                .Where(e => hasta == null || e.FechaHora <= hasta)
+                .Where(e => idUsuario == null || e.IdUsuario == idUsuario)
+                .Where(e => modulo == null || string.Equals(e.Modulo, modulo, StringComparison.OrdinalIgnoreCase))
+                .Where(e => ip == null || string.Equals(e.IP, ip, StringComparison.OrdinalIgnoreCase))
+                .Where(e => criticidad == null || string.Equals(e.Criticidad, criticidad, StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(e => e.IdBitacora)
+                .ToList();
+        }
+
+        // El archivo lo sube un usuario: se prohibe el DTD y no se resuelven
+        // referencias externas, para evitar ataques XXE y de expansion de entidades.
+        private static XElement LeerXmlBitacora(Stream contenidoXml)
+        {
+            XmlReaderSettings opciones = new XmlReaderSettings
+            {
+                DtdProcessing = DtdProcessing.Prohibit,
+                XmlResolver = null
+            };
+
+            XDocument documento;
+
+            try
+            {
+                using (XmlReader lector = XmlReader.Create(contenidoXml, opciones))
+                {
+                    documento = XDocument.Load(lector);
+                }
+            }
+            catch (XmlException ex)
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("El archivo no es un XML valido."), ex);
+            }
+
+            if (documento.Root == null || documento.Root.Name != "Bitacora")
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("El archivo no tiene el formato de bitacora del sistema."));
+            }
+
+            return documento.Root;
+        }
+
+        private static BE_Bitacora LeerEvento(XElement evento)
+        {
+            if (!int.TryParse((string)evento.Attribute("id"), out int id)
+                || !DateTime.TryParseExact((string)evento.Attribute("fechaHora"), "s", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fechaHora))
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("El archivo tiene un evento sin ID o sin fecha valida."));
+            }
+
+            return new BE_Bitacora
+            {
+                IdBitacora = id,
+                IdUsuario = LeerEntero((string)evento.Attribute("idUsuario")),
+                FechaHora = fechaHora,
+                Criticidad = (string)evento.Attribute("criticidad"),
+                Accion = Enum.TryParse((string)evento.Element("Accion"), out AccionBitacora accion) ? accion : AccionBitacora.ACCION_INVALIDA,
+                Modulo = (string)evento.Element("Modulo"),
+                IP = (string)evento.Element("IP"),
+                NombreMaquina = (string)evento.Element("NombreMaquina"),
+                Descripcion = (string)evento.Element("Descripcion")
+            };
+        }
+
+        private static DateTime? LeerFechaFiltro(XElement filtros, string atributo)
+        {
+            string valor = (string)filtros?.Attribute(atributo);
+
+            if (string.IsNullOrEmpty(valor))
+            {
+                return null;
+            }
+
+            if (!DateTime.TryParseExact(valor, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fecha))
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("El archivo tiene un filtro de fecha invalido."));
+            }
+
+            return fecha;
+        }
+
+        private static int? LeerEntero(string valor)
+        {
+            return int.TryParse(valor, out int numero) ? numero : (int?)null;
         }
 
         // Un filtro vacio no se escribe como atributo (en vez de quedar desde="").

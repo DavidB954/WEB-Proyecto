@@ -31,7 +31,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("Seguridad.Page_Load", ex);
-                    lblMensaje.Text = "No se pudo cargar la pantalla de seguridad. Intenta nuevamente mas tarde.";
+                    lblMensaje.Text = T("No se pudo cargar la pantalla de seguridad. Intenta nuevamente mas tarde.");
                     lblMensaje.ForeColor = System.Drawing.Color.Red;
                 }
             }
@@ -45,7 +45,7 @@ namespace Presentacion
 
             if (backups.Count == 0)
             {
-                ddlBackups.Items.Add(new ListItem("No hay backups disponibles", ""));
+                ddlBackups.Items.Add(new ListItem(T("No hay backups disponibles"), ""));
                 btnRestore.Enabled = false;
                 return;
             }
@@ -112,12 +112,12 @@ namespace Presentacion
                 bll_dvv.ActualizarDVV("Rol");
                 bll_dvv.ActualizarDVV("Bitacora");
 
-                CerrarSesionYVolverALogin("Se recalcularon los digitos verificadores correctamente. Tenes que volver a iniciar sesion.");
+                CerrarSesionYVolverALogin(T("Se recalcularon los digitos verificadores correctamente. Tenes que volver a iniciar sesion."));
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnRecalcular_Click", ex);
-                lblMensaje.Text = "No se pudieron recalcular los digitos verificadores. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudieron recalcular los digitos verificadores. Intenta nuevamente mas tarde.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -135,7 +135,7 @@ namespace Presentacion
 
                 string rutaGenerada = bll_dvv.GenerarBackUp(usuarioLogueado);
 
-                lblMensaje.Text = $"Backup generado en: {rutaGenerada}";
+                lblMensaje.Text = T("Backup generado en: {0}", rutaGenerada);
                 lblMensaje.ForeColor = System.Drawing.Color.Green;
 
                 CargarBackupsDisponibles();
@@ -143,7 +143,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnBackUp_Click", ex);
-                lblMensaje.Text = "No se pudo generar el backup. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudo generar el backup. Intenta nuevamente mas tarde.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }
@@ -161,12 +161,12 @@ namespace Presentacion
 
                 bll_dvv.RestaurarBackup(usuarioLogueado, ddlBackups.SelectedValue);
 
-                CerrarSesionYVolverALogin("Se restauro la base de datos correctamente. Tenes que volver a iniciar sesion.");
+                CerrarSesionYVolverALogin(T("Se restauro la base de datos correctamente. Tenes que volver a iniciar sesion."));
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnRestore_Click", ex);
-                lblMensaje.Text = "No se pudo restaurar el backup. Intenta nuevamente mas tarde.";
+                lblMensaje.Text = T("No se pudo restaurar el backup. Intenta nuevamente mas tarde.");
                 lblMensaje.ForeColor = System.Drawing.Color.Red;
             }
         }

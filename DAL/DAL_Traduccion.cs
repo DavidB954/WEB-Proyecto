@@ -69,6 +69,37 @@ namespace DAL
             }
         }
 
+        // Guarda un lote de traducciones (IdClave -> texto) en una sola transaccion.
+        public void GuardarTraducciones(int idIdioma, Dictionary<int, string> textos)
+        {
+            using (SqlConnection cn = conex.ObtenerConexion())
+            {
+                cn.Open();
+
+                using (SqlTransaction transaccion = cn.BeginTransaction())
+                {
+                    SqlCommand cmd = new SqlCommand(
+                        @"If Exists (Select 1 From Traduccion Where IdIdioma = @idIdioma And IdClave = @idClave)
+                            Update Traduccion Set Texto = @texto Where IdIdioma = @idIdioma And IdClave = @idClave
+                          Else
+                            Insert Into Traduccion (IdIdioma, IdClave, Texto) Values (@idIdioma, @idClave, @texto)", cn, transaccion);
+
+                    cmd.Parameters.Add("@idIdioma", SqlDbType.Int).Value = idIdioma;
+                    SqlParameter idClave = cmd.Parameters.Add("@idClave", SqlDbType.Int);
+                    SqlParameter texto = cmd.Parameters.Add("@texto", SqlDbType.NVarChar, 300);
+
+                    foreach (KeyValuePair<int, string> par in textos)
+                    {
+                        idClave.Value = par.Key;
+                        texto.Value = par.Value;
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    transaccion.Commit();
+                }
+            }
+        }
+
         public List<BE_Traduccion> ObtenerCatalogo()
         {
             List<BE_Traduccion> lista = new List<BE_Traduccion>();
@@ -139,7 +170,7 @@ namespace DAL
                 cn.Open();
 
                 SqlCommand cmd = new SqlCommand(
-                    @"Select ct.Pagina, ct.ControlId, IsNull(t.Texto, ct.TextoBase) As Texto
+                    @"Select ct.Pagina, ct.ControlId, IsNull(NullIf(t.Texto, ''), ct.TextoBase) As Texto
                       From ClaveTexto ct
                       Left Join Traduccion t On t.IdClave = ct.IdClave And t.IdIdioma = @idIdioma", cn);
 

@@ -3,6 +3,8 @@ using BLL;
 using SERVICIOS;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
@@ -16,6 +18,9 @@ namespace Presentacion
         private const string ClaveObservadoresRequest = "IdiomaObservadoresRequest";
         private const string ClaveMarcador = "data-i18n";
         private const string PaginaMaster = "Site1Master";
+        private const string PaginaMensajes = "Mensajes";
+
+        private static readonly Regex RegexConfirmacion = new Regex(@"confirm\('((?:[^'\\]|\\.)*)'\)", RegexOptions.Compiled);
 
         private static readonly object candado = new object();
         private static readonly Dictionary<int, Dictionary<string, string>> cacheTraducciones = new Dictionary<int, Dictionary<string, string>>();
@@ -76,6 +81,91 @@ namespace Presentacion
                 // (español) en vez de romperse: es preferible a tirar la pagina abajo.
                 RegistrarErrorSilencioso("GestorIdioma.ObtenerIdiomaActual", ex);
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// Traduce un texto escrito en C# (mensajes, avisos, items de combos). El
+        /// texto en español identifica la entrada del catalogo: la clave es un hash
+        /// suyo porque ControlId admite 100 caracteres y estos textos pueden ser mas
+        /// largos. Los {0}, {1}... se completan despues de traducir, para que la
+        /// traduccion pueda reordenarlos. Nunca rompe: en el peor caso devuelve el
+        /// texto en español.
+        /// </summary>
+        public static string Traducir(string textoBase, params object[] argumentos)
+        {
+            string texto = textoBase;
+
+            try
+            {
+                if (HttpContext.Current != null && !string.IsNullOrWhiteSpace(textoBase))
+                {
+                    texto = ResolverTexto(
+                        PaginaMensajes + ".m_" + HashHelper.GenerarHash(textoBase).Substring(0, 16),
+                        textoBase,
+                        ObtenerTraduccionesDeCache(ObtenerIdiomaActual()));
+                }
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorSilencioso("GestorIdioma.Traducir", ex);
+            }
+
+            if (argumentos == null || argumentos.Length == 0)
+            {
+                return texto;
+            }
+
+            try
+            {
+                return string.Format(texto, argumentos);
+            }
+            catch (FormatException)
+            {
+                // Traduccion mal cargada (ej. un {3} que no existe): se usa el original.
+                return string.Format(textoBase, argumentos);
+            }
+        }
+
+        public static void CargarSelector(DropDownList selector)
+        {
+            selector.DataSource = bll_idioma.ObtenerIdiomasActivos();
+            selector.DataBind();
+
+            string idIdiomaActual = ObtenerIdiomaActual().ToString();
+
+            if (selector.Items.FindByValue(idIdiomaActual) != null)
+            {
+                selector.SelectedValue = idIdiomaActual;
+            }
+        }
+
+        public static void AplicarTituloPagina(Page pagina)
+        {
+            try
+            {
+                if (pagina.Header == null)
+                {
+                    return;
+                }
+
+                // Con Title="" en la directiva, Page.Title viene vacio aunque el <title>
+                // de la Master se renderice igual: el texto se toma de ese control.
+                HtmlTitle controlTitulo = pagina.Header.Controls.OfType<HtmlTitle>().FirstOrDefault();
+                string titulo = string.IsNullOrWhiteSpace(pagina.Title) ? controlTitulo?.Text : pagina.Title;
+
+                if (string.IsNullOrWhiteSpace(titulo))
+                {
+                    return;
+                }
+
+                string nombrePagina = pagina.Master != null ? PaginaMaster : (pagina.GetType().BaseType ?? pagina.GetType()).Name;
+
+                pagina.Title = ResolverTexto(nombrePagina + "._titulo", titulo.Trim(), ObtenerTraduccionesDeCache(ObtenerIdiomaActual()));
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorSilencioso("GestorIdioma.AplicarTituloPagina", ex);
             }
         }
 
@@ -168,6 +258,8 @@ namespace Presentacion
                 AplicarAlControl(control, pagina, idGrilla + "_" + control.ID, traducciones);
             }
 
+            TraducirAvisos(control, pagina, idGrilla + "_" + control.ID, traducciones);
+
             foreach (Control hijo in control.Controls)
             {
                 TraducirContenidoGrilla(hijo, idGrilla, pagina, traducciones);
@@ -196,10 +288,52 @@ namespace Presentacion
                 AplicarAlControl(control, paginaActual, control.ID, traducciones);
             }
 
+            TraducirAvisos(control, paginaActual, control.ID, traducciones);
+
             foreach (Control hijo in control.Controls)
             {
                 RecorrerControl(hijo, paginaActual, paginaContenido, traducciones);
             }
+        }
+
+        // No necesitan data-i18n: un confirm() o un ToolTip siempre son texto visible.
+        private static void TraducirAvisos(Control control, string pagina, string controlId, Dictionary<string, string> traducciones)
+        {
+            if (string.IsNullOrEmpty(control.ID))
+            {
+                return;
+            }
+
+            if (control is WebControl webControl && !string.IsNullOrWhiteSpace(webControl.ToolTip))
+            {
+                webControl.ToolTip = ResolverTexto($"{pagina}.{controlId}_tooltip", webControl.ToolTip, traducciones);
+            }
+
+            switch (control)
+            {
+                case Button btn:
+                    btn.OnClientClick = TraducirConfirmacion(btn.OnClientClick, pagina, controlId, traducciones);
+                    break;
+                case LinkButton lnk:
+                    lnk.OnClientClick = TraducirConfirmacion(lnk.OnClientClick, pagina, controlId, traducciones);
+                    break;
+            }
+        }
+
+        private static string TraducirConfirmacion(string script, string pagina, string controlId, Dictionary<string, string> traducciones)
+        {
+            if (string.IsNullOrEmpty(script))
+            {
+                return script;
+            }
+
+            return RegexConfirmacion.Replace(script, coincidencia =>
+            {
+                string mensaje = coincidencia.Groups[1].Value.Replace("\\'", "'");
+                string traducido = ResolverTexto($"{pagina}.{controlId}_confirm", mensaje, traducciones);
+
+                return "confirm('" + HttpUtility.JavaScriptStringEncode(traducido) + "')";
+            });
         }
 
         private static bool EsTraducible(Control control)
@@ -234,6 +368,15 @@ namespace Presentacion
                     break;
                 case Label lbl:
                     lbl.Text = ResolverTexto(clave, lbl.Text, traducciones);
+                    break;
+                case TextBox txt:
+                    txt.Attributes["placeholder"] = ResolverTexto(clave, txt.Attributes["placeholder"], traducciones);
+                    break;
+                case ListControl lista:
+                    foreach (ListItem item in lista.Items)
+                    {
+                        item.Text = ResolverTexto(clave + "_" + item.Value, item.Text, traducciones);
+                    }
                     break;
                 case CheckBox chk:
                     chk.Text = ResolverTexto(clave, chk.Text, traducciones);

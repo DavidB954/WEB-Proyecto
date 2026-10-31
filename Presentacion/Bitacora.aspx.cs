@@ -16,6 +16,17 @@ namespace Presentacion
     {
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
         BLL_Usuario bll_usuarios = new BLL_Usuario();
+
+        private const string ClaveSesionImportada = "BitacoraImportada";
+
+        // Archivo que se esta consultando; null = bitacora real del sistema. En sesion
+        // y no en ViewState: el archivo entero viajaria en cada postback.
+        private BE_BitacoraImportada Importada
+        {
+            get { return Session[ClaveSesionImportada] as BE_BitacoraImportada; }
+            set { Session[ClaveSesionImportada] = value; }
+        }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
@@ -24,6 +35,8 @@ namespace Presentacion
             {
                 try
                 {
+                    Importada = null;
+
                     CargarUsuarios();
                     CargarModulos();
                     CargarCriticidades();
@@ -32,7 +45,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("Bitacora.Page_Load", ex);
-                    lblPaginas.Text = "No se pudo cargar la bitacora. Intenta nuevamente mas tarde.";
+                    lblPaginas.Text = T("No se pudo cargar la bitacora. Intenta nuevamente mas tarde.");
                 }
             }
         }
@@ -40,20 +53,37 @@ namespace Presentacion
 
         private void CargarUsuarios()
         {
-            ddlUsuarios.DataSource = bll_usuarios.Usuarios();
+            List<BE_Usuario> usuarios = bll_usuarios.Usuarios();
+
+            ddlUsuarios.DataSource = usuarios;
             ddlUsuarios.DataTextField = "NombreApellido";
             ddlUsuarios.DataValueField = "IdUsuario";
 
             ddlUsuarios.DataBind();
 
-            ddlUsuarios.Items.Insert(0, new ListItem("Todos", ""));
+            // Los usuarios eliminados ya no estan en Usuario pero sus eventos siguen
+            // en la bitacora con su IdUsuario: se agregan para poder filtrarlos.
+            HashSet<int> idsExistentes = new HashSet<int>(usuarios.Select(u => u.IdUsuario));
+
+            IEnumerable<int> idsEliminados = bll_bitacora.ObtenerBitacora()
+                .Where(b => b.IdUsuario.HasValue && !idsExistentes.Contains(b.IdUsuario.Value))
+                .Select(b => b.IdUsuario.Value)
+                .Distinct()
+                .OrderBy(id => id);
+
+            foreach (int id in idsEliminados)
+            {
+                ddlUsuarios.Items.Add(new ListItem(T("Usuario eliminado (ID {0})", id), id.ToString()));
+            }
+
+            ddlUsuarios.Items.Insert(0, new ListItem(T("Todos"), ""));
         }
 
         private void CargarModulos()
         {
             ddlModulos.Items.Clear();
 
-            ddlModulos.Items.Add(new ListItem("Todos", ""));
+            ddlModulos.Items.Add(new ListItem(T("Todos"), ""));
 
 
             ddlModulos.Items.Add(new ListItem("LOGIN", "LOGIN"));
@@ -66,10 +96,10 @@ namespace Presentacion
         {
             ddlCriticidad.Items.Clear();
 
-            ddlCriticidad.Items.Add(new ListItem("Todas", ""));
-            ddlCriticidad.Items.Add(new ListItem("ALTA", CriticidadBitacora.ALTA));
-            ddlCriticidad.Items.Add(new ListItem("MEDIA", CriticidadBitacora.MEDIA));
-            ddlCriticidad.Items.Add(new ListItem("BAJA", CriticidadBitacora.BAJA));
+            ddlCriticidad.Items.Add(new ListItem(T("Todas"), ""));
+            ddlCriticidad.Items.Add(new ListItem(T("ALTA"), CriticidadBitacora.ALTA));
+            ddlCriticidad.Items.Add(new ListItem(T("MEDIA"), CriticidadBitacora.MEDIA));
+            ddlCriticidad.Items.Add(new ListItem(T("BAJA"), CriticidadBitacora.BAJA));
         }
 
         private void CargarGrilla()
@@ -84,7 +114,15 @@ namespace Presentacion
 
             bool sinFiltros = desde == null && hasta == null && idUsuario == null && modulo == null && ip == null && criticidad == null;
 
-            if (sinFiltros)
+            BE_BitacoraImportada importada = Importada;
+
+            MostrarOrigen(importada);
+
+            if (importada != null)
+            {
+                gvBitacora.DataSource = bll_bitacora.FiltrarEventos(importada.Eventos, desde, hasta, idUsuario, modulo, ip, criticidad);
+            }
+            else if (sinFiltros)
             {
                 gvBitacora.DataSource = bll_bitacora.ObtenerBitacora()
                     .OrderByDescending(b => b.IdBitacora)
@@ -101,12 +139,121 @@ namespace Presentacion
 
             if (gvBitacora.PageCount == 0)
             {
-                lblPaginas.Text = "Sin resultados";
+                lblPaginas.Text = T("Sin resultados");
             }
             else
             {
-                lblPaginas.Text = $"Pagina {gvBitacora.PageIndex + 1} de {gvBitacora.PageCount}";
+                lblPaginas.Text = T("Pagina {0} de {1}", gvBitacora.PageIndex + 1, gvBitacora.PageCount);
             }
+        }
+
+        // Deja claro de donde salen los datos: un archivo se puede editar a mano y no
+        // tiene digitos verificadores. Mientras se mira uno no se ofrece exportar,
+        // porque Exportar XML siempre sale de la bitacora real.
+        private void MostrarOrigen(BE_BitacoraImportada importada)
+        {
+            pnlArchivoImportado.Visible = importada != null;
+            btnExportarXml.Visible = importada == null;
+
+            if (importada != null)
+            {
+                lblArchivoImportado.Text = HttpUtility.HtmlEncode(T(
+                    "Estas viendo el archivo {0} ({1} eventos), generado el {2} por {3}. No son datos de la bitacora del sistema y su contenido no esta verificado.",
+                    importada.NombreArchivo, importada.Eventos.Count, importada.Generado, importada.GeneradoPor));
+            }
+        }
+
+        protected void btnImportarXml_Click(object sender, EventArgs e)
+        {
+            if (!ExigirPermiso("BITACORA_IMPORTAR"))
+            {
+                return;
+            }
+
+            try
+            {
+                if (!fuImportarXml.HasFile || !string.Equals(System.IO.Path.GetExtension(fuImportarXml.FileName), ".xml", StringComparison.OrdinalIgnoreCase))
+                {
+                    lblMensajeImportar.Text = T("Selecciona un archivo .xml para importar.");
+                    return;
+                }
+
+                BE_BitacoraImportada importada = bll_bitacora.ImportarXml(
+                    UsuarioLogueado, System.IO.Path.GetFileName(fuImportarXml.FileName), fuImportarXml.PostedFile.InputStream);
+
+                Importada = importada;
+
+                AplicarFiltrosDelArchivo(importada);
+
+                gvBitacora.PageIndex = 0;
+                CargarGrilla();
+            }
+            catch (InvalidOperationException ex)
+            {
+                lblMensajeImportar.Text = HttpUtility.HtmlEncode(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Bitacora.btnImportarXml_Click", ex);
+                lblMensajeImportar.Text = T("No se pudo importar el archivo. Intenta nuevamente mas tarde.");
+            }
+        }
+
+        protected void btnVolverBitacora_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Importada = null;
+
+                LimpiarFiltros();
+
+                gvBitacora.PageIndex = 0;
+                CargarGrilla();
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Bitacora.btnVolverBitacora_Click", ex);
+                lblPaginas.Text = T("No se pudo cargar la bitacora. Intenta nuevamente mas tarde.");
+            }
+        }
+
+        private void AplicarFiltrosDelArchivo(BE_BitacoraImportada importada)
+        {
+            fechaDesde.Text = importada.Desde?.ToString("yyyy-MM-dd") ?? "";
+            fechaHasta.Text = importada.Hasta?.ToString("yyyy-MM-dd") ?? "";
+            txtIP.Text = importada.Ip ?? "";
+
+            SeleccionarFiltro(ddlUsuarios, importada.IdUsuario?.ToString(), T("Usuario eliminado (ID {0})", importada.IdUsuario));
+            SeleccionarFiltro(ddlModulos, importada.Modulo, importada.Modulo);
+            SeleccionarFiltro(ddlCriticidad, importada.Criticidad, importada.Criticidad);
+        }
+
+        // El archivo puede traer un valor que el combo no ofrece (un usuario ya borrado,
+        // un modulo que no esta en la lista): se agrega para no perder ese filtro.
+        private static void SeleccionarFiltro(DropDownList combo, string valor, string textoSiFalta)
+        {
+            if (string.IsNullOrEmpty(valor))
+            {
+                combo.SelectedIndex = 0;
+                return;
+            }
+
+            if (combo.Items.FindByValue(valor) == null)
+            {
+                combo.Items.Add(new ListItem(textoSiFalta, valor));
+            }
+
+            combo.SelectedValue = valor;
+        }
+
+        private void LimpiarFiltros()
+        {
+            fechaDesde.Text = "";
+            fechaHasta.Text = "";
+            ddlUsuarios.SelectedIndex = 0;
+            ddlModulos.SelectedIndex = 0;
+            ddlCriticidad.SelectedIndex = 0;
+            txtIP.Text = "";
         }
 
         public void btnFiltrar_Click(object sender, EventArgs e)
@@ -119,7 +266,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.btnFiltrar_Click", ex);
-                lblPaginas.Text = "No se pudo aplicar el filtro. Intenta nuevamente mas tarde.";
+                lblPaginas.Text = T("No se pudo aplicar el filtro. Intenta nuevamente mas tarde.");
             }
         }
 
@@ -127,12 +274,7 @@ namespace Presentacion
         {
             try
             {
-                fechaDesde.Text = "";
-                fechaHasta.Text = "";
-                ddlUsuarios.SelectedIndex = 0;
-                ddlModulos.SelectedIndex = 0;
-                ddlCriticidad.SelectedIndex = 0;
-                txtIP.Text = "";
+                LimpiarFiltros();
 
                 gvBitacora.PageIndex = 0;
                 CargarGrilla();
@@ -140,7 +282,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.btnLimpiar_Click", ex);
-                lblPaginas.Text = "No se pudieron limpiar los filtros. Intenta nuevamente mas tarde.";
+                lblPaginas.Text = T("No se pudieron limpiar los filtros. Intenta nuevamente mas tarde.");
             }
         }
 
@@ -168,26 +310,11 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.btnExportarXml_Click", ex);
-                lblPaginas.Text = "No se pudo exportar la bitacora. Intenta nuevamente mas tarde.";
+                lblPaginas.Text = T("No se pudo exportar la bitacora. Intenta nuevamente mas tarde.");
                 return;
             }
 
             DescargarXml(xml, $"Bitacora_{DateTime.Now:yyyy-MM-dd_HHmm}.xml");
-        }
-
-        // Reemplaza la respuesta de la pagina por el archivo. Se evita Response.End()
-        // (corta con ThreadAbortException); SuppressContent descarta el HTML que la
-        // pagina igual va a generar despues de este evento.
-        private void DescargarXml(string xml, string nombreArchivo)
-        {
-            Response.Clear();
-            Response.ContentType = "application/xml";
-            Response.ContentEncoding = System.Text.Encoding.UTF8;
-            Response.AddHeader("Content-Disposition", $"attachment; filename={nombreArchivo}");
-            Response.Write(xml);
-            Response.Flush();
-            Response.SuppressContent = true;
-            Context.ApplicationInstance.CompleteRequest();
         }
 
         protected void gvBitacora_PageIndexChanging(object sender, GridViewPageEventArgs e)
@@ -200,7 +327,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Bitacora.gvBitacora_PageIndexChanging", ex);
-                lblPaginas.Text = "No se pudo cambiar de pagina. Intenta nuevamente mas tarde.";
+                lblPaginas.Text = T("No se pudo cambiar de pagina. Intenta nuevamente mas tarde.");
             }
         }
 
@@ -232,6 +359,8 @@ namespace Presentacion
                     celda.CssClass = "criticidad-baja";
                     break;
             }
+
+            celda.Text = T(celda.Text);
         }
 
         // Por DataField y no por posicion fija: las columnas ocultas (ID) tambien

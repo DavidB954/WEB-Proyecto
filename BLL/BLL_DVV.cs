@@ -157,7 +157,7 @@ namespace BLL
 
             if (mensajes.Count == 0)
             {
-                mensajes.Add($"Se elimino un registro de la tabla '{nombreTabla}'.");
+                mensajes.Add(TextoLocalizado.T("Se elimino un registro de la tabla '{0}'.", nombreTabla));
             }
 
             return mensajes;
@@ -173,11 +173,11 @@ namespace BLL
 
                 if (usuario.DVH == null)
                 {
-                    mensajes.Add($"El usuario {usuario.NombreApellido} (ID {usuario.IdUsuario}) no tiene firma de integridad: parece haber sido insertado por fuera del sistema.");
+                    mensajes.Add(TextoLocalizado.T("El usuario {0} (ID {1}) no tiene firma de integridad: parece haber sido insertado por fuera del sistema.", usuario.NombreApellido, usuario.IdUsuario));
                 }
                 else if (usuario.DVH != dvhEsperado)
                 {
-                    mensajes.Add($"Se modifico el usuario {usuario.NombreApellido} (ID {usuario.IdUsuario}).");
+                    mensajes.Add(TextoLocalizado.T("Se modifico el usuario {0} (ID {1}).", usuario.NombreApellido, usuario.IdUsuario));
                 }
             }
 
@@ -243,7 +243,7 @@ namespace BLL
             {
                 if (!idsAceptados.Contains(fantasma.Key))
                 {
-                    mensajes.Add($"Se elimino el usuario {fantasma.Value} (ID {fantasma.Key}) sin registro de baja en la bitacora.");
+                    mensajes.Add(TextoLocalizado.T("Se elimino el usuario {0} (ID {1}) sin registro de baja en la bitacora.", fantasma.Value, fantasma.Key));
                 }
             }
         }
@@ -258,11 +258,11 @@ namespace BLL
 
                 if (rol.DVH == null)
                 {
-                    mensajes.Add($"El rol {rol.Nombre} (ID {rol.IdRol}) no tiene firma de integridad: parece haber sido insertado por fuera del sistema.");
+                    mensajes.Add(TextoLocalizado.T("El rol {0} (ID {1}) no tiene firma de integridad: parece haber sido insertado por fuera del sistema.", rol.Nombre, rol.IdRol));
                 }
                 else if (rol.DVH != dvhEsperado)
                 {
-                    mensajes.Add($"Se modifico el rol {rol.Nombre} (ID {rol.IdRol}).");
+                    mensajes.Add(TextoLocalizado.T("Se modifico el rol {0} (ID {1}).", rol.Nombre, rol.IdRol));
                 }
             }
 
@@ -288,7 +288,7 @@ namespace BLL
 
             if (faltantes.Count > 0)
             {
-                mensajes.Add($"Falta(n) {faltantes.Count} rol(es) (IDs: {string.Join(", ", faltantes)}).");
+                mensajes.Add(TextoLocalizado.T("Falta(n) {0} rol(es) (IDs: {1}).", faltantes.Count, string.Join(", ", faltantes)));
             }
         }
 
@@ -346,11 +346,11 @@ namespace BLL
 
                 if (evento.DVH == null)
                 {
-                    mensajes.Add($"El registro de bitacora ID {evento.IdBitacora} no tiene firma de integridad: parece haber sido insertado por fuera del sistema.");
+                    mensajes.Add(TextoLocalizado.T("El registro de bitacora ID {0} no tiene firma de integridad: parece haber sido insertado por fuera del sistema.", evento.IdBitacora));
                 }
                 else if (evento.DVH != dvhEsperado)
                 {
-                    mensajes.Add($"Se modifico el registro de bitacora ID {evento.IdBitacora}.");
+                    mensajes.Add(TextoLocalizado.T("Se modifico el registro de bitacora ID {0}.", evento.IdBitacora));
                 }
             }
 
@@ -394,7 +394,7 @@ namespace BLL
 
             if (faltantes.Count > 0)
             {
-                mensajes.Add($"Faltan {faltantes.Count} registro(s) en la bitacora (IDs: {string.Join(", ", faltantes)}).");
+                mensajes.Add(TextoLocalizado.T("Faltan {0} registro(s) en la bitacora (IDs: {1}).", faltantes.Count, string.Join(", ", faltantes)));
             }
         }
 

@@ -28,6 +28,7 @@ namespace Presentacion
             cardUsuarios.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "CRUD_Usuarios.aspx");
             cardRecetas.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Recetas.aspx");
             cardMedicos.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Medicos.aspx");
+            cardAgendaMedicos.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "AgendaMedicos.aspx");
             cardBitacora.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Bitacora.aspx");
             cardSeguridad.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "Seguridad.aspx");
             cardRolesPermisos.Visible = SeguridadHelper.TieneAccesoPagina(usuarioLogueado, permisos, "GestionRolesPermisos.aspx");

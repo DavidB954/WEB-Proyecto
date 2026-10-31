@@ -24,6 +24,20 @@ namespace Presentacion
 
         protected global::System.Web.UI.WebControls.Button btnExportarXml;
 
+        protected global::System.Web.UI.WebControls.Panel pnlImportar;
+
+        protected global::System.Web.UI.WebControls.FileUpload fuImportarXml;
+
+        protected global::System.Web.UI.WebControls.Button btnImportarXml;
+
+        protected global::System.Web.UI.WebControls.Panel pnlArchivoImportado;
+
+        protected global::System.Web.UI.WebControls.Label lblArchivoImportado;
+
+        protected global::System.Web.UI.WebControls.Button btnVolverBitacora;
+
+        protected global::System.Web.UI.WebControls.Label lblMensajeImportar;
+
         protected global::System.Web.UI.WebControls.Label lblPaginas;
 
         protected global::System.Web.UI.WebControls.GridView gvBitacora;

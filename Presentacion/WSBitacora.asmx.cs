@@ -22,6 +22,46 @@ namespace Presentacion
         private const string PermisoExportar = "BITACORA_EXPORTAR";
 
         private readonly BLL_Bitacora bll_bitacora = new BLL_Bitacora();
+        private readonly BLL_Usuario bll_usuario = new BLL_Usuario();
+        private readonly BLL_DVV bll_dvv = new BLL_DVV();
+
+        // Para clientes externos (ver el proyecto ClienteBitacoraWS): abre la sesion que
+        // exigen los demas metodos. El cliente tiene que conservar la cookie de sesion.
+        // Pasa por las mismas reglas del login del sitio (intentos, bloqueo, bitacora).
+        [WebMethod(EnableSession = true, Description = "Inicia sesion en el servicio. El cliente debe conservar la cookie de sesion para los demas metodos.")]
+        public void IniciarSesion(string email, string password)
+        {
+            // Mismo corte que Login.aspx: con la base alterada solo entra el Webmaster,
+            // y ese ingreso no se hace por el servicio.
+            if (!bll_dvv.EstaIntegra("Usuario") || !bll_dvv.EstaIntegra("Rol"))
+            {
+                throw new UnauthorizedAccessException("El sistema detecto un problema de integridad en la base de datos.");
+            }
+
+            BE_LoginResultado resultado = bll_usuario.ObtenerUsuarioPorEmail(email, password);
+
+            if (resultado.Usuario == null)
+            {
+                throw new UnauthorizedAccessException(resultado.Mensaje);
+            }
+
+            Session["Usuario"] = resultado.Usuario;
+            Session["Permisos"] = new BLL_Permiso().ConstruirArbolUsuario(resultado.Usuario);
+        }
+
+        [WebMethod(EnableSession = true, Description = "Cierra la sesion abierta con IniciarSesion.")]
+        public void CerrarSesion()
+        {
+            BE_Usuario usuario = Session["Usuario"] as BE_Usuario;
+
+            if (usuario != null)
+            {
+                bll_bitacora.RegistrarEvento(usuario.IdUsuario, AccionBitacora.LOGOUT, "LOGIN",
+                    $"Cierre de sesion del usuario: {usuario.NombreApellido}, ID: {usuario.IdUsuario} (web service)");
+            }
+
+            Session.Abandon();
+        }
 
         [WebMethod(EnableSession = true, Description = "Devuelve los eventos de la bitacora que cumplen los filtros (vacio = sin filtro).")]
         public List<BE_Bitacora> ConsultarBitacora(string desde, string hasta, string idUsuario, string modulo, string ip, string criticidad)

@@ -47,9 +47,9 @@ namespace BE.Seguridad
 
             if (TienePermiso(permiso.Codigo))
             {
-                throw new InvalidOperationException(
-                    $"El usuario {usuario.NombreApellido} ya tiene el permiso '{permiso.Codigo}' " +
-                    "(directo o a traves de un rol). No se puede asignar de nuevo.");
+                throw new InvalidOperationException(TextoLocalizado.T(
+                    "El usuario {0} ya tiene el permiso '{1}' (directo o a traves de un rol). No se puede asignar de nuevo.",
+                    usuario.NombreApellido, permiso.Codigo));
             }
 
             asignaciones.Add(permiso);
@@ -66,9 +66,9 @@ namespace BE.Seguridad
 
             if (duplicado != null)
             {
-                throw new InvalidOperationException(
-                    $"No se puede asignar el rol '{rol.Codigo}': el usuario {usuario.NombreApellido} " +
-                    $"ya tiene el permiso '{duplicado.Nombre}' asignado (quedaria duplicado por el rol).");
+                throw new InvalidOperationException(TextoLocalizado.T(
+                    "No se puede asignar el rol '{0}': el usuario {1} ya tiene el permiso '{2}' asignado (quedaria duplicado por el rol).",
+                    rol.Codigo, usuario.NombreApellido, duplicado.Nombre));
             }
 
             asignaciones.Add(rol);

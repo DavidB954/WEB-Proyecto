@@ -41,12 +41,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BLL_AgendaMedico.cs" />
     <Compile Include="BLL_Bitacora.cs" />
+    <Compile Include="BLL_Especialidad.cs" />
+    <Compile Include="BLL_Medico.cs" />
     <Compile Include="BLL_DVV.cs" />
     <Compile Include="BLL_Idioma.cs" />
     <Compile Include="BLL_Permiso.cs" />
     <Compile Include="BLL_Rol.cs" />
     <Compile Include="BLL_Usuario.cs" />
+    <Compile Include="BLL_Paciente.cs" />
+    <Compile Include="BLL_Turno.cs" />
+    <Compile Include="BLL_AtencionMedica.cs" />
+    <Compile Include="BLL_Receta.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

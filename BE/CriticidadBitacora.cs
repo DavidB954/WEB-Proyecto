@@ -24,6 +24,8 @@ namespace BE
                 case AccionBitacora.PERMISO_BAJA:
                 case AccionBitacora.BACKUP_RESTAURADO:
                 case AccionBitacora.IDIOMA_BAJA:
+                case AccionBitacora.ESPECIALIDAD_BAJA:
+                case AccionBitacora.HORARIO_BAJA:
                     return ALTA;
 
                 case AccionBitacora.LOGIN_INCORRECTO:
@@ -45,7 +47,19 @@ namespace BE
                 case AccionBitacora.BACKUP_GENERADO:
                 case AccionBitacora.IDIOMA_ALTA:
                 case AccionBitacora.TRADUCCION_MODIFICACION:
+                case AccionBitacora.TRADUCCION_EXPORTADA:
+                case AccionBitacora.TRADUCCION_IMPORTADA:
                 case AccionBitacora.BITACORA_EXPORTADA:
+                case AccionBitacora.BITACORA_IMPORTADA:
+                case AccionBitacora.MEDICO_DATOS_MODIFICACION:
+                case AccionBitacora.ESPECIALIDAD_ALTA:
+                case AccionBitacora.HORARIO_ALTA:
+                case AccionBitacora.HORARIO_ACTIVADO:
+                case AccionBitacora.HORARIO_DESACTIVADO:
+                case AccionBitacora.BLOQUEO_AGENDA_ALTA:
+                case AccionBitacora.BLOQUEO_AGENDA_BAJA:
+                case AccionBitacora.PACIENTE_DATOS_MODIFICACION:
+                case AccionBitacora.ATENCION_REGISTRADA:
                     return MEDIA;
 
                 default:
