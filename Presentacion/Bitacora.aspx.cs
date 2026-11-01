@@ -74,10 +74,16 @@ namespace Presentacion
 
             ddlModulos.Items.Add(new ListItem(T("Todos"), ""));
 
+            ddlModulos.Items.Add(new ListItem("AGENDA", "AGENDA"));
+            ddlModulos.Items.Add(new ListItem("ATENCION", "ATENCION"));
+            ddlModulos.Items.Add(new ListItem("IDIOMA", "IDIOMA"));
             ddlModulos.Items.Add(new ListItem("LOGIN", "LOGIN"));
-            ddlModulos.Items.Add(new ListItem("USUARIO", "USUARIO"));
-            ddlModulos.Items.Add(new ListItem("SEGURIDAD", "SEGURIDAD"));
+            ddlModulos.Items.Add(new ListItem("MEDICO", "MEDICO"));
+            ddlModulos.Items.Add(new ListItem("PERMISO", "PERMISO"));
             ddlModulos.Items.Add(new ListItem("ROL", "ROL"));
+            ddlModulos.Items.Add(new ListItem("SEGURIDAD", "SEGURIDAD"));
+            ddlModulos.Items.Add(new ListItem("TURNOS", "TURNOS"));
+            ddlModulos.Items.Add(new ListItem("USUARIO", "USUARIO"));
         }
 
         private void CargarCriticidades()
