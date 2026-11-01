@@ -1,12 +1,4 @@
-﻿-- Crea desde cero la estructura de la base del sistema y sus datos de referencia
--- (procedimientos, idiomas, permisos, roles y familias, estados de turno, especialidades).
--- NO incluye usuarios ni datos personales: el primer ingreso se hace con el login
--- de emergencia. Despues hay que correr Scripts\TraduccionesCompletas.sql.
---
---   sqlcmd -S .\SQLEXPRESS -E -C -Q "CREATE DATABASE GestionWEB"
---   sqlcmd -S .\SQLEXPRESS -d GestionWEB -E -C -f 65001 -i Scripts\CrearBase.sql
---   sqlcmd -S .\SQLEXPRESS -d GestionWEB -E -C -f 65001 -i Scripts\TraduccionesCompletas.sql
-SET NOCOUNT ON;
+﻿SET NOCOUNT ON;
 SET QUOTED_IDENTIFIER ON;
 SET ANSI_NULLS ON;
 GO
@@ -349,10 +341,6 @@ GO
 ALTER TABLE dbo.[Traduccion] ADD CONSTRAINT [FK_Traduccion_ClaveTexto] FOREIGN KEY ([IdClave]) REFERENCES dbo.[ClaveTexto] ([IdClave]) ON DELETE CASCADE;
 GO
 
--- 3. SP de filtrado: se agrega el parámetro @Criticidad, su condición en el WHERE
---    y la columna Criticidad en el SELECT (la grilla la muestra).
---    Si tu versión actual del SP difiere en algo (por ejemplo en cómo compara la IP),
---    conservá tu lógica y sumale solo esas tres cosas.
 CREATE PROCEDURE [dbo].[FiltrarBitacora]
     @Desde      DATETIME    = NULL,
     @Hasta      DATETIME    = NULL,
@@ -417,7 +405,6 @@ INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (10, N'G
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (11, N'GESTION_TRADUCCIONES', N'PAGINA', NULL);
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (12, N'GESTION_ROLES_PERMISOS', N'PAGINA', NULL);
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (13, N'ASIGNACION_SEGURIDAD', N'PAGINA', NULL);
-INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (14, N'ALTA_USUARIO', N'ACCION', N'4bcf3b950d7daac66df6d6769bfb4e785b415c3b46615b6e62dae4f0addcbb9a');
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (15, N'USUARIO_ALTA', N'ACCION', N'0f5451439638689b0b6d7fcd58317188ebb989a0e3067a3a982181bea0a4802f');
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (16, N'USUARIO_MODIFICACION', N'ACCION', N'31868321625cdd564f2196d6684418aa75b3cb5357dd381896dd56bd4ca6dcfc');
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (17, N'ACCESO_MEDICOS', N'PAGINA', N'bf3da339e13feb302764ce9c8945f2cc396c475777bcaf8859f390d621bdcc9d');
@@ -442,8 +429,6 @@ INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (35, N'M
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (36, N'AGENDA_HORARIO_EDITAR', N'ACCION', N'242e9b8c04e5459cdb3be28e25e2679d9d757d8ee92474dee560cb8deecd9988');
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (37, N'AGENDA_BLOQUEO_EDITAR', N'ACCION', N'66269069cdb1615352f09038be6721f182b88c198db23243b18fc0f721b9de31');
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (38, N'ESPECIALIDAD_ABM', N'ACCION', N'9feb84c1d3564ac3525aeb146d8601ceb05fea6a0d0bba6710d83c57be5fe523');
-INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (39, N'TRADUCCION_EXPORTAR', N'ACCION', N'a8793b16a731306ec121c82af64650fadf8923c6d02fe3683dd953415364e74a');
-INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (40, N'TRADUCCION_IMPORTAR', N'ACCION', N'3ff2efa9c66be399e9ab75fa494b9bead3e65e6f00ba11539a05d78ef1f892d5');
 INSERT INTO dbo.[Permiso] ([IdPermiso], [Nombre], [Tipo], [DVH]) VALUES (41, N'BITACORA_IMPORTAR', N'ACCION', N'53b5cd7138eed81ea97d523e0df929a147794e7d84146045c9cc2bb58ae3952c');
 SET IDENTITY_INSERT dbo.[Permiso] OFF;
 GO
@@ -453,8 +438,6 @@ INSERT INTO dbo.[Rol] ([IdRol], [Nombre], [DVH]) VALUES (1, N'MEDICO', N'b239c0a
 INSERT INTO dbo.[Rol] ([IdRol], [Nombre], [DVH]) VALUES (2, N'PACIENTE', N'e27f59695619c2593c36cfb35b94c7a44ce62e938c08275d30c0489d3e8f503c');
 INSERT INTO dbo.[Rol] ([IdRol], [Nombre], [DVH]) VALUES (3, N'WEBMASTER', N'7ca8d10082563d99acc5331b760cba33c97e5714deafc48651ea6d452148b867');
 INSERT INTO dbo.[Rol] ([IdRol], [Nombre], [DVH]) VALUES (4, N'ADMINISTRADOR', N'a721c6dd3ed4b6ce941111b79241bf09a85d80b914212ac02af58efefec4b9a1');
-INSERT INTO dbo.[Rol] ([IdRol], [Nombre], [DVH]) VALUES (5, N'Nuevo', N'7f6d47f89f0ef33c803190ffba9627e02877460301446cfab960d4f2ef825400');
-INSERT INTO dbo.[Rol] ([IdRol], [Nombre], [DVH]) VALUES (12, N'SUPERVISOR', N'c275acd1dc652256b0137a2d7f55f67a1156ad64731d6d660e6a8d2de89332d0');
 SET IDENTITY_INSERT dbo.[Rol] OFF;
 GO
 
@@ -468,14 +451,9 @@ INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (3, 11);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (3, 12);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (3, 13);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 4);
-INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 5);
-INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 13);
+INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 31);
+INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 33);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 34);
-INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (5, 5);
-GO
-
-INSERT INTO dbo.[Rol_Rol] ([idPadre], [idHijo]) VALUES (12, 1);
-INSERT INTO dbo.[Rol_Rol] ([idPadre], [idHijo]) VALUES (12, 4);
 GO
 
 INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActualizacion], [IdsVigentes]) VALUES (N'AtencionMedica', N'', N'2026-05-25T23:21:44.060', NULL);
@@ -484,13 +462,11 @@ INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActuali
 INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActualizacion], [IdsVigentes]) VALUES (N'Paciente', N'', N'2026-05-25T23:21:44.060', NULL);
 INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActualizacion], [IdsVigentes]) VALUES (N'Permiso', N'', N'2026-05-25T23:21:44.060', NULL);
 INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActualizacion], [IdsVigentes]) VALUES (N'Receta', N'', N'2026-05-25T23:21:44.060', NULL);
-INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActualizacion], [IdsVigentes]) VALUES (N'Rol', N'cc6807ecdd691c69f9cdae1aa6d7312457264806d83c0c8f34608a21e6a2c153', N'2026-10-30T19:13:32.530', N'1,2,3,4,5,12');
+INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActualizacion], [IdsVigentes]) VALUES (N'Rol', N'a4da04db6ca76b04fe68178fc0a331e46cbd661c09520230a6825743aaa034fe', N'2026-10-31T19:18:00.170', N'1,2,3,4');
 INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActualizacion], [IdsVigentes]) VALUES (N'Turno', N'', N'2026-05-25T23:21:44.060', NULL);
 INSERT INTO dbo.[DigitoVerificadorVertical] ([NombreTabla], [DVV], [FechaActualizacion], [IdsVigentes]) VALUES (N'Usuario', N'7f91ab4e6f788e858bf3144c9d6a4d2aa070ccc8fd50f2f383dd4c622bb690ce', N'2026-10-21T14:20:13.733', N'7,0,14,19,21,22');
 GO
 
--- Base sin usuarios ni eventos: los digitos verificadores de esas tablas son el hash
--- de la cadena vacia, igual que los calcularia BLL_DVV.
 UPDATE dbo.DigitoVerificadorVertical
 SET DVV = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', IdsVigentes = NULL
 WHERE NombreTabla IN ('Usuario', 'Bitacora');

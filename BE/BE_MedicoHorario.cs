@@ -2,8 +2,6 @@ using System;
 
 namespace BE
 {
-    // Franja semanal de atencion: un dia de la semana, un rango horario y cada
-    // cuantos minutos se da un turno dentro de ese rango.
     public class BE_MedicoHorario
     {
         private static readonly string[] NombresDias = { "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo" };
@@ -12,7 +10,6 @@ namespace BE
 
         public int IdMedico { get; set; }
 
-        // 1 = Lunes ... 7 = Domingo
         public int DiaSemana { get; set; }
 
         public TimeSpan HoraDesde { get; set; }
@@ -57,7 +54,6 @@ namespace BE
             }
         }
 
-        // Clase CSS del badge: no depende del idioma, a diferencia de Estado.
         public string EstadoCss
         {
             get
@@ -71,7 +67,6 @@ namespace BE
             return diaSemana >= 1 && diaSemana <= 7 ? TextoLocalizado.T(NombresDias[diaSemana - 1]) : "?";
         }
 
-        // DayOfWeek arranca en Domingo = 0; la agenda usa Lunes = 1 ... Domingo = 7.
         public static int DiaSemanaDe(DateTime fecha)
         {
             return ((int)fecha.DayOfWeek + 6) % 7 + 1;

@@ -4,13 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    // Pantalla del paciente: completa sus datos, pide turnos segun la agenda
-    // real de los medicos (AgendaMedicos.aspx) y consulta o cancela los suyos.
     public partial class Turnos : PaginaBase
     {
         BLL_Turno bll_turno = new BLL_Turno();
@@ -19,11 +16,28 @@ namespace Presentacion
 
         private const string FormatoFecha = "yyyy-MM-dd";
         private const string FormatoFechaHora = "yyyy-MM-dd HH:mm";
+        private const int IndiceColumnaAccion = 5;
+        private const string BuscarPorProfesional = "Profesional";
+
+        private static readonly string[] NombresMeses =
+        {
+            "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        };
+
+        private DateTime? DiaElegido
+        {
+            get { return ViewState["DiaElegido"] as DateTime?; }
+            set { ViewState["DiaElegido"] = value; }
+        }
+
+        private DateTime MesVisible
+        {
+            get { return ViewState["MesVisible"] as DateTime? ?? new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); }
+            set { ViewState["MesVisible"] = new DateTime(value.Year, value.Month, 1); }
+        }
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
-
             if (!IsPostBack)
             {
                 try
@@ -39,7 +53,6 @@ namespace Presentacion
 
                     CargarDatosPaciente();
                     CargarEspecialidades();
-                    BuscarMedicos();
                     BindTurnos();
                 }
                 catch (Exception ex)
@@ -49,8 +62,6 @@ namespace Presentacion
                 }
             }
         }
-
-        // ---- Carga de datos ----
 
         private void CargarDatosPaciente()
         {
@@ -69,31 +80,63 @@ namespace Presentacion
                 txtTelefono.Text = paciente.Telefono ?? string.Empty;
             }
 
-            // Sin fila en Paciente no se puede reservar (Turno.IdPaciente la referencia).
             pnlSolicitar.Visible = paciente != null;
             spanAyudaDatos.Visible = paciente == null;
+
+            pnlPaciente.CssClass = paciente == null ? "turnos-layout turnos-datos-pendientes" : "turnos-layout";
+
+            if (paciente == null)
+            {
+                detMisDatos.Attributes["class"] = "datos-plegables datos-obligatorios";
+                AbrirMisDatos();
+            }
+            else
+            {
+                detMisDatos.Attributes["class"] = "datos-plegables";
+                detMisDatos.Attributes.Remove("open");
+            }
+        }
+
+        private void AbrirMisDatos()
+        {
+            detMisDatos.Attributes["open"] = "open";
         }
 
         private void CargarEspecialidades()
         {
-            ddlEspecialidades.DataSource = bll_especialidad.ObtenerEspecialidades();
-            ddlEspecialidades.DataBind();
-            ddlEspecialidades.Items.Insert(0, new ListItem(T("Todas"), ""));
+            rblEspecialidades.DataSource = bll_especialidad.ObtenerEspecialidades();
+            rblEspecialidades.DataBind();
+        }
+
+        private void OcultarAgenda()
+        {
+            DiaElegido = null;
+            pnlProfesional.Visible = false;
+            pnlAgenda.Visible = false;
         }
 
         private void BuscarMedicos()
         {
             int? idEspecialidad = null;
-            if (int.TryParse(ddlEspecialidades.SelectedValue, out int id))
+            string nombre = null;
+
+            if (rblBuscarPor.SelectedValue == BuscarPorProfesional)
+            {
+                nombre = txtBuscarProfesional.Text;
+            }
+            else if (int.TryParse(rblEspecialidades.SelectedValue, out int id))
             {
                 idEspecialidad = id;
             }
-
-            string medicoAnterior = ddlMedico.SelectedValue;
+            else
+            {
+                OcultarAgenda();
+                return;
+            }
 
             ddlMedico.Items.Clear();
 
-            foreach (BE_Medico medico in bll_turno.BuscarMedicosConAgenda(UsuarioLogueado, txtBuscarNombre.Text, idEspecialidad))
+            foreach (BE_Medico medico in bll_turno.BuscarMedicosParaTurno(UsuarioLogueado, nombre, idEspecialidad))
             {
                 ddlMedico.Items.Add(new ListItem(medico.NombreApellido + " - " + medico.EspecialidadesTexto, medico.IdMedico.ToString()));
             }
@@ -102,79 +145,119 @@ namespace Presentacion
             {
                 ddlMedico.Items.Add(new ListItem(T("(no hay medicos con turnos para ese criterio)"), ""));
             }
-            else if (ddlMedico.Items.FindByValue(medicoAnterior) != null)
-            {
-                ddlMedico.SelectedValue = medicoAnterior;
-            }
 
             ddlMedico.Enabled = ddlMedico.SelectedValue != "";
+            pnlProfesional.Visible = true;
 
-            CargarFechas();
+            DiaElegido = null;
+            CargarAgenda();
         }
 
-        // Llena el combo de dias y el de horarios a partir de una sola consulta
-        // de turnos libres del medico seleccionado.
-        private void CargarFechas()
+        private void CargarAgenda()
         {
-            string fechaAnterior = ddlFecha.SelectedValue;
-
-            ddlFecha.Items.Clear();
-
-            List<DateTime> libres = ObtenerTurnosLibresMedicoSeleccionado();
-
-            foreach (IGrouping<DateTime, DateTime> dia in libres.GroupBy(t => t.Date))
+            if (!int.TryParse(ddlMedico.SelectedValue, out int idMedico))
             {
-                string texto = BE_MedicoHorario.ObtenerNombreDia(BE_MedicoHorario.DiaSemanaDe(dia.Key)) + " " + dia.Key.ToString("dd/MM/yyyy")
-                    + " (" + (dia.Count() == 1 ? T("1 turno") : T("{0} turnos", dia.Count())) + ")";
-
-                ddlFecha.Items.Add(new ListItem(texto, dia.Key.ToString(FormatoFecha)));
+                pnlAgenda.Visible = false;
+                return;
             }
 
-            if (ddlFecha.Items.FindByValue(fechaAnterior) != null)
+            BE_AgendaDisponible agenda = bll_turno.ObtenerAgendaDisponible(UsuarioLogueado, idMedico);
+
+            pnlAgenda.Visible = true;
+
+            if (DiaElegido == null || !agenda.TurnosLibres.Exists(t => t.Date == DiaElegido))
             {
-                ddlFecha.SelectedValue = fechaAnterior;
+                DiaElegido = agenda.TurnosLibres.Count > 0 ? agenda.TurnosLibres[0].Date : (DateTime?)null;
+                MesVisible = DiaElegido ?? DateTime.Today;
             }
 
-            ddlFecha.Enabled = ddlFecha.Items.Count > 0;
+            if (agenda.TurnosLibres.Count > 0)
+            {
+                DateTime primero = agenda.TurnosLibres[0];
 
-            CargarHorarios(libres);
+                lblPrimerTurno.Text = System.Web.HttpUtility.HtmlEncode(T("Primer turno disponible: {0} {1:dd/MM/yyyy} a las {2:HH:mm} hs.",
+                    BE_MedicoHorario.ObtenerNombreDia(BE_MedicoHorario.DiaSemanaDe(primero)), primero, primero));
+            }
+
+            lblPrimerTurno.Visible = agenda.TurnosLibres.Count > 0;
+
+            BindCalendario(agenda);
+            CargarHorarios(agenda.TurnosLibres);
+        }
+
+        private void BindCalendario(BE_AgendaDisponible agenda)
+        {
+            DateTime mes = MesVisible;
+            HashSet<DateTime> diasConTurnos = new HashSet<DateTime>(agenda.TurnosLibres.Select(t => t.Date));
+
+            lblMes.Text = T(NombresMeses[mes.Month - 1]) + " " + mes.Year;
+
+            btnMesAnterior.Enabled = mes > new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            btnMesSiguiente.Enabled = mes.AddMonths(1) <= DateTime.Today.AddDays(BLL_Turno.DiasAnticipacionMaxima);
+
+            var dias = Enumerable.Repeat(new { Valor = "", Numero = "", Css = "calendario-vacio", Titulo = "", Elegible = false }, BE_MedicoHorario.DiaSemanaDe(mes) - 1).ToList();
+
+            for (DateTime fecha = mes; fecha.Month == mes.Month; fecha = fecha.AddDays(1))
+            {
+                bool conTurnos = diasConTurnos.Contains(fecha);
+                bool atiende = agenda.DiasDeAtencion.Contains(fecha);
+
+                string css = conTurnos ? "dia-con-turnos" : atiende ? "dia-sin-turnos" : "dia-sin-atencion";
+
+                if (fecha == DiaElegido)
+                {
+                    css += " dia-elegido";
+                }
+
+                dias.Add(new
+                {
+                    Valor = fecha.ToString(FormatoFecha),
+                    Numero = fecha.Day.ToString(),
+                    Css = "calendario-dia " + css,
+                    Titulo = conTurnos ? T("Hay turnos disponibles") : atiende ? T("El medico atiende este dia, pero no hay turnos disponibles") : string.Empty,
+                    Elegible = conTurnos
+                });
+            }
+
+            rptDias.DataSource = dias;
+            rptDias.DataBind();
         }
 
         private void CargarHorarios(List<DateTime> libres)
         {
             rblHorarios.Items.Clear();
 
-            if (DateTime.TryParseExact(ddlFecha.SelectedValue, FormatoFecha, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fecha))
+            foreach (DateTime turno in libres.Where(t => t.Date == DiaElegido))
             {
-                foreach (DateTime turno in libres.Where(t => t.Date == fecha))
-                {
-                    rblHorarios.Items.Add(new ListItem(turno.ToString("HH:mm"), turno.ToString(FormatoFechaHora)));
-                }
+                rblHorarios.Items.Add(new ListItem(turno.ToString("HH:mm"), turno.ToString(FormatoFechaHora)));
             }
 
             bool hayHorarios = rblHorarios.Items.Count > 0;
+
+            if (hayHorarios)
+            {
+                rblHorarios.SelectedIndex = 0;
+
+                DateTime dia = DiaElegido.Value;
+
+                lblHoraTurno.Text = System.Web.HttpUtility.HtmlEncode(T("Horarios del {0} {1:dd/MM/yyyy}:", BE_MedicoHorario.ObtenerNombreDia(BE_MedicoHorario.DiaSemanaDe(dia)), dia));
+            }
+
+            lblHoraTurno.Visible = hayHorarios;
             rblHorarios.Visible = hayHorarios;
             pSinHorarios.Visible = !hayHorarios;
             btnAgendar.Enabled = hayHorarios;
-        }
-
-        private List<DateTime> ObtenerTurnosLibresMedicoSeleccionado()
-        {
-            if (!int.TryParse(ddlMedico.SelectedValue, out int idMedico))
-            {
-                return new List<DateTime>();
-            }
-
-            return bll_turno.ObtenerTurnosLibres(UsuarioLogueado, idMedico);
         }
 
         private void BindTurnos()
         {
             List<BE_Turno> turnos = bll_turno.ObtenerTurnosPaciente(UsuarioLogueado);
 
-            // Proximos: los reservados de hoy en adelante, del mas cercano al mas
-            // lejano. Historial: todo lo demas, del mas reciente al mas viejo.
-            if (rblVista.SelectedValue == "Historial")
+            bool esHistorial = rblVista.SelectedValue == "Historial";
+            gvTurnos.Columns[IndiceColumnaAccion].Visible = !esHistorial;
+            spanAyudaCancelar.Visible = !esHistorial;
+
+            if (esHistorial)
             {
                 gvTurnos.DataSource = turnos
                     .Where(t => !(t.Estado == EstadoTurno.Reservado && t.FechaHora.Date >= DateTime.Today))
@@ -192,8 +275,6 @@ namespace Presentacion
             gvTurnos.DataBind();
         }
 
-        // ---- Datos del paciente ----
-
         protected void btnGuardarDatos_Click(object sender, EventArgs e)
         {
             if (!ExigirPermiso("TURNO_ALTA"))
@@ -205,6 +286,7 @@ namespace Presentacion
             {
                 if (!DateTime.TryParseExact(txtFechaNacimiento.Text, FormatoFecha, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime fechaNacimiento))
                 {
+                    AbrirMisDatos();
                     MostrarMensaje(lblMensajeDatos, T("Ingresa una fecha de nacimiento valida."), false);
                     return;
                 }
@@ -217,18 +299,36 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
+                AbrirMisDatos();
                 MostrarMensaje(lblMensajeDatos, ex.Message, false);
             }
             catch (Exception ex)
             {
+                AbrirMisDatos();
                 RegistrarErrorInterno("Turnos.btnGuardarDatos_Click", ex);
                 MostrarMensaje(lblMensajeDatos, T("No se pudieron guardar tus datos. Intenta nuevamente mas tarde."), false);
             }
         }
 
-        // ---- Solicitud de turno ----
+        protected void rblBuscarPor_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                bool porProfesional = rblBuscarPor.SelectedValue == BuscarPorProfesional;
 
-        protected void ddlEspecialidades_SelectedIndexChanged(object sender, EventArgs e)
+                pnlBuscarEspecialidad.Visible = !porProfesional;
+                pnlBuscarProfesional.Visible = porProfesional;
+
+                BuscarMedicos();
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Turnos.rblBuscarPor_SelectedIndexChanged", ex);
+                MostrarMensaje(lblMensajeTurno, T("No se pudo realizar la busqueda. Intenta nuevamente mas tarde."), false);
+            }
+        }
+
+        protected void rblEspecialidades_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
@@ -236,7 +336,7 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                RegistrarErrorInterno("Turnos.ddlEspecialidades_SelectedIndexChanged", ex);
+                RegistrarErrorInterno("Turnos.rblEspecialidades_SelectedIndexChanged", ex);
                 MostrarMensaje(lblMensajeTurno, T("No se pudieron cargar los medicos de esa especialidad. Intenta nuevamente mas tarde."), false);
             }
         }
@@ -258,7 +358,8 @@ namespace Presentacion
         {
             try
             {
-                CargarFechas();
+                DiaElegido = null;
+                CargarAgenda();
             }
             catch (Exception ex)
             {
@@ -267,16 +368,44 @@ namespace Presentacion
             }
         }
 
-        protected void ddlFecha_SelectedIndexChanged(object sender, EventArgs e)
+        protected void rptDias_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
             try
             {
-                CargarHorarios(ObtenerTurnosLibresMedicoSeleccionado());
+                if (e.CommandName == "ElegirDia" && DateTime.TryParseExact(Convert.ToString(e.CommandArgument), FormatoFecha, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dia))
+                {
+                    DiaElegido = dia;
+                    CargarAgenda();
+                }
             }
             catch (Exception ex)
             {
-                RegistrarErrorInterno("Turnos.ddlFecha_SelectedIndexChanged", ex);
+                RegistrarErrorInterno("Turnos.rptDias_ItemCommand", ex);
                 MostrarMensaje(lblMensajeTurno, T("No se pudieron cargar los horarios. Intenta nuevamente mas tarde."), false);
+            }
+        }
+
+        protected void btnMesAnterior_Click(object sender, EventArgs e)
+        {
+            CambiarMes(-1);
+        }
+
+        protected void btnMesSiguiente_Click(object sender, EventArgs e)
+        {
+            CambiarMes(1);
+        }
+
+        private void CambiarMes(int meses)
+        {
+            try
+            {
+                MesVisible = MesVisible.AddMonths(meses);
+                BindCalendario(bll_turno.ObtenerAgendaDisponible(UsuarioLogueado, int.Parse(ddlMedico.SelectedValue)));
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Turnos.CambiarMes", ex);
+                MostrarMensaje(lblMensajeTurno, T("No se pudieron cargar los dias disponibles. Intenta nuevamente mas tarde."), false);
             }
         }
 
@@ -307,15 +436,14 @@ namespace Presentacion
 
                 rblVista.SelectedValue = "Proximos";
                 BindTurnos();
-                CargarFechas();
+                CargarAgenda();
 
                 MostrarMensaje(lblMensajeTurno, T("Turno reservado con {0} el {1:dd/MM/yyyy} a las {2:HH:mm} hs.", medico, fechaHora, fechaHora), true);
                 MostrarToast(T("Turno reservado."), true);
             }
             catch (InvalidOperationException ex)
             {
-                // Si el horario se ocupo mientras tanto, se refrescan las opciones.
-                CargarFechasSinFallar();
+                CargarAgendaSinFallar();
                 MostrarMensaje(lblMensajeTurno, ex.Message, false);
             }
             catch (Exception ex)
@@ -329,11 +457,18 @@ namespace Presentacion
         {
             try
             {
-                txtBuscarNombre.Text = string.Empty;
-                ddlEspecialidades.SelectedIndex = 0;
-                ddlMedico.Items.Clear();
-                ddlFecha.Items.Clear();
-                BuscarMedicos();
+                txtBuscarEspecialidad.Text = string.Empty;
+                txtBuscarProfesional.Text = string.Empty;
+                rblEspecialidades.ClearSelection();
+
+                if (rblBuscarPor.SelectedValue == BuscarPorProfesional)
+                {
+                    BuscarMedicos();
+                }
+                else
+                {
+                    OcultarAgenda();
+                }
             }
             catch (Exception ex)
             {
@@ -341,8 +476,6 @@ namespace Presentacion
                 MostrarMensaje(lblMensajeTurno, T("No se pudo limpiar el formulario. Intenta nuevamente mas tarde."), false);
             }
         }
-
-        // ---- Mis turnos ----
 
         protected void rblVista_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -381,10 +514,9 @@ namespace Presentacion
 
                 BindTurnos();
 
-                // El horario liberado vuelve a aparecer si es del medico elegido.
                 if (pnlSolicitar.Visible)
                 {
-                    CargarFechas();
+                    CargarAgenda();
                 }
 
                 MostrarMensaje(lblMensajeMisTurnos, T("El turno fue cancelado."), true);
@@ -402,19 +534,15 @@ namespace Presentacion
             }
         }
 
-        // ---- Auxiliares ----
-
-        // Refrescos despues de un error de negocio: si fallan, se registra y se
-        // deja el mensaje original en pantalla.
-        private void CargarFechasSinFallar()
+        private void CargarAgendaSinFallar()
         {
             try
             {
-                CargarFechas();
+                CargarAgenda();
             }
             catch (Exception ex)
             {
-                RegistrarErrorInterno("Turnos.CargarFechasSinFallar", ex);
+                RegistrarErrorInterno("Turnos.CargarAgendaSinFallar", ex);
             }
         }
 
@@ -427,42 +555,6 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Turnos.BindTurnosSinFallar", ex);
-            }
-        }
-
-        private void MostrarMensaje(Label label, string texto, bool exito)
-        {
-            // Los mensajes pueden traer nombres cargados por usuarios.
-            label.Text = System.Web.HttpUtility.HtmlEncode(texto);
-            label.CssClass = exito ? "msg-form msg-exito" : "msg-form msg-error";
-        }
-
-        private void MostrarToast(string mensaje, bool exito)
-        {
-            string clase = exito ? "toast-exito" : "toast-error";
-            string texto = System.Web.HttpUtility.JavaScriptStringEncode(mensaje, true);
-
-            string script =
-                "(function(){var t=document.createElement('div');t.className='toast " + clase + "';" +
-                "t.textContent=" + texto + ";document.body.appendChild(t);" +
-                "setTimeout(function(){t.className+=' toast-hide';},3000);" +
-                "setTimeout(function(){if(t.parentNode){t.parentNode.removeChild(t);}},3600);})();";
-
-            ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
             }
         }
     }

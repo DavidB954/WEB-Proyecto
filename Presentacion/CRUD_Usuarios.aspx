@@ -73,7 +73,7 @@
             <asp:Button ID="btnGuardar" CssClass="btn-base btn-success" runat="server" Text="Guardar" data-permiso="USUARIO_ALTA" data-i18n="1" OnClick="btnGuardar_Click" />
             <asp:Button ID="btnModificar" CssClass="btn-base btn-primary" runat="server" Text="Modificar" data-permiso="USUARIO_MODIFICACION" data-i18n="1" OnClick="btnModificar_Click" />
             <asp:Button ID="btnEliminar" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" data-permiso="USUARIO_BAJA" data-i18n="1" OnClick="btnEliminar_Click"
-                OnClientClick="return confirm('Eliminar el usuario? Si es paciente se borran sus turnos e historia clinica; si es medico se borra su agenda y se cancelan sus turnos reservados. La bitacora se conserva.');" />
+                OnClientClick="return confirmarAccion(this, 'Eliminar el usuario? Si es paciente se borran sus turnos e historia clinica; si es medico se borra su agenda y se cancelan sus turnos reservados. La bitacora se conserva.');" />
         </div>
         <asp:Label ID="lblMensaje" runat="server" CssClass="msg-form"></asp:Label>
 

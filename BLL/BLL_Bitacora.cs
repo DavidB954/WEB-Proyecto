@@ -8,8 +8,6 @@ using System.Linq;
 using System.Net;
 using System.Globalization;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -20,22 +18,18 @@ namespace BLL
         DAL_Bitacora dal_bitacora = new DAL_Bitacora();
         DAL_DVV dal_dvv = new DAL_DVV();
 
-        public void RegistrarEvento(int? IdUsuario, AccionBitacora accion, string modulo, string descripcion)
+        public void RegistrarEvento(int? idUsuario, AccionBitacora accion, string modulo, string descripcion)
         {
-            // Un fallo al auditar (ej. no se pudo resolver el nombre de maquina, o la
-            // base esta momentaneamente caida) no debe ocultar que la operacion
-            // principal (alta de usuario, login, etc.) si se completo: por eso este
-            // metodo nunca relanza, solo deja constancia via Trace y sigue.
             try
             {
-                if (IdUsuario == 0)
+                if (idUsuario == 0)
                 {
-                    IdUsuario = null;
+                    idUsuario = null;
                 }
 
                 BE_Bitacora objBitacora = new BE_Bitacora()
                 {
-                    IdUsuario = IdUsuario,
+                    IdUsuario = idUsuario,
                     FechaHora = DateTime.Now,
                     Accion = accion,
                     Modulo = modulo,
@@ -45,7 +39,7 @@ namespace BLL
                     Criticidad = CriticidadBitacora.Obtener(accion)
                 };
 
-                objBitacora.DVH = EncryptionHelper.Encriptar(CadenaBitacora(objBitacora));
+                objBitacora.DVH = EncryptionHelper.Encriptar(CadenasIntegridad.CadenaBitacora(objBitacora));
 
                 dal_bitacora.RegistrarEvento(objBitacora);
 
@@ -57,48 +51,11 @@ namespace BLL
             }
         }
 
-        public void RefrescarDVHDeFilas(IEnumerable<int> idsBitacora)
-        {
-            if (idsBitacora == null)
-            {
-                return;
-            }
-
-            var eventosPorId = dal_bitacora.ObtenerBitacora().ToDictionary(b => b.IdBitacora);
-
-            bool huboCambios = false;
-
-            foreach (var idBitacora in idsBitacora)
-            {
-                if (eventosPorId.TryGetValue(idBitacora, out var evento))
-                {
-                    dal_bitacora.ActualizarDVH(evento.IdBitacora, EncryptionHelper.Encriptar(CadenaBitacora(evento)));
-                    huboCambios = true;
-                }
-            }
-
-            if (huboCambios)
-            {
-                RefrescarDVVBitacora();
-            }
-        }
-
         private void RefrescarDVVBitacora()
         {
-            List<string> hashesFila = dal_bitacora.ObtenerBitacora().Select(b => EncryptionHelper.Encriptar(CadenaBitacora(b))).ToList();
+            IEnumerable<string> firmas = dal_bitacora.ObtenerBitacora().Select(b => EncryptionHelper.Encriptar(CadenasIntegridad.CadenaBitacora(b)));
 
-            StringBuilder concatenacion = new StringBuilder();
-            foreach (var hash in hashesFila)
-            {
-                concatenacion.Append(hash);
-            }
-
-            dal_dvv.ActualizarDVV(HashHelper.GenerarHash(concatenacion.ToString()), "Bitacora");
-        }
-
-        private string CadenaBitacora(BE_Bitacora bitacora)
-        {
-            return $"{bitacora.IdUsuario}|{bitacora.FechaHora}|{bitacora.Accion}|{bitacora.Modulo}|{bitacora.IP}|{bitacora.Descripcion}|{bitacora.NombreMaquina}|{bitacora.Criticidad}";
+            dal_dvv.ActualizarDVV(CadenasIntegridad.CalcularDVV(firmas), "Bitacora");
         }
 
         private string ObtenerIP()
@@ -126,14 +83,7 @@ namespace BLL
             return dal_bitacora.ObtenerBitacora();
         }
 
-        public DataTable FiltrarBitacora(DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
-        {
-            return dal_bitacora.FiltrarBitacora(desde, hasta, idUsuario, modulo, ip, criticidad);
-        }
-
-        // Misma consulta que la grilla de Bitacora.aspx, pero devuelta como lista de
-        // entidades (la usan el Web Service y la exportacion a XML), mas nuevo primero.
-        public List<BE_Bitacora> ConsultarBitacora(DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
+        public List<BE_Bitacora> ConsultarBitacora(BE_Usuario usuarioLogueado, DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
         {
             bool sinFiltros = desde == null && hasta == null && idUsuario == null && modulo == null && ip == null && criticidad == null;
 
@@ -141,7 +91,27 @@ namespace BLL
                 ? (IEnumerable<BE_Bitacora>)dal_bitacora.ObtenerBitacora()
                 : dal_bitacora.FiltrarBitacora(desde, hasta, idUsuario, modulo, ip, criticidad).AsEnumerable().Select(MapearFila);
 
-            return eventos.OrderByDescending(e => e.IdBitacora).ToList();
+            return SoloEventosVisibles(usuarioLogueado, eventos).OrderByDescending(e => e.IdBitacora).ToList();
+        }
+
+        // BLL_Permiso se crea aca y no como campo porque BLL_Permiso ya tiene un campo BLL_Bitacora.
+        private static IEnumerable<BE_Bitacora> SoloEventosVisibles(BE_Usuario usuarioLogueado, IEnumerable<BE_Bitacora> eventos)
+        {
+            BLL_Permiso bll_permiso = new BLL_Permiso();
+
+            if (bll_permiso.EsWebmaster(usuarioLogueado))
+            {
+                return eventos;
+            }
+
+            HashSet<int> idsWebmaster = bll_permiso.ObtenerIdsUsuariosWebmaster();
+
+            return eventos.Where(e => !(e.IdUsuario.HasValue && idsWebmaster.Contains(e.IdUsuario.Value)) && !MencionaWebmaster(e));
+        }
+
+        private static bool MencionaWebmaster(BE_Bitacora evento)
+        {
+            return evento.Descripcion != null && evento.Descripcion.IndexOf(RolesSistema.Webmaster, StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         public string GenerarXml(List<BE_Bitacora> eventos, DateTime? desde, DateTime? hasta, int? idUsuario,
@@ -172,13 +142,9 @@ namespace BLL
                             new XElement("NombreMaquina", e.NombreMaquina ?? string.Empty),
                             new XElement("Descripcion", e.Descripcion ?? string.Empty))))));
 
-            // XDocument.ToString() omite la declaracion <?xml ...?>: se agrega a mano.
             return documento.Declaration + Environment.NewLine + documento.ToString();
         }
 
-        // Lee un archivo generado por GenerarXml para consultarlo en la grilla. No inserta
-        // nada en la tabla Bitacora: la auditoria solo la escribe el sistema, y un evento
-        // importado no tendria un DVH legitimo. Lo unico que se registra es la importacion.
         public BE_BitacoraImportada ImportarXml(BE_Usuario usuarioLogueado, string nombreArchivo, Stream contenidoXml)
         {
             XElement raiz = LeerXmlBitacora(contenidoXml);
@@ -204,8 +170,6 @@ namespace BLL
                 Eventos = eventos.Elements("Evento").Select(LeerEvento).ToList()
             };
 
-            // Sin firma no se puede probar que el archivo sea autentico, pero si detectar
-            // que le faltan eventos respecto de lo que declara.
             if (LeerEntero((string)eventos.Attribute("cantidad")) != importada.Eventos.Count)
             {
                 throw new InvalidOperationException(TextoLocalizado.T("El archivo esta incompleto: la cantidad de eventos no coincide con la declarada."));
@@ -217,10 +181,9 @@ namespace BLL
             return importada;
         }
 
-        // Mismas condiciones que el SP dbo.FiltrarBitacora, sobre los eventos del archivo.
-        public List<BE_Bitacora> FiltrarEventos(IEnumerable<BE_Bitacora> eventos, DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
+        public List<BE_Bitacora> FiltrarEventos(BE_Usuario usuarioLogueado, IEnumerable<BE_Bitacora> eventos, DateTime? desde, DateTime? hasta, int? idUsuario, string modulo, string ip, string criticidad)
         {
-            return eventos
+            return SoloEventosVisibles(usuarioLogueado, eventos)
                 .Where(e => desde == null || e.FechaHora >= desde)
                 .Where(e => hasta == null || e.FechaHora <= hasta)
                 .Where(e => idUsuario == null || e.IdUsuario == idUsuario)
@@ -231,8 +194,6 @@ namespace BLL
                 .ToList();
         }
 
-        // El archivo lo sube un usuario: se prohibe el DTD y no se resuelven
-        // referencias externas, para evitar ataques XXE y de expansion de entidades.
         private static XElement LeerXmlBitacora(Stream contenidoXml)
         {
             XmlReaderSettings opciones = new XmlReaderSettings
@@ -307,13 +268,11 @@ namespace BLL
             return int.TryParse(valor, out int numero) ? numero : (int?)null;
         }
 
-        // Un filtro vacio no se escribe como atributo (en vez de quedar desde="").
         private static XAttribute AtributoOpcional(string nombre, string valor)
         {
             return string.IsNullOrEmpty(valor) ? null : new XAttribute(nombre, valor);
         }
 
-        // Columnas que devuelve el SP dbo.FiltrarBitacora.
         private static BE_Bitacora MapearFila(DataRow fila)
         {
             return new BE_Bitacora

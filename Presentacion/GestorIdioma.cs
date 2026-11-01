@@ -1,4 +1,3 @@
-using BE;
 using BLL;
 using SERVICIOS;
 using System;
@@ -16,11 +15,12 @@ namespace Presentacion
     {
         private const string ClaveSesionIdioma = "IdiomaActual";
         private const string ClaveObservadoresRequest = "IdiomaObservadoresRequest";
+        private const string ClaveIdiomaPorDefectoRequest = "IdiomaPorDefectoRequest";
         private const string ClaveMarcador = "data-i18n";
         private const string PaginaMaster = "Site1Master";
         private const string PaginaMensajes = "Mensajes";
 
-        private static readonly Regex RegexConfirmacion = new Regex(@"confirm\('((?:[^'\\]|\\.)*)'\)", RegexOptions.Compiled);
+        private static readonly Regex RegexConfirmacion = new Regex(@"confirmarAccion\(this,\s*'((?:[^'\\]|\\.)*)'\)", RegexOptions.Compiled);
 
         private static readonly object candado = new object();
         private static readonly Dictionary<int, Dictionary<string, string>> cacheTraducciones = new Dictionary<int, Dictionary<string, string>>();
@@ -37,9 +37,7 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                // Si un observador falla al sincronizarse no debe romper el render de
-                // la pagina: en el peor caso queda sin traducir (texto base en español).
-                RegistrarErrorSilencioso("GestorIdioma.Suscribir", ex);
+                RegistroErrores.Registrar("GestorIdioma.Suscribir", ex);
             }
         }
 
@@ -55,7 +53,7 @@ namespace Presentacion
                 }
                 catch (Exception ex)
                 {
-                    RegistrarErrorSilencioso("GestorIdioma.CambiarIdioma", ex);
+                    RegistroErrores.Registrar("GestorIdioma.CambiarIdioma", ex);
                 }
             }
         }
@@ -69,29 +67,28 @@ namespace Presentacion
                 return idIdiomaSesion;
             }
 
+            object idiomaDelRequest = HttpContext.Current.Items[ClaveIdiomaPorDefectoRequest];
+
+            if (idiomaDelRequest is int idIdiomaDelRequest)
+            {
+                return idIdiomaDelRequest;
+            }
+
             try
             {
-                BE_Idioma idiomaPorDefecto = bll_idioma.ObtenerIdiomaPorDefecto();
+                int idIdiomaPorDefecto = bll_idioma.ObtenerIdiomaPorDefecto()?.IdIdioma ?? 0;
 
-                return idiomaPorDefecto?.IdIdioma ?? 0;
+                HttpContext.Current.Items[ClaveIdiomaPorDefectoRequest] = idIdiomaPorDefecto;
+
+                return idIdiomaPorDefecto;
             }
             catch (Exception ex)
             {
-                // Sin idioma resuelto la pagina sigue renderizando con el texto base
-                // (español) en vez de romperse: es preferible a tirar la pagina abajo.
-                RegistrarErrorSilencioso("GestorIdioma.ObtenerIdiomaActual", ex);
+                RegistroErrores.Registrar("GestorIdioma.ObtenerIdiomaActual", ex);
                 return 0;
             }
         }
 
-        /// <summary>
-        /// Traduce un texto escrito en C# (mensajes, avisos, items de combos). El
-        /// texto en español identifica la entrada del catalogo: la clave es un hash
-        /// suyo porque ControlId admite 100 caracteres y estos textos pueden ser mas
-        /// largos. Los {0}, {1}... se completan despues de traducir, para que la
-        /// traduccion pueda reordenarlos. Nunca rompe: en el peor caso devuelve el
-        /// texto en español.
-        /// </summary>
         public static string Traducir(string textoBase, params object[] argumentos)
         {
             string texto = textoBase;
@@ -108,7 +105,7 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                RegistrarErrorSilencioso("GestorIdioma.Traducir", ex);
+                RegistroErrores.Registrar("GestorIdioma.Traducir", ex);
             }
 
             if (argumentos == null || argumentos.Length == 0)
@@ -122,7 +119,6 @@ namespace Presentacion
             }
             catch (FormatException)
             {
-                // Traduccion mal cargada (ej. un {3} que no existe): se usa el original.
                 return string.Format(textoBase, argumentos);
             }
         }
@@ -149,8 +145,6 @@ namespace Presentacion
                     return;
                 }
 
-                // Con Title="" en la directiva, Page.Title viene vacio aunque el <title>
-                // de la Master se renderice igual: el texto se toma de ese control.
                 HtmlTitle controlTitulo = pagina.Header.Controls.OfType<HtmlTitle>().FirstOrDefault();
                 string titulo = string.IsNullOrWhiteSpace(pagina.Title) ? controlTitulo?.Text : pagina.Title;
 
@@ -165,7 +159,7 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                RegistrarErrorSilencioso("GestorIdioma.AplicarTituloPagina", ex);
+                RegistroErrores.Registrar("GestorIdioma.AplicarTituloPagina", ex);
             }
         }
 
@@ -177,18 +171,10 @@ namespace Presentacion
             }
         }
 
-        /// <summary>
-        /// Recorre el arbol de controles de la pagina (y, dentro de el, el de la
-        /// Master Page) aplicando la traduccion del idioma activo a cada control
-        /// marcado con data-i18n. Si un control marcado no tiene todavia una fila
-        /// en el catalogo, la registra usando su texto actual (el que esta escrito
-        /// en el .aspx, en español) como texto base.
-        /// </summary>
         public static void AplicarTraducciones(Control pagina)
         {
             try
             {
-               
                 string nombrePagina = (pagina.GetType().BaseType ?? pagina.GetType()).Name;
                 Dictionary<string, string> traducciones = ObtenerTraduccionesDeCache(ObtenerIdiomaActual());
 
@@ -196,19 +182,10 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                // El multiidioma es una capa cosmetica sobre la pagina: si falla,
-                // la pagina tiene que seguir mostrandose (con el texto base en
-                // español), nunca romperse.
-                RegistrarErrorSilencioso("GestorIdioma.AplicarTraducciones", ex);
+                RegistroErrores.Registrar("GestorIdioma.AplicarTraducciones", ex);
             }
         }
 
-        /// <summary>
-        /// Segundo paso, llamado desde PaginaBase.OnPreRender: las filas de las
-        /// grillas (controles de TemplateField y EmptyDataTemplate) recien existen
-        /// despues del DataBind, asi que no estan cuando se traduce en OnInit.
-        /// La clave de esos controles es Pagina.IdGrilla_IdControl.
-        /// </summary>
         public static void AplicarTraduccionesGrillas(Control pagina)
         {
             try
@@ -220,7 +197,7 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                RegistrarErrorSilencioso("GestorIdioma.AplicarTraduccionesGrillas", ex);
+                RegistroErrores.Registrar("GestorIdioma.AplicarTraduccionesGrillas", ex);
             }
         }
 
@@ -283,6 +260,11 @@ namespace Presentacion
                 return;
             }
 
+            if (control is Repeater)
+            {
+                return;
+            }
+
             if (EsTraducible(control))
             {
                 AplicarAlControl(control, paginaActual, control.ID, traducciones);
@@ -296,7 +278,6 @@ namespace Presentacion
             }
         }
 
-        // No necesitan data-i18n: un confirm() o un ToolTip siempre son texto visible.
         private static void TraducirAvisos(Control control, string pagina, string controlId, Dictionary<string, string> traducciones)
         {
             if (string.IsNullOrEmpty(control.ID))
@@ -332,7 +313,7 @@ namespace Presentacion
                 string mensaje = coincidencia.Groups[1].Value.Replace("\\'", "'");
                 string traducido = ResolverTexto($"{pagina}.{controlId}_confirm", mensaje, traducciones);
 
-                return "confirm('" + HttpUtility.JavaScriptStringEncode(traducido) + "')";
+                return "confirmarAccion(this, '" + HttpUtility.JavaScriptStringEncode(traducido) + "')";
             });
         }
 
@@ -362,7 +343,6 @@ namespace Presentacion
 
             switch (control)
             {
-                // Antes que Label: los validadores heredan de Label.
                 case BaseValidator validador:
                     validador.ErrorMessage = ResolverTexto(clave, validador.ErrorMessage, traducciones);
                     break;
@@ -416,7 +396,6 @@ namespace Presentacion
             {
                 DataControlField columna = gridView.Columns[i];
 
-                // Texto del link "Seleccionar" / "Componer" de las CommandField.
                 if (columna is CommandField comando && comando.ShowSelectButton)
                 {
                     comando.SelectText = ResolverTexto($"{pagina}.{gridView.ID}_col{i}_sel", comando.SelectText, traducciones);
@@ -471,7 +450,6 @@ namespace Presentacion
             }
             catch
             {
-                // El auto-descubrimiento de claves nunca debe romper el render de la pagina.
             }
         }
 
@@ -492,9 +470,7 @@ namespace Presentacion
                 }
                 catch (Exception ex)
                 {
-                    // No se cachea el fallo: el proximo request vuelve a intentar
-                    // contra la base en vez de quedar "roto" hasta reciclar el pool.
-                    RegistrarErrorSilencioso("GestorIdioma.ObtenerTraduccionesDeCache", ex);
+                    RegistroErrores.Registrar("GestorIdioma.ObtenerTraduccionesDeCache", ex);
                     return new Dictionary<string, string>();
                 }
             }
@@ -508,22 +484,6 @@ namespace Presentacion
             }
 
             return (List<IIdiomaObservador>)HttpContext.Current.Items[ClaveObservadoresRequest];
-        }
-
-        private static void RegistrarErrorSilencioso(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = HttpContext.Current.Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
-               
-            }
         }
     }
 }

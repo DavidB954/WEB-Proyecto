@@ -4,11 +4,7 @@ using SERVICIOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
 
 namespace BLL
 {
@@ -32,7 +28,6 @@ namespace BLL
             {
                 throw new Exception($"Error al actualizar DVV: {ex.Message}", ex);
             }
-
         }
 
         public bool VerificarIntegridad(string nombreTabla)
@@ -61,8 +56,6 @@ namespace BLL
             {
                 throw new Exception($"Error al verificar integridad: {ex.Message}", ex);
             }
-
-
         }
 
         public bool EstaIntegra(string nombreTabla)
@@ -81,22 +74,12 @@ namespace BLL
         {
             try
             {
-                List<string> hashesFila = ObtenerHashesFila(nombreTabla);
-
-                StringBuilder concatenacion = new StringBuilder();
-                foreach (var hash in hashesFila)
-                {
-                    concatenacion.Append(hash);
-                }
-
-                return HashHelper.GenerarHash(concatenacion.ToString());
+                return CadenasIntegridad.CalcularDVV(ObtenerHashesFila(nombreTabla));
             }
             catch (Exception ex)
             {
-
                 throw new Exception($"Error al calcular DVV: {ex.Message}", ex);
             }
-
         }
 
         private List<string> ObtenerHashesFila(string nombreTabla)
@@ -104,33 +87,17 @@ namespace BLL
             switch (nombreTabla)
             {
                 case "Usuario":
-                    return dal_usuario.Usuarios().Select(u => HashHelper.GenerarHash(CadenaUsuario(u))).ToList();
+                    return dal_usuario.Usuarios().Select(u => HashHelper.GenerarHash(CadenasIntegridad.CadenaUsuario(u))).ToList();
 
                 case "Rol":
-                    return dal_rol.ObtenerRoles().Select(r => HashHelper.GenerarHash(CadenaRol(r))).ToList();
+                    return dal_rol.ObtenerRoles().Select(r => HashHelper.GenerarHash(CadenasIntegridad.CadenaRol(r))).ToList();
 
                 case "Bitacora":
-                    return dal_bitacora.ObtenerBitacora().Select(b => EncryptionHelper.Encriptar(CadenaBitacora(b))).ToList();
+                    return dal_bitacora.ObtenerBitacora().Select(b => EncryptionHelper.Encriptar(CadenasIntegridad.CadenaBitacora(b))).ToList();
 
                 default:
                     throw new Exception($"Tabla no soportada para calculo de DV: {nombreTabla}");
             }
-        }
-
-        private string CadenaUsuario(BE_Usuario usuario)
-        {
-            string activo = usuario.Activo ? "1" : "0";
-            return $"{usuario.Nombre}|{usuario.Apellido}|{usuario.Email}|{usuario.HashPassword}|{usuario.DNI}|{usuario.IntentosFallidos}|{activo}";
-        }
-
-        private string CadenaRol(BE_Rol rol)
-        {
-            return $"{rol.IdRol}|{rol.Nombre}";
-        }
-
-        private string CadenaBitacora(BE_Bitacora bitacora)
-        {
-            return $"{bitacora.IdUsuario}|{bitacora.FechaHora}|{bitacora.Accion}|{bitacora.Modulo}|{bitacora.IP}|{bitacora.Descripcion}|{bitacora.NombreMaquina}|{bitacora.Criticidad}";
         }
 
         public List<string> DetectarCambios(string nombreTabla)
@@ -169,7 +136,7 @@ namespace BLL
 
             foreach (var usuario in usuarios)
             {
-                string dvhEsperado = HashHelper.GenerarHash(CadenaUsuario(usuario));
+                string dvhEsperado = HashHelper.GenerarHash(CadenasIntegridad.CadenaUsuario(usuario));
 
                 if (usuario.DVH == null)
                 {
@@ -234,10 +201,7 @@ namespace BLL
         {
             var fantasmas = ObtenerFantasmasUsuario(usuariosActuales);
 
-            string idsAceptadosCsv = dal_dvv.ObtenerIdsVigentes("Usuario");
-            HashSet<int> idsAceptados = string.IsNullOrWhiteSpace(idsAceptadosCsv)
-                ? new HashSet<int>()
-                : new HashSet<int>(idsAceptadosCsv.Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(int.Parse));
+            HashSet<int> idsAceptados = ParsearIds(dal_dvv.ObtenerIdsVigentes("Usuario"));
 
             foreach (var fantasma in fantasmas)
             {
@@ -254,7 +218,7 @@ namespace BLL
 
             foreach (var rol in roles)
             {
-                string dvhEsperado = HashHelper.GenerarHash(CadenaRol(rol));
+                string dvhEsperado = HashHelper.GenerarHash(CadenasIntegridad.CadenaRol(rol));
 
                 if (rol.DVH == null)
                 {
@@ -271,20 +235,7 @@ namespace BLL
 
         private void DetectarRolEliminado(List<BE_Rol> rolesActuales, List<string> mensajes)
         {
-            string idsVigentesCsv = dal_dvv.ObtenerIdsVigentes("Rol");
-
-            if (string.IsNullOrWhiteSpace(idsVigentesCsv))
-            {
-                return;
-            }
-
-            var idsVigentes = new HashSet<int>(
-                idsVigentesCsv.Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(int.Parse)
-            );
-
-            var idsActuales = new HashSet<int>(rolesActuales.Select(r => r.IdRol));
-
-            var faltantes = idsVigentes.Where(id => !idsActuales.Contains(id)).OrderBy(id => id).ToList();
+            List<int> faltantes = IdsFaltantes("Rol", rolesActuales.Select(r => r.IdRol));
 
             if (faltantes.Count > 0)
             {
@@ -301,7 +252,7 @@ namespace BLL
 
                     foreach (var usuario in usuariosActuales)
                     {
-                        dal_usuario.ActualizarDVH(usuario.IdUsuario, HashHelper.GenerarHash(CadenaUsuario(usuario)));
+                        dal_usuario.ActualizarDVH(usuario.IdUsuario, HashHelper.GenerarHash(CadenasIntegridad.CadenaUsuario(usuario)));
                     }
 
                     var fantasmasActuales = ObtenerFantasmasUsuario(usuariosActuales).Keys;
@@ -313,7 +264,7 @@ namespace BLL
 
                     foreach (var rol in rolesActuales)
                     {
-                        dal_rol.ActualizarDVH(rol.IdRol, HashHelper.GenerarHash(CadenaRol(rol)));
+                        dal_rol.ActualizarDVH(rol.IdRol, HashHelper.GenerarHash(CadenasIntegridad.CadenaRol(rol)));
                     }
 
                     dal_dvv.ActualizarIdsVigentes("Rol", string.Join(",", rolesActuales.Select(r => r.IdRol)));
@@ -324,7 +275,7 @@ namespace BLL
 
                     foreach (var evento in eventosBitacora)
                     {
-                        dal_bitacora.ActualizarDVH(evento.IdBitacora, EncryptionHelper.Encriptar(CadenaBitacora(evento)));
+                        dal_bitacora.ActualizarDVH(evento.IdBitacora, EncryptionHelper.Encriptar(CadenasIntegridad.CadenaBitacora(evento)));
                     }
 
                     string idsVigentes = string.Join(",", eventosBitacora.Select(e => e.IdBitacora));
@@ -342,7 +293,7 @@ namespace BLL
 
             foreach (var evento in eventos)
             {
-                string dvhEsperado = EncryptionHelper.Encriptar(CadenaBitacora(evento));
+                string dvhEsperado = EncryptionHelper.Encriptar(CadenasIntegridad.CadenaBitacora(evento));
 
                 if (evento.DVH == null)
                 {
@@ -377,25 +328,26 @@ namespace BLL
 
         private void DetectarBitacoraEliminada(List<BE_Bitacora> eventos, List<string> mensajes)
         {
-            string idsVigentesCsv = dal_dvv.ObtenerIdsVigentes("Bitacora");
-
-            if (string.IsNullOrWhiteSpace(idsVigentesCsv))
-            {
-                return;
-            }
-
-            var idsVigentes = new HashSet<int>(
-                idsVigentesCsv.Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(int.Parse)
-            );
-
-            var idsActuales = new HashSet<int>(eventos.Select(e => e.IdBitacora));
-
-            var faltantes = idsVigentes.Where(id => !idsActuales.Contains(id)).OrderBy(id => id).ToList();
+            List<int> faltantes = IdsFaltantes("Bitacora", eventos.Select(e => e.IdBitacora));
 
             if (faltantes.Count > 0)
             {
                 mensajes.Add(TextoLocalizado.T("Faltan {0} registro(s) en la bitacora (IDs: {1}).", faltantes.Count, string.Join(", ", faltantes)));
             }
+        }
+
+        private List<int> IdsFaltantes(string nombreTabla, IEnumerable<int> idsActuales)
+        {
+            HashSet<int> actuales = new HashSet<int>(idsActuales);
+
+            return ParsearIds(dal_dvv.ObtenerIdsVigentes(nombreTabla)).Where(id => !actuales.Contains(id)).OrderBy(id => id).ToList();
+        }
+
+        private static HashSet<int> ParsearIds(string idsCsv)
+        {
+            return string.IsNullOrWhiteSpace(idsCsv)
+                ? new HashSet<int>()
+                : new HashSet<int>(idsCsv.Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).Select(int.Parse));
         }
 
         public string GenerarBackUp(BE_Usuario usuarioLogueado)
@@ -422,7 +374,6 @@ namespace BLL
             {
                 throw new Exception($"Error al generar backup: {ex.Message}", ex);
             }
-
         }
 
         public List<string> ListarBackupsDisponibles()
@@ -436,7 +387,7 @@ namespace BLL
             {
                 if (string.IsNullOrWhiteSpace(nombreArchivo) || nombreArchivo.IndexOfAny(new[] { '\\', '/' }) >= 0 || nombreArchivo.Contains(".."))
                 {
-                    throw new Exception("Debe seleccionar un backup valido de la lista.");
+                    throw new InvalidOperationException(TextoLocalizado.T("Debe seleccionar un backup valido de la lista."));
                 }
 
                 string carpetaBackup = dal_dvv.ObtenerCarpetaBackupPorDefecto();
@@ -451,11 +402,14 @@ namespace BLL
                     $"Se restauro la base de datos desde el backup: {rutaCompleta}"
                 );
             }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 throw new Exception($"Error al restaurar backup: {ex.Message}", ex);
             }
-
         }
     }
 }

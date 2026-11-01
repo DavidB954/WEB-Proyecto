@@ -15,6 +15,8 @@
 
         protected global::System.Web.UI.WebControls.Label lblHistoriaClinica;
 
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl detMisDatos;
+
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl spanAyudaDatos;
 
         protected global::System.Web.UI.WebControls.Label lblFechaNacimiento;
@@ -31,29 +33,37 @@
 
         protected global::System.Web.UI.WebControls.Panel pnlSolicitar;
 
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl hCrearTurno;
+        protected global::System.Web.UI.WebControls.RadioButtonList rblBuscarPor;
 
-        protected global::System.Web.UI.WebControls.Label lblEspecialidad;
+        protected global::System.Web.UI.WebControls.Panel pnlBuscarEspecialidad;
 
-        protected global::System.Web.UI.WebControls.DropDownList ddlEspecialidades;
+        protected global::System.Web.UI.WebControls.TextBox txtBuscarEspecialidad;
 
-        protected global::System.Web.UI.WebControls.Label lblBuscarNombre;
+        protected global::System.Web.UI.WebControls.RadioButtonList rblEspecialidades;
 
-        protected global::System.Web.UI.WebControls.TextBox txtBuscarNombre;
+        protected global::System.Web.UI.WebControls.Panel pnlBuscarProfesional;
+
+        protected global::System.Web.UI.WebControls.TextBox txtBuscarProfesional;
 
         protected global::System.Web.UI.WebControls.Button btnBuscar;
 
-        protected global::System.Web.UI.WebControls.Label lblMedico;
+        protected global::System.Web.UI.WebControls.Panel pnlProfesional;
+
+        protected global::System.Web.UI.WebControls.Panel pnlAgenda;
+
+        protected global::System.Web.UI.WebControls.LinkButton btnMesAnterior;
+
+        protected global::System.Web.UI.WebControls.Label lblMes;
+
+        protected global::System.Web.UI.WebControls.LinkButton btnMesSiguiente;
+
+        protected global::System.Web.UI.WebControls.Repeater rptDias;
+
+        protected global::System.Web.UI.WebControls.Label lblPrimerTurno;
+
+        protected global::System.Web.UI.WebControls.Label lblHoraTurno;
 
         protected global::System.Web.UI.WebControls.DropDownList ddlMedico;
-
-        protected global::System.Web.UI.WebControls.Label lblDia;
-
-        protected global::System.Web.UI.WebControls.DropDownList ddlFecha;
-
-        protected global::System.Web.UI.HtmlControls.HtmlGenericControl spanAyudaFechas;
-
-        protected global::System.Web.UI.WebControls.Label lblHora;
 
         protected global::System.Web.UI.WebControls.RadioButtonList rblHorarios;
 

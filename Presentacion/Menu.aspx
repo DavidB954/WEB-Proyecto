@@ -56,6 +56,20 @@
     <asp:Button ID="btnVerSeguridad" runat="server" Text="Ver Seguridad" data-i18n="1" CssClass="btn-base btn-danger" PostBackUrl="~/Seguridad.aspx" />
 </div>
 
+    <div id="cardIdiomas" runat="server" class="option-card">
+        <i class="fas fa-language"></i>
+        <h2 id="hIdiomas" runat="server" data-i18n="1">Idiomas</h2>
+        <p id="pIdiomas" runat="server" data-i18n="1">Administre los idiomas disponibles en el sistema.</p>
+        <asp:Button ID="btnVerIdiomas" runat="server" Text="Ver Idiomas" data-i18n="1" CssClass="btn-base btn-primary" PostBackUrl="~/FormIdiomas.aspx" />
+    </div>
+
+    <div id="cardTraducciones" runat="server" class="option-card">
+        <i class="fas fa-globe"></i>
+        <h2 id="hTraducciones" runat="server" data-i18n="1">Traducciones</h2>
+        <p id="pTraducciones" runat="server" data-i18n="1">Edite los textos del sistema en cada idioma.</p>
+        <asp:Button ID="btnVerTraducciones" runat="server" Text="Ver Traducciones" data-i18n="1" CssClass="btn-base btn-primary" PostBackUrl="~/FormTraducciones.aspx" />
+    </div>
+
     <div id="cardRolesPermisos" runat="server" class="option-card">
         <i class="fas fa-sitemap"></i>
         <h2 id="hRolesPermisos" runat="server" data-i18n="1">Roles y Permisos</h2>

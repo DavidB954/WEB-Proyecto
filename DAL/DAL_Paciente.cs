@@ -1,5 +1,6 @@
 using BE;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -7,8 +8,7 @@ namespace DAL
 {
     public class DAL_Paciente
     {
-        // Nombre del rol (tabla Rol) que identifica a un usuario como paciente.
-        private const string RolPaciente = "PACIENTE";
+        private const string RolPaciente = RolesSistema.Paciente;
 
         DAL_Conexion conex = new DAL_Conexion();
 
@@ -29,7 +29,6 @@ namespace DAL
             }
         }
 
-        // null si el usuario todavia no completo sus datos de paciente.
         public BE_Paciente ObtenerPaciente(int idPaciente)
         {
             using (SqlConnection cn = conex.ObtenerConexion())
@@ -42,22 +41,61 @@ namespace DAL
 
                 cmd.Parameters.Add("@id", SqlDbType.Int).Value = idPaciente;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                if (!lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    return null;
+                    if (!lector.Read())
+                    {
+                        return null;
+                    }
+
+                    return new BE_Paciente
+                    {
+                        IdPaciente = lector.GetInt32(0),
+                        NumeroHistoriaClinica = lector.GetString(1),
+                        FechaNacimiento = lector.GetDateTime(2),
+                        Telefono = lector.IsDBNull(3) ? null : lector.GetString(3),
+                        DVH = lector.IsDBNull(4) ? null : lector.GetString(4)
+                    };
                 }
-
-                return new BE_Paciente
-                {
-                    IdPaciente = lector.GetInt32(0),
-                    NumeroHistoriaClinica = lector.GetString(1),
-                    FechaNacimiento = lector.GetDateTime(2),
-                    Telefono = lector.IsDBNull(3) ? null : lector.GetString(3),
-                    DVH = lector.IsDBNull(4) ? null : lector.GetString(4)
-                };
             }
+        }
+
+        public List<BE_PacienteResumen> BuscarPacientes(string texto)
+        {
+            List<BE_PacienteResumen> lista = new List<BE_PacienteResumen>();
+
+            using (SqlConnection cn = conex.ObtenerConexion())
+            {
+                cn.Open();
+
+                SqlCommand cmd = new SqlCommand(@"Select p.IdPaciente, u.Apellido + ', ' + u.Nombre As NombrePaciente, p.NumeroHistoriaClinica, u.DNI
+                                                  From Paciente p
+                                                  Join Usuario u On u.IdUsuario = p.IdPaciente
+                                                  Where @texto = ''
+                                                     Or CharIndex(@texto, u.Nombre + ' ' + u.Apellido) > 0
+                                                     Or CharIndex(@texto, u.Apellido + ', ' + u.Nombre) > 0
+                                                     Or CharIndex(@texto, u.DNI) > 0
+                                                     Or CharIndex(@texto, p.NumeroHistoriaClinica) > 0
+                                                  Order By NombrePaciente", cn);
+
+                cmd.Parameters.Add("@texto", SqlDbType.VarChar, 100).Value = texto;
+
+                using (SqlDataReader lector = cmd.ExecuteReader())
+                {
+                    while (lector.Read())
+                    {
+                        lista.Add(new BE_PacienteResumen
+                        {
+                            IdPaciente = lector.GetInt32(0),
+                            NombrePaciente = lector.GetString(1),
+                            HistoriaClinica = lector.GetString(2),
+                            DNI = lector.GetString(3)
+                        });
+                    }
+                }
+            }
+
+            return lista;
         }
 
         public void GuardarPaciente(BE_Paciente paciente)

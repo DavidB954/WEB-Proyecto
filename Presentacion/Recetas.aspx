@@ -17,9 +17,8 @@
             <span id="spanAyudaVigencia" runat="server" class="ayuda-campo"></span>
 
             <div class="grid-scroll">
-                <asp:GridView ID="gvRecetas" runat="server" AutoGenerateColumns="False" CssClass="grid-crud">
+                <asp:GridView ID="gvRecetas" runat="server" AutoGenerateColumns="False" CssClass="grid-crud" OnRowCommand="gvRecetas_RowCommand">
                     <Columns>
-                        <%-- Mismo orden de columnas que la version anterior: las traducciones se guardan por indice (gvRecetas_colN). --%>
                         <asp:BoundField DataField="FechaEmision" HeaderText="Fecha" DataFormatString="{0:dd/MM/yyyy}" />
                         <asp:BoundField DataField="NombreMedico" HeaderText="Medico" />
                         <asp:BoundField DataField="EspecialidadesTexto" HeaderText="Especialidad" />
@@ -28,6 +27,12 @@
                         <asp:TemplateField HeaderText="Estado">
                             <ItemTemplate>
                                 <span class='<%# "badge badge-" + Eval("EstadoCss") %>'><%# Eval("EstadoTexto") %></span>
+                            </ItemTemplate>
+                        </asp:TemplateField>
+                        <asp:TemplateField HeaderText="Descargar">
+                            <ItemTemplate>
+                                <asp:LinkButton ID="lnkDescargarPdf" runat="server" data-i18n="1" CommandName="DescargarPdf"
+                                    CommandArgument='<%# Eval("IdReceta") %>' Text="PDF" CausesValidation="false" />
                             </ItemTemplate>
                         </asp:TemplateField>
                     </Columns>

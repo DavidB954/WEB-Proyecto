@@ -1,13 +1,9 @@
 ﻿using BE;
-using BE.Seguridad;
 using BLL;
-using SERVICIOS;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Presentacion
@@ -19,8 +15,6 @@ namespace Presentacion
 
         private const string ClaveSesionImportada = "BitacoraImportada";
 
-        // Archivo que se esta consultando; null = bitacora real del sistema. En sesion
-        // y no en ViewState: el archivo entero viajaria en cada postback.
         private BE_BitacoraImportada Importada
         {
             get { return Session[ClaveSesionImportada] as BE_BitacoraImportada; }
@@ -29,8 +23,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
-
             if (!IsPostBack)
             {
                 try
@@ -50,10 +42,9 @@ namespace Presentacion
             }
         }
 
-
         private void CargarUsuarios()
         {
-            List<BE_Usuario> usuarios = bll_usuarios.Usuarios();
+            List<BE_Usuario> usuarios = bll_usuarios.UsuariosConRol(UsuarioLogueado);
 
             ddlUsuarios.DataSource = usuarios;
             ddlUsuarios.DataTextField = "NombreApellido";
@@ -61,11 +52,9 @@ namespace Presentacion
 
             ddlUsuarios.DataBind();
 
-            // Los usuarios eliminados ya no estan en Usuario pero sus eventos siguen
-            // en la bitacora con su IdUsuario: se agregan para poder filtrarlos.
             HashSet<int> idsExistentes = new HashSet<int>(usuarios.Select(u => u.IdUsuario));
 
-            IEnumerable<int> idsEliminados = bll_bitacora.ObtenerBitacora()
+            IEnumerable<int> idsEliminados = bll_bitacora.ConsultarBitacora(UsuarioLogueado, null, null, null, null, null, null)
                 .Where(b => b.IdUsuario.HasValue && !idsExistentes.Contains(b.IdUsuario.Value))
                 .Select(b => b.IdUsuario.Value)
                 .Distinct()
@@ -84,7 +73,6 @@ namespace Presentacion
             ddlModulos.Items.Clear();
 
             ddlModulos.Items.Add(new ListItem(T("Todos"), ""));
-
 
             ddlModulos.Items.Add(new ListItem("LOGIN", "LOGIN"));
             ddlModulos.Items.Add(new ListItem("USUARIO", "USUARIO"));
@@ -112,28 +100,13 @@ namespace Presentacion
             string ip = string.IsNullOrEmpty(txtIP.Text) ? null : txtIP.Text;
             string criticidad = string.IsNullOrEmpty(ddlCriticidad.SelectedValue) ? null : ddlCriticidad.SelectedValue;
 
-            bool sinFiltros = desde == null && hasta == null && idUsuario == null && modulo == null && ip == null && criticidad == null;
-
             BE_BitacoraImportada importada = Importada;
 
             MostrarOrigen(importada);
 
-            if (importada != null)
-            {
-                gvBitacora.DataSource = bll_bitacora.FiltrarEventos(importada.Eventos, desde, hasta, idUsuario, modulo, ip, criticidad);
-            }
-            else if (sinFiltros)
-            {
-                gvBitacora.DataSource = bll_bitacora.ObtenerBitacora()
-                    .OrderByDescending(b => b.IdBitacora)
-                    .ToList();
-            }
-            else
-            {
-                DataTable dt = bll_bitacora.FiltrarBitacora(desde, hasta, idUsuario, modulo, ip, criticidad);
-                dt.DefaultView.Sort = "IdBitacora DESC";
-                gvBitacora.DataSource = dt.DefaultView;
-            }
+            gvBitacora.DataSource = importada != null
+                ? bll_bitacora.FiltrarEventos(UsuarioLogueado, importada.Eventos, desde, hasta, idUsuario, modulo, ip, criticidad)
+                : bll_bitacora.ConsultarBitacora(UsuarioLogueado, desde, hasta, idUsuario, modulo, ip, criticidad);
 
             gvBitacora.DataBind();
 
@@ -147,9 +120,6 @@ namespace Presentacion
             }
         }
 
-        // Deja claro de donde salen los datos: un archivo se puede editar a mano y no
-        // tiene digitos verificadores. Mientras se mira uno no se ofrece exportar,
-        // porque Exportar XML siempre sale de la bitacora real.
         private void MostrarOrigen(BE_BitacoraImportada importada)
         {
             pnlArchivoImportado.Visible = importada != null;
@@ -190,7 +160,7 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
-                lblMensajeImportar.Text = HttpUtility.HtmlEncode(ex.Message);
+                MostrarMensaje(lblMensajeImportar, ex.Message, false);
             }
             catch (Exception ex)
             {
@@ -228,8 +198,6 @@ namespace Presentacion
             SeleccionarFiltro(ddlCriticidad, importada.Criticidad, importada.Criticidad);
         }
 
-        // El archivo puede traer un valor que el combo no ofrece (un usuario ya borrado,
-        // un modulo que no esta en la lista): se agrega para no perder ese filtro.
         private static void SeleccionarFiltro(DropDownList combo, string valor, string textoSiFalta)
         {
             if (string.IsNullOrEmpty(valor))
@@ -297,10 +265,6 @@ namespace Presentacion
 
             try
             {
-                // Se usa la clase del Web Service (WSBitacora.asmx) en el mismo
-                // proceso y no por HTTP: este request tiene tomada la sesion del
-                // usuario, y una llamada HTTP al servicio (que tambien la necesita
-                // para validar permisos) quedaria esperando a que se libere.
                 WSBitacora servicio = new WSBitacora();
 
                 xml = servicio.ExportarBitacoraXml(
@@ -363,8 +327,6 @@ namespace Presentacion
             celda.Text = T(celda.Text);
         }
 
-        // Por DataField y no por posicion fija: las columnas ocultas (ID) tambien
-        // tienen celda en cada fila, y el indice se corre si se agregan columnas.
         private int IndiceColumna(string dataField)
         {
             for (int i = 0; i < gvBitacora.Columns.Count; i++)
@@ -376,21 +338,6 @@ namespace Presentacion
             }
 
             return -1;
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
-            }
         }
     }
 }

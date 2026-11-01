@@ -1,5 +1,4 @@
 using BE;
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -20,15 +19,16 @@ namespace DAL
 
                 SqlCommand cmd = new SqlCommand("Select IdEspecialidad, NombreEspecialidad From Especialidad Order By NombreEspecialidad", cn);
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(new BE_Especialidad
+                    while (lector.Read())
                     {
-                        IdEspecialidad = lector.GetInt32(0),
-                        Nombre = lector.GetString(1)
-                    });
+                        lista.Add(new BE_Especialidad
+                        {
+                            IdEspecialidad = lector.GetInt32(0),
+                            Nombre = lector.GetString(1)
+                        });
+                    }
                 }
             }
 

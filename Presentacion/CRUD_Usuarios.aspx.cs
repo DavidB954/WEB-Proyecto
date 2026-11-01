@@ -1,11 +1,8 @@
 using BE;
-using BE.Seguridad;
 using BLL;
-using SERVICIOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -17,8 +14,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
-
             if (!IsPostBack)
             {
                 try
@@ -28,34 +23,18 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("CRUD_Usuarios.Page_Load", ex);
-                    lblMensaje.Text = T("No se pudieron cargar los datos. Intenta nuevamente mas tarde.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("No se pudieron cargar los datos. Intenta nuevamente mas tarde."), false);
                 }
             }
         }
 
         private void RefrescarGrillas()
         {
-            List<BE_Usuario> usuarios = bll_usuario.UsuariosConRol();
+            List<BE_Usuario> usuarios = bll_usuario.UsuariosConRol(UsuarioLogueado);
 
             gvUsuarios.DataSource = usuarios;
             gvUsuarios.DataBind();
         }
-
-        private void MostrarToast(string mensaje, bool exito)
-        {
-            string clase = exito ? "toast-exito" : "toast-error";
-            string texto = System.Web.HttpUtility.JavaScriptStringEncode(mensaje, true);
-
-            string script =
-                "(function(){var t=document.createElement('div');t.className='toast " + clase + "';" +
-                "t.textContent=" + texto + ";document.body.appendChild(t);" +
-                "setTimeout(function(){t.className+=' toast-hide';},3000);" +
-                "setTimeout(function(){if(t.parentNode){t.parentNode.removeChild(t);}},3600);})();";
-
-            ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
-        }
-
 
         private void LimpiarFormularioUsuario()
         {
@@ -92,8 +71,7 @@ namespace Presentacion
                 string.IsNullOrWhiteSpace(txtEmail.Text) ||
                 string.IsNullOrWhiteSpace(txtPassword.Text))
                 {
-                    lblMensaje.Text = T("Debe completar todos los campos antes de guardar.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("Debe completar todos los campos antes de guardar."), false);
                     return;
                 }
 
@@ -107,9 +85,7 @@ namespace Presentacion
                 usuario.IntentosFallidos = 0;
                 usuario.Activo = chkActivo.Checked;
 
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_usuario.AgregarUsuario(usuarioLogueado, usuario);
+                bll_usuario.AgregarUsuario(UsuarioLogueado, usuario);
 
                 LimpiarFormularioUsuario();
 
@@ -118,16 +94,13 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
-                // Error de validacion (ej: DNI o email repetido): se muestra tal cual
-                // y no se registra como error interno.
-                lblMensaje.Text = ex.Message;
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, ex.Message, false);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnGuardar_Click", ex);
                 string mensaje = System.Web.HttpUtility.JavaScriptStringEncode(T("No se pudo guardar el usuario. Verifica los datos e intenta nuevamente."));
-                ScriptManager.RegisterStartupScript(this, GetType(), "errorAlert", $"alert('{mensaje}');", true);
+                ScriptManager.RegisterStartupScript(this, GetType(), "errorAlert", $"mostrarAviso('{mensaje}');", true);
             }
         }
 
@@ -151,12 +124,13 @@ namespace Presentacion
                 txtPassword.Text = string.Empty;
                 chkResetearPassword.Checked = false;
                 chkResetearIntentos.Checked = false;
+
+                DesplazarHacia(hGestionUsuarios);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.gvUsuarios_SelectedIndexChanged", ex);
-                lblMensaje.Text = T("No se pudo cargar el usuario seleccionado.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, T("No se pudo cargar el usuario seleccionado."), false);
             }
         }
 
@@ -176,8 +150,7 @@ namespace Presentacion
 
                 if (string.IsNullOrWhiteSpace(hiddenIdUsuario.Value))
                 {
-                    lblMensaje.Text = T("Seleccione un usuario de la lista antes de modificar.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("Seleccione un usuario de la lista antes de modificar."), false);
                     return;
                 }
 
@@ -185,8 +158,7 @@ namespace Presentacion
 
                 if (restablecerPassword && string.IsNullOrWhiteSpace(txtPassword.Text))
                 {
-                    lblMensaje.Text = T("Ingrese la nueva contraseña para restablecerla.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("Ingrese la nueva contraseña para restablecerla."), false);
                     return;
                 }
 
@@ -210,9 +182,7 @@ namespace Presentacion
                     usuario.IntentosFallidos = usuarioActual?.IntentosFallidos ?? 0;
                 }
 
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_usuario.ModificarUsuario(usuarioLogueado, usuario, restablecerPassword);
+                bll_usuario.ModificarUsuario(UsuarioLogueado, usuario, restablecerPassword);
 
                 LimpiarFormularioUsuario();
 
@@ -221,16 +191,12 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
-                // Error de validacion (ej: DNI o email repetido): se muestra tal cual
-                // y no se registra como error interno.
-                lblMensaje.Text = ex.Message;
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, ex.Message, false);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnModificar_Click", ex);
-                lblMensaje.Text = T("No se pudo modificar el usuario. Intenta nuevamente mas tarde.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, T("No se pudo modificar el usuario. Intenta nuevamente mas tarde."), false);
             }
         }
 
@@ -245,15 +211,12 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdUsuario.Value))
                 {
-                    lblMensaje.Text = T("Seleccione un usuario de la lista antes de eliminar.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("Seleccione un usuario de la lista antes de eliminar."), false);
                     return;
                 }
 
                 int id = int.Parse(hiddenIdUsuario.Value);
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_usuario.EliminarUsuario(usuarioLogueado, id);
+                bll_usuario.EliminarUsuario(UsuarioLogueado, id);
 
                 LimpiarFormularioUsuario();
 
@@ -262,30 +225,12 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
-                lblMensaje.Text = ex.Message;
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, ex.Message, false);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("CRUD_Usuarios.btnEliminar_Click", ex);
-                lblMensaje.Text = T("No se pudo eliminar el usuario. Intenta nuevamente mas tarde.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
+                MostrarMensaje(lblMensaje, T("No se pudo eliminar el usuario. Intenta nuevamente mas tarde."), false);
             }
         }
     }

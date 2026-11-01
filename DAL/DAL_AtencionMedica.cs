@@ -9,15 +9,8 @@ namespace DAL
 {
     public class DAL_AtencionMedica
     {
-        // Errores de SQL Server por clave/indice unico duplicado.
-        private const int ErrorIndiceUnico = 2601;
-        private const int ErrorClaveUnica = 2627;
-
         DAL_Conexion conex = new DAL_Conexion();
 
-        // Inserta la atencion con sus recetas y pasa el turno a Atendido, todo en
-        // una transaccion. Devuelve false (sin guardar nada) si el turno ya no
-        // estaba Reservado o si ya tenia una atencion cargada.
         public bool RegistrarAtencion(BE_AtencionMedica atencion)
         {
             try
@@ -74,15 +67,12 @@ namespace DAL
                     }
                 }
             }
-            catch (SqlException ex) when (ex.Number == ErrorIndiceUnico || ex.Number == ErrorClaveUnica)
+            catch (SqlException ex) when (ErroresSql.EsClaveDuplicada(ex))
             {
-                // La transaccion se deshace sola al cerrar la conexion sin Commit.
                 return false;
             }
         }
 
-        // Historia clinica: todas las atenciones del paciente, de la mas reciente
-        // a la mas vieja, cada una con sus recetas.
         public List<BE_AtencionMedica> ObtenerAtencionesPaciente(int idPaciente)
         {
             List<BE_AtencionMedica> lista = new List<BE_AtencionMedica>();
@@ -155,8 +145,6 @@ namespace DAL
             return lista;
         }
 
-        // Recetas del paciente, de la mas reciente a la mas vieja, con el medico
-        // y la fecha de la atencion que las emitio.
         public List<BE_Receta> ObtenerRecetasPaciente(int idPaciente)
         {
             List<BE_Receta> lista = new List<BE_Receta>();
@@ -179,21 +167,22 @@ namespace DAL
 
                 cmd.Parameters.Add("@idPaciente", SqlDbType.Int).Value = idPaciente;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(new BE_Receta
+                    while (lector.Read())
                     {
-                        IdReceta = lector.GetInt32(0),
-                        IdAtencion = lector.GetInt32(1),
-                        Medicamento = lector.GetString(2),
-                        Observaciones = lector.IsDBNull(3) ? null : lector.GetString(3),
-                        DVH = lector.IsDBNull(4) ? null : lector.GetString(4),
-                        FechaEmision = lector.GetDateTime(5),
-                        NombreMedico = lector.GetString(6),
-                        Especialidades = lector.IsDBNull(7) ? null : lector.GetString(7)
-                    });
+                        lista.Add(new BE_Receta
+                        {
+                            IdReceta = lector.GetInt32(0),
+                            IdAtencion = lector.GetInt32(1),
+                            Medicamento = lector.GetString(2),
+                            Observaciones = lector.IsDBNull(3) ? null : lector.GetString(3),
+                            DVH = lector.IsDBNull(4) ? null : lector.GetString(4),
+                            FechaEmision = lector.GetDateTime(5),
+                            NombreMedico = lector.GetString(6),
+                            Especialidades = lector.IsDBNull(7) ? null : lector.GetString(7)
+                        });
+                    }
                 }
             }
 

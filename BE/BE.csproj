@@ -42,6 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccionBitacora.cs" />
+    <Compile Include="BE_AgendaDisponible.cs" />
+    <Compile Include="BE_PacienteResumen.cs" />
+    <Compile Include="RolesSistema.cs" />
     <Compile Include="BE_Bitacora.cs" />
     <Compile Include="BE_BitacoraImportada.cs" />
     <Compile Include="BE_Especialidad.cs" />
@@ -51,9 +54,7 @@
     <Compile Include="BE_Idioma.cs" />
     <Compile Include="BE_LoginResultado.cs" />
     <Compile Include="BE_Permiso.cs" />
-    <Compile Include="BE_RegistrosCorruptos.cs" />
     <Compile Include="BE_Rol.cs" />
-    <Compile Include="BE_ResultadoImportacion.cs" />
     <Compile Include="BE_Traduccion.cs" />
     <Compile Include="TextoLocalizado.cs" />
     <Compile Include="BE_Usuario.cs" />

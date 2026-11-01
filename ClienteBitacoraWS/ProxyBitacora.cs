@@ -6,8 +6,6 @@ using System.Xml.Serialization;
 
 namespace ClienteBitacoraWS
 {
-    // Proxy SOAP de WSBitacora.asmx. No referencia ningun proyecto de la solucion:
-    // lo unico que comparte con el servicio es el contrato publicado en el WSDL.
     [WebServiceBinding(Name = "WSBitacoraSoap", Namespace = Espacio)]
     public class ProxyBitacora : SoapHttpClientProtocol
     {
@@ -17,8 +15,6 @@ namespace ClienteBitacoraWS
         {
             Url = url;
 
-            // El servicio guarda el usuario en la sesion: sin conservar la cookie,
-            // cada llamada seria un visitante nuevo.
             CookieContainer = new CookieContainer();
         }
 
@@ -47,7 +43,6 @@ namespace ClienteBitacoraWS
         }
     }
 
-    // Solo los campos que usa el cliente: los demas del WSDL se ignoran al deserializar.
     [XmlType("BE_Bitacora", Namespace = ProxyBitacora.Espacio)]
     public class EventoBitacora
     {

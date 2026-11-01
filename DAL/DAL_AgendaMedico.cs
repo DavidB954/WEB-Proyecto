@@ -10,8 +10,6 @@ namespace DAL
     {
         DAL_Conexion conex = new DAL_Conexion();
 
-        // ---- MedicoHorario: franjas semanales ----
-
         public List<BE_MedicoHorario> ObtenerHorarios(int idMedico)
         {
             List<BE_MedicoHorario> lista = new List<BE_MedicoHorario>();
@@ -27,21 +25,22 @@ namespace DAL
 
                 cmd.Parameters.Add("@idMedico", SqlDbType.Int).Value = idMedico;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(new BE_MedicoHorario
+                    while (lector.Read())
                     {
-                        IdHorario = lector.GetInt32(0),
-                        IdMedico = lector.GetInt32(1),
-                        DiaSemana = lector.GetByte(2),
-                        HoraDesde = lector.GetTimeSpan(3),
-                        HoraHasta = lector.GetTimeSpan(4),
-                        DuracionTurno = lector.GetInt32(5),
-                        Activo = lector.GetBoolean(6),
-                        DVH = lector.IsDBNull(7) ? null : lector.GetString(7)
-                    });
+                        lista.Add(new BE_MedicoHorario
+                        {
+                            IdHorario = lector.GetInt32(0),
+                            IdMedico = lector.GetInt32(1),
+                            DiaSemana = lector.GetByte(2),
+                            HoraDesde = lector.GetTimeSpan(3),
+                            HoraHasta = lector.GetTimeSpan(4),
+                            DuracionTurno = lector.GetInt32(5),
+                            Activo = lector.GetBoolean(6),
+                            DVH = lector.IsDBNull(7) ? null : lector.GetString(7)
+                        });
+                    }
                 }
             }
 
@@ -113,8 +112,6 @@ namespace DAL
             }
         }
 
-        // ---- MedicoBloqueo: dias u horas puntuales sin atencion ----
-
         public List<BE_MedicoBloqueo> ObtenerBloqueos(int idMedico, DateTime desdeFecha)
         {
             List<BE_MedicoBloqueo> lista = new List<BE_MedicoBloqueo>();
@@ -131,20 +128,21 @@ namespace DAL
                 cmd.Parameters.Add("@idMedico", SqlDbType.Int).Value = idMedico;
                 cmd.Parameters.Add("@desde", SqlDbType.Date).Value = desdeFecha.Date;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(new BE_MedicoBloqueo
+                    while (lector.Read())
                     {
-                        IdBloqueo = lector.GetInt32(0),
-                        IdMedico = lector.GetInt32(1),
-                        Fecha = lector.GetDateTime(2),
-                        HoraDesde = lector.IsDBNull(3) ? (TimeSpan?)null : lector.GetTimeSpan(3),
-                        HoraHasta = lector.IsDBNull(4) ? (TimeSpan?)null : lector.GetTimeSpan(4),
-                        Motivo = lector.IsDBNull(5) ? null : lector.GetString(5),
-                        DVH = lector.IsDBNull(6) ? null : lector.GetString(6)
-                    });
+                        lista.Add(new BE_MedicoBloqueo
+                        {
+                            IdBloqueo = lector.GetInt32(0),
+                            IdMedico = lector.GetInt32(1),
+                            Fecha = lector.GetDateTime(2),
+                            HoraDesde = lector.IsDBNull(3) ? (TimeSpan?)null : lector.GetTimeSpan(3),
+                            HoraHasta = lector.IsDBNull(4) ? (TimeSpan?)null : lector.GetTimeSpan(4),
+                            Motivo = lector.IsDBNull(5) ? null : lector.GetString(5),
+                            DVH = lector.IsDBNull(6) ? null : lector.GetString(6)
+                        });
+                    }
                 }
             }
 

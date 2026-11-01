@@ -23,7 +23,6 @@ namespace BLL
             }
         }
 
-        // null si todavia no completo sus datos.
         public BE_Paciente ObtenerPaciente(int idUsuario)
         {
             try
@@ -36,8 +35,6 @@ namespace BLL
             }
         }
 
-        // El propio paciente carga o corrige su fecha de nacimiento y telefono.
-        // La historia clinica se asigna sola la primera vez y no cambia.
         public void GuardarDatos(BE_Usuario usuarioLogueado, DateTime fechaNacimiento, string telefono)
         {
             try
@@ -61,7 +58,6 @@ namespace BLL
 
                 telefono = string.IsNullOrWhiteSpace(telefono) ? null : telefono.Trim();
 
-                // Paciente.Telefono es VARCHAR(20).
                 if (telefono != null && (telefono.Length > 20 || !telefono.All(c => char.IsDigit(c) || " +-()".IndexOf(c) >= 0)))
                 {
                     throw new InvalidOperationException(TextoLocalizado.T("El telefono solo puede tener numeros, espacios, +, - y parentesis (hasta 20 caracteres)."));

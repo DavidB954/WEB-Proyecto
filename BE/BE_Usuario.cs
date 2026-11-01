@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BE
+﻿namespace BE
 {
     public class BE_Usuario
     {
@@ -33,10 +27,23 @@ namespace BE
 
         public string DVH { get; set; }
 
-        public int IdRol { get; set; }
-
         public string NombreRol { get; set; }
 
         public int? IdIdiomaPreferido { get; set; }
+
+        public bool EsEmergencia { get; private set; }
+
+        public static BE_Usuario CrearEmergencia(string nombre, string email, string nombreRol)
+        {
+            return new BE_Usuario
+            {
+                Nombre = nombre,
+                Apellido = "de Emergencia",
+                Email = email,
+                NombreRol = nombreRol,
+                Activo = true,
+                EsEmergencia = true
+            };
+        }
     }
 }

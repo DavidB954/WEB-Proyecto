@@ -5,8 +5,6 @@ using SERVICIOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BLL
 {
@@ -17,6 +15,11 @@ namespace BLL
         DAL_DVV dal_dvv = new DAL_DVV();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
+        private static readonly HashSet<string> RolesDelSistema = new HashSet<string>(
+            new[] { RolesSistema.Medico, RolesSistema.Paciente, RolesSistema.Webmaster, RolesSistema.Administrador }, StringComparer.OrdinalIgnoreCase);
+
+        private const int NombresEnMensaje = 5;
+
         public List<BE_Rol> ObtenerRoles()
         {
             try
@@ -26,18 +29,6 @@ namespace BLL
             catch (Exception ex)
             {
                 throw new Exception($"Error al obtener roles: {ex.Message}", ex);
-            }
-        }
-
-        public List<BE_Rol> ObtenerRolesDeUsuario(int idUsuario)
-        {
-            try
-            {
-                return dal_rol.ObtenerRolesDeUsuario(idUsuario);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error al obtener los roles del usuario: {ex.Message}", ex);
             }
         }
 
@@ -54,7 +45,7 @@ namespace BLL
 
                 dal_rol.AgregarRol(rol);
 
-                rol.DVH = HashHelper.GenerarHash(CadenaRol(rol));
+                rol.DVH = HashHelper.GenerarHash(CadenasIntegridad.CadenaRol(rol));
                 dal_rol.ActualizarDVH(rol.IdRol, rol.DVH);
 
                 RefrescarDVVRol();
@@ -82,7 +73,7 @@ namespace BLL
                     throw new InvalidOperationException(TextoLocalizado.T("Ya existe un rol llamado '{0}'.", rol.Nombre));
                 }
 
-                rol.DVH = HashHelper.GenerarHash(CadenaRol(rol));
+                rol.DVH = HashHelper.GenerarHash(CadenasIntegridad.CadenaRol(rol));
                 dal_rol.ModificarRol(rol);
 
                 RefrescarDVVRol();
@@ -105,11 +96,17 @@ namespace BLL
             {
                 BE_Rol rol = dal_rol.ObtenerRoles().FirstOrDefault(r => r.IdRol == idRol);
 
+                ValidarSePuedeEliminar(rol, idRol);
+
                 dal_rol.EliminarRolPorId(idRol);
 
                 RefrescarDVVRol();
 
-                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.ROL_BAJA, "ROL", $"Se elimina el rol '{rol?.Nombre}' (ID {idRol}). Eliminado por {usuarioLogueado.NombreApellido}.");
+                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.ROL_BAJA, "ROL", $"Se elimina el rol '{rol.Nombre}' (ID {idRol}). Eliminado por {usuarioLogueado.NombreApellido}.");
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -117,28 +114,52 @@ namespace BLL
             }
         }
 
-        private string CadenaRol(BE_Rol rol) => $"{rol.IdRol}|{rol.Nombre}";
+        private void ValidarSePuedeEliminar(BE_Rol rol, int idRol)
+        {
+            if (rol == null)
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("El rol seleccionado ya no existe."));
+            }
 
-        // Sin esto, cualquier alta, cambio o baja de un rol hecha desde el sistema
-        // dejaba el DVV desactualizado y el proximo login lo tomaba como una
-        // alteracion de la base. Mismo calculo que BLL_DVV.CalcularDVV("Rol").
+            if (RolesDelSistema.Contains(rol.Nombre))
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("El rol '{0}' es un rol del sistema y no se puede eliminar.", rol.Nombre));
+            }
+
+            List<string> usuarios = dal_rol.ObtenerNombresUsuariosConRol(idRol);
+
+            if (usuarios.Count > 0)
+            {
+                throw new InvalidOperationException(TextoLocalizado.T(
+                    "No se puede eliminar el rol '{0}': lo tienen asignado {1} usuario(s) ({2}). Primero quitaselo o cambialo por otro desde Asignacion de Seguridad.",
+                    rol.Nombre, usuarios.Count, ResumirNombres(usuarios)));
+            }
+
+            List<string> rolesPadre = dal_rol.ObtenerNombresRolesPadre(idRol);
+
+            if (rolesPadre.Count > 0)
+            {
+                throw new InvalidOperationException(TextoLocalizado.T(
+                    "No se puede eliminar el rol '{0}': es sub-rol de {1}. Primero quitalo de la composicion de esos roles.",
+                    rol.Nombre, ResumirNombres(rolesPadre)));
+            }
+        }
+
+        private string ResumirNombres(List<string> nombres)
+        {
+            string resumen = string.Join(", ", nombres.Take(NombresEnMensaje));
+
+            return nombres.Count > NombresEnMensaje ? resumen + ", ..." : resumen;
+        }
+
         private void RefrescarDVVRol()
         {
             List<BE_Rol> roles = dal_rol.ObtenerRoles();
 
-            StringBuilder concatenacion = new StringBuilder();
-            foreach (var rol in roles)
-            {
-                concatenacion.Append(HashHelper.GenerarHash(CadenaRol(rol)));
-            }
-
-            dal_dvv.ActualizarDVV(HashHelper.GenerarHash(concatenacion.ToString()), "Rol");
+            dal_dvv.ActualizarDVV(CadenasIntegridad.CalcularDVV(roles.Select(r => HashHelper.GenerarHash(CadenasIntegridad.CadenaRol(r)))), "Rol");
             dal_dvv.ActualizarIdsVigentes("Rol", string.Join(",", roles.Select(r => r.IdRol)));
         }
 
-        // La columna Rol.Nombre es VARCHAR(30): sin este chequeo, un nombre mas
-        // largo se trunca en silencio del lado del cliente SQL (sin excepcion),
-        // lo que podria hacer que dos roles con nombres distintos colisionen.
         private void ValidarNombre(string nombre)
         {
             if (!string.IsNullOrEmpty(nombre) && nombre.Length > 30)
@@ -146,8 +167,6 @@ namespace BLL
                 throw new InvalidOperationException(TextoLocalizado.T("El nombre del rol no puede superar los 30 caracteres (tiene {0}).", nombre.Length));
             }
         }
-
-        // ---- Composicion del arbol Composite de un Rol (sub-roles + permisos) ----
 
         public RolComponente ConstruirArbolRol(int idRol)
         {
@@ -170,10 +189,6 @@ namespace BLL
 
             if (!enConstruccion.Add(idRol))
             {
-                // Este rol ya se esta construyendo mas arriba en la misma cadena:
-                // hay un ciclo cargado en la base. No deberia pasar si todo se creo
-                // a traves de AgregarSubRol, pero se corta aca para no recursionar
-                // infinito en vez de tirar un StackOverflow.
                 return componente;
             }
 
@@ -215,8 +230,6 @@ namespace BLL
 
                 RolComponente arbolHijo = ConstruirArbolRol(idRolHijo);
 
-                // AgregarHijo valida que esto no cierre un ciclo (idRolPadre no
-                // puede aparecer ya dentro del arbol de idRolHijo).
                 arbolPadre.AgregarHijo(arbolHijo);
 
                 dal_rol.AgregarSubRol(idRolPadre, idRolHijo);
@@ -267,7 +280,6 @@ namespace BLL
                     throw new InvalidOperationException(TextoLocalizado.T("El rol '{0}' ya tiene el permiso '{1}' (directo o a traves de un sub-rol).", arbolRol.Codigo, permiso.Nombre));
                 }
 
-                // Una ACCION es redundante si el rol ya tiene la PAGINA completa.
                 PermisoDefinicion definicion = CatalogoPermisos.Buscar(permiso.Nombre);
 
                 if (definicion != null && definicion.Tipo == CatalogoPermisos.TipoAccion)

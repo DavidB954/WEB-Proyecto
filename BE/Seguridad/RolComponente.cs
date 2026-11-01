@@ -4,8 +4,6 @@ using System.Linq;
 
 namespace BE.Seguridad
 {
-    // Composite del Composite: un rol agrupa Permisos (leaf) y/o
-    // otros Roles (composite), formando un arbol.
     public class RolComponente : IComponentePermiso
     {
         private readonly BE_Rol rol;
@@ -26,9 +24,6 @@ namespace BE.Seguridad
 
         public IEnumerable<PermisoComponente> PermisosDirectos => hijos.OfType<PermisoComponente>();
 
-        // Unico punto de entrada para armar el arbol: si agregar "hijo" cierra
-        // un ciclo (hijo ya contiene a este rol en su propia descendencia),
-        // se rechaza en vez de guardar una referencia circular.
         public void AgregarHijo(IComponentePermiso hijo)
         {
             if (hijo == null)
@@ -44,15 +39,11 @@ namespace BE.Seguridad
             hijos.Add(hijo);
         }
 
-        // Usado solo para reconstruir el arbol desde la base (los datos ya
-        // pasaron la validacion de AgregarHijo cuando se guardaron): evita
-        // relanzar la comprobacion de ciclos al simplemente leer.
         public void CargarHijo(IComponentePermiso hijo)
         {
             hijos.Add(hijo ?? throw new ArgumentNullException(nameof(hijo)));
         }
 
-        // true si idRol es este rol o aparece en algun sub-rol descendiente.
         public bool ContieneRol(int idRol)
         {
             if (rol.IdRol == idRol)

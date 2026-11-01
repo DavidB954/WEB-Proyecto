@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Presentacion
@@ -17,7 +16,6 @@ namespace Presentacion
 
         private const string FormatoHora = @"hh\:mm";
 
-        // Los combos de hora ofrecen intervalos de 15 minutos.
         private const int PasoMinutos = 15;
 
         private int? IdMedicoSeleccionado
@@ -28,8 +26,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
-
             if (!IsPostBack)
             {
                 try
@@ -45,8 +41,6 @@ namespace Presentacion
                 }
             }
         }
-
-        // ---- Carga de datos ----
 
         private void CargarCombosHorario()
         {
@@ -112,8 +106,6 @@ namespace Presentacion
             gvMedicos.DataSource = bll_medico.BuscarMedicos(txtBuscarNombre.Text, idEspecialidad);
             gvMedicos.DataBind();
 
-            // Despues de rebindear, se vuelve a marcar la fila del medico que se
-            // esta editando (si sigue apareciendo con el filtro actual).
             gvMedicos.SelectedIndex = -1;
             for (int i = 0; i < gvMedicos.DataKeys.Count; i++)
             {
@@ -169,8 +161,6 @@ namespace Presentacion
             gvBloqueos.DataBind();
         }
 
-        // ---- Buscador ----
-
         protected void btnBuscar_Click(object sender, EventArgs e)
         {
             try
@@ -205,6 +195,11 @@ namespace Presentacion
             {
                 int idMedico = (int)gvMedicos.SelectedDataKey.Value;
                 MostrarMedico(idMedico);
+
+                if (pnlMedico.Visible)
+                {
+                    DesplazarHacia(pnlMedico);
+                }
             }
             catch (Exception ex)
             {
@@ -212,8 +207,6 @@ namespace Presentacion
                 MostrarMensaje(lblMensajeEspecialidad, T("No se pudo cargar el medico seleccionado."), false);
             }
         }
-
-        // ---- Matricula y especialidades ----
 
         protected void btnGuardarDatos_Click(object sender, EventArgs e)
         {
@@ -257,8 +250,6 @@ namespace Presentacion
                 MostrarMensaje(lblMensaje, T("No se pudieron guardar los datos del medico. Intenta nuevamente mas tarde."), false);
             }
         }
-
-        // ---- Franjas semanales ----
 
         protected void btnAgregarHorario_Click(object sender, EventArgs e)
         {
@@ -358,8 +349,6 @@ namespace Presentacion
             return cancelados == 0 ? "" : " " + T("Se cancelaron {0} turno(s) reservado(s).", cancelados);
         }
 
-        // ---- Bloqueos puntuales ----
-
         protected void chkDiaCompleto_CheckedChanged(object sender, EventArgs e)
         {
             HabilitarHorasBloqueo();
@@ -455,8 +444,6 @@ namespace Presentacion
             }
         }
 
-        // ---- Catalogo de especialidades ----
-
         protected void btnAgregarEspecialidad_Click(object sender, EventArgs e)
         {
             if (!ExigirPermiso("ESPECIALIDAD_ABM"))
@@ -513,8 +500,6 @@ namespace Presentacion
             }
         }
 
-        // El combo de filtro y los checks del medico dependen del catalogo: se
-        // recargan y se vuelven a marcar las especialidades del medico abierto.
         private void RecargarTrasCambioDeEspecialidades()
         {
             CargarEspecialidades();
@@ -526,46 +511,9 @@ namespace Presentacion
             }
         }
 
-        // ---- Utilidades ----
-
         private static TimeSpan LeerHora(DropDownList ddl)
         {
             return TimeSpan.ParseExact(ddl.SelectedValue, FormatoHora, CultureInfo.InvariantCulture);
-        }
-
-        private void MostrarMensaje(Label label, string texto, bool exito)
-        {
-            label.Text = texto;
-            label.CssClass = exito ? "msg-form msg-exito" : "msg-form msg-error";
-        }
-
-        private void MostrarToast(string mensaje, bool exito)
-        {
-            string clase = exito ? "toast-exito" : "toast-error";
-            string texto = System.Web.HttpUtility.JavaScriptStringEncode(mensaje, true);
-
-            string script =
-                "(function(){var t=document.createElement('div');t.className='toast " + clase + "';" +
-                "t.textContent=" + texto + ";document.body.appendChild(t);" +
-                "setTimeout(function(){t.className+=' toast-hide';},3000);" +
-                "setTimeout(function(){if(t.parentNode){t.parentNode.removeChild(t);}},3600);})();";
-
-            ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
-            }
         }
     }
 }

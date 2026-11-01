@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BLL
 {
@@ -16,119 +14,108 @@ namespace BLL
         DAL_Rol dal_rol = new DAL_Rol();
         DAL_DVV dal_dvv = new DAL_DVV();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
+        BLL_Permiso bll_permiso = new BLL_Permiso();
 
-
-        public BE_LoginResultado ObtenerUsuarioPorEmail(string Email, string Password)
+        public BE_LoginResultado IniciarSesion(string email, string password)
         {
             try
             {
-
-                if (string.IsNullOrEmpty(Password))
+                if (string.IsNullOrEmpty(password))
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Debe ingresar contraseña") };
+                    return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Debe ingresar contraseña") };
                 }
 
-                Password = HashHelper.GenerarHash(Password);
+                password = HashHelper.GenerarHash(password);
 
-                BE_Usuario Usuario = dal_usuario.ObtenerUsuarioPorEmail(Email);
+                BE_Usuario usuario = dal_usuario.ObtenerUsuarioPorEmail(email);
 
-                if (Usuario == null)
+                if (usuario == null)
                 {
-                    bll_bitacora.RegistrarEvento(null, AccionBitacora.LOGIN_INTENTO, "LOGIN", $"Intento de Login usando el email: {Email}");
+                    bll_bitacora.RegistrarEvento(null, AccionBitacora.LOGIN_INTENTO, "LOGIN", $"Intento de Login usando el email: {email}");
 
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
+                    return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
                 }
 
-                if (!Usuario.Activo)
+                if (!usuario.Activo)
                 {
-                    bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_INTENTO, "LOGIN", $"Intento de sesion del usuario bloqueado: {Usuario.NombreApellido}, con IdUsuario = {Usuario.IdUsuario}");
+                    bll_bitacora.RegistrarEvento(usuario.IdUsuario, AccionBitacora.LOGIN_INTENTO, "LOGIN", $"Intento de sesion del usuario bloqueado: {usuario.NombreApellido}, con IdUsuario = {usuario.IdUsuario}");
 
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario bloqueado. Contactese con el Administrador") };
+                    return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario bloqueado. Contactese con el Administrador") };
                 }
 
-                if (Usuario.HashPassword != Password)
+                if (usuario.HashPassword != password)
                 {
-                    Usuario.IntentosFallidos++;
+                    usuario.IntentosFallidos++;
 
-                    if (Usuario.IntentosFallidos > 3)
+                    if (usuario.IntentosFallidos > 3)
                     {
-                        Usuario.Activo = false;
+                        usuario.Activo = false;
 
-                        dal_usuario.ActualizarIntentosFallidos(Usuario.IntentosFallidos, Usuario.IdUsuario);
-                        dal_usuario.BloquearUsuario(Usuario.IdUsuario);
-                        RefrescarDVH(Usuario);
+                        dal_usuario.ActualizarIntentosFallidos(usuario.IntentosFallidos, usuario.IdUsuario);
+                        dal_usuario.BloquearUsuario(usuario.IdUsuario);
+                        RefrescarDVH(usuario);
 
+                        bll_bitacora.RegistrarEvento(usuario.IdUsuario, AccionBitacora.LOGIN_BLOQUEADO, "LOGIN", $"Se bloquea al usuario: {usuario.NombreApellido}, ID: {usuario.IdUsuario}, por superar la cantidad de intentos permitidos");
 
-                        bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_BLOQUEADO, "LOGIN", $"Se bloquea al usuario: {Usuario.NombreApellido}, ID: {Usuario.IdUsuario}, por superar la cantidad de intentos permitidos");
-
-                        return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario Bloqueado. Contacte Administrador") };
+                        return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario Bloqueado. Contacte Administrador") };
                     }
                     else
                     {
+                        bll_bitacora.RegistrarEvento(usuario.IdUsuario, AccionBitacora.LOGIN_INCORRECTO, "LOGIN", $"Intento de inicio de sesion con el usuario: {usuario.NombreApellido}, ID: {usuario.IdUsuario} con contraseña incorrecta");
 
-                        bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_INCORRECTO, "LOGIN", $"Intento de inicio de sesion con el usuario: {Usuario.NombreApellido}, ID: {Usuario.IdUsuario} con contraseña incorrecta");
+                        dal_usuario.ActualizarIntentosFallidos(usuario.IntentosFallidos, usuario.IdUsuario);
+                        RefrescarDVH(usuario);
 
-                        dal_usuario.ActualizarIntentosFallidos(Usuario.IntentosFallidos, Usuario.IdUsuario);
-                        RefrescarDVH(Usuario);
-
-                        return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Contraseña Incorrecta. Intentos fallidos: {0}", Usuario.IntentosFallidos) };
+                        return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Contraseña Incorrecta. Intentos fallidos: {0}", usuario.IntentosFallidos) };
                     }
-
                 }
                 else
                 {
-                    Usuario.IntentosFallidos = 0;
-                    dal_usuario.ActualizarIntentosFallidos(0, Usuario.IdUsuario);
-                    RefrescarDVH(Usuario);
+                    usuario.IntentosFallidos = 0;
+                    dal_usuario.ActualizarIntentosFallidos(0, usuario.IdUsuario);
+                    RefrescarDVH(usuario);
 
+                    bll_bitacora.RegistrarEvento(usuario.IdUsuario, AccionBitacora.LOGIN_OK, "LOGIN", $"Login correcto del usuario: {usuario.NombreApellido}, ID: {usuario.IdUsuario}");
 
-                    bll_bitacora.RegistrarEvento(Usuario.IdUsuario, AccionBitacora.LOGIN_OK, "LOGIN", $"Login correcto del usuario: {Usuario.NombreApellido}, ID: {Usuario.IdUsuario}");
-
-                    return new BE_LoginResultado { ExitoLogin = true, Usuario = Usuario, Mensaje = TextoLocalizado.T("Login exitoso") };
+                    return new BE_LoginResultado { Usuario = usuario, Mensaje = TextoLocalizado.T("Login exitoso") };
                 }
             }
             catch (Exception ex)
             {
-
                 throw new Exception($"Error al obtener usuario: {ex.Message}", ex);
             }
-
         }
 
-        public BE_LoginResultado ValidarWebmaster(string Email, string Password)
+        public BE_LoginResultado ValidarWebmaster(string email, string password)
         {
             try
             {
-                if (string.IsNullOrEmpty(Password))
+                if (string.IsNullOrEmpty(password))
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Debe ingresar contraseña") };
+                    return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Debe ingresar contraseña") };
                 }
 
-                BE_Usuario usuario = dal_usuario.ObtenerUsuarioPorEmail(Email);
+                BE_Usuario usuario = dal_usuario.ObtenerUsuarioPorEmail(email);
 
                 if (usuario == null)
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
+                    return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
                 }
 
-                // No alcanza con usuario.NombreRol: ese campo trae "un" rol del
-                // usuario (el primero que devuelva el join, sin orden definido),
-                // y un usuario puede tener varios. Hay que preguntar si WEBMASTER
-                // esta entre TODOS sus roles, no solo en el primero que aparezca.
                 bool esWebmaster = dal_rol.ObtenerRolesDeUsuario(usuario.IdUsuario)
-                    .Any(r => string.Equals(r.Nombre, "WEBMASTER", StringComparison.OrdinalIgnoreCase));
+                    .Any(r => string.Equals(r.Nombre, RolesSistema.Webmaster, StringComparison.OrdinalIgnoreCase));
 
                 if (!esWebmaster)
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Solo el Webmaster puede ingresar en este momento.") };
+                    return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Solo el Webmaster puede ingresar en este momento.") };
                 }
 
-                if (usuario.HashPassword != HashHelper.GenerarHash(Password))
+                if (usuario.HashPassword != HashHelper.GenerarHash(password))
                 {
-                    return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
+                    return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
                 }
 
-                return new BE_LoginResultado { ExitoLogin = true, Usuario = usuario, Mensaje = TextoLocalizado.T("Login de Webmaster correcto") };
+                return new BE_LoginResultado { Usuario = usuario, Mensaje = TextoLocalizado.T("Login de Webmaster correcto") };
             }
             catch (Exception ex)
             {
@@ -136,46 +123,37 @@ namespace BLL
             }
         }
 
-
         private const string EMAIL_EMERGENCIA_WEBMASTER = "REMOVIDO";
         private const string EMAIL_EMERGENCIA_ADMIN = "REMOVIDO";
         private const string HASH_PASSWORD_EMERGENCIA = "";
 
-        public BE_LoginResultado LoginEmergencia(string Email, string Password)
+        public BE_LoginResultado LoginEmergencia(string email, string password)
         {
             string rol;
 
-            if (Email == EMAIL_EMERGENCIA_WEBMASTER)
+            if (email == EMAIL_EMERGENCIA_WEBMASTER)
             {
-                rol = "WEBMASTER";
+                rol = RolesSistema.Webmaster;
             }
-            else if (Email == EMAIL_EMERGENCIA_ADMIN)
+            else if (email == EMAIL_EMERGENCIA_ADMIN)
             {
-                rol = "ADMINISTRADOR";
+                rol = RolesSistema.Administrador;
             }
             else
             {
-                return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
+                return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
             }
 
-            if (string.IsNullOrEmpty(Password) || HashHelper.GenerarHash(Password) != HASH_PASSWORD_EMERGENCIA)
+            if (string.IsNullOrEmpty(password) || HashHelper.GenerarHash(password) != HASH_PASSWORD_EMERGENCIA)
             {
-                return new BE_LoginResultado { ExitoLogin = false, Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
+                return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
             }
 
-            BE_Usuario usuarioEmergencia = new BE_Usuario
-            {
-                IdUsuario = 0,
-                Nombre = rol == "WEBMASTER" ? "Webmaster" : "Administrador",
-                Apellido = "de Emergencia",
-                Email = Email,
-                NombreRol = rol,
-                Activo = true
-            };
+            BE_Usuario usuarioEmergencia = BE_Usuario.CrearEmergencia(rol == RolesSistema.Webmaster ? "Webmaster" : "Administrador", email, rol);
 
-            bll_bitacora.RegistrarEvento(null, AccionBitacora.LOGIN_OK, "LOGIN", $"Login de EMERGENCIA con rol {rol} usando el email: {Email}");
+            bll_bitacora.RegistrarEvento(null, AccionBitacora.LOGIN_OK, "LOGIN", $"Login de EMERGENCIA con rol {rol} usando el email: {email}");
 
-            return new BE_LoginResultado { ExitoLogin = true, Usuario = usuarioEmergencia, Mensaje = TextoLocalizado.T("Login de emergencia exitoso") };
+            return new BE_LoginResultado { Usuario = usuarioEmergencia, Mensaje = TextoLocalizado.T("Login de emergencia exitoso") };
         }
 
         public List<BE_Usuario> Usuarios()
@@ -190,11 +168,20 @@ namespace BLL
             }
         }
 
-        public List<BE_Usuario> UsuariosConRol()
+        public List<BE_Usuario> UsuariosConRol(BE_Usuario usuarioLogueado)
         {
             try
             {
-                return dal_usuario.UsuariosConRol();
+                List<BE_Usuario> usuarios = dal_usuario.UsuariosConRol();
+
+                if (bll_permiso.EsWebmaster(usuarioLogueado))
+                {
+                    return usuarios;
+                }
+
+                HashSet<int> idsWebmaster = bll_permiso.ObtenerIdsUsuariosWebmaster();
+
+                return usuarios.Where(u => !idsWebmaster.Contains(u.IdUsuario)).ToList();
             }
             catch (Exception ex)
             {
@@ -202,7 +189,7 @@ namespace BLL
             }
         }
 
-        public void AgregarUsuario(BE_Usuario UsuarioLogueado, BE_Usuario usuario)
+        public void AgregarUsuario(BE_Usuario usuarioLogueado, BE_Usuario usuario)
         {
             try
             {
@@ -210,20 +197,19 @@ namespace BLL
 
                 usuario.HashPassword = HashHelper.GenerarHash(usuario.HashPassword);
 
-                usuario.DVH = HashHelper.GenerarHash(CadenaUsuario(usuario));
+                usuario.DVH = HashHelper.GenerarHash(CadenasIntegridad.CadenaUsuario(usuario));
 
                 dal_usuario.AgregarUsuario(usuario);
 
                 RefrescarDVVUsuario();
 
-
-                bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_ALTA, "USUARIO", $"Se crea un nuevo usuario: {usuario.Nombre} {usuario.Apellido} (ID: {usuario.IdUsuario}), creado por {UsuarioLogueado.NombreApellido}");
+                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.USUARIO_ALTA, "USUARIO", $"Se crea un nuevo usuario: {usuario.Nombre} {usuario.Apellido} (ID: {usuario.IdUsuario}), creado por {usuarioLogueado.NombreApellido}");
             }
             catch (InvalidOperationException)
             {
                 throw;
             }
-            catch (SqlException ex) when (EsClaveDuplicada(ex))
+            catch (SqlException ex) when (ErroresSql.EsClaveDuplicada(ex))
             {
                 throw new InvalidOperationException(TextoLocalizado.T("Ya existe un usuario con ese DNI o email."), ex);
             }
@@ -231,12 +217,14 @@ namespace BLL
             {
                 throw new Exception("Error al agregar usuario: " + ex.Message, ex);
             }
-
         }
-        public void ModificarUsuario(BE_Usuario UsuarioLogueado, BE_Usuario usuario, bool actualizarPassword)
+
+        public void ModificarUsuario(BE_Usuario usuarioLogueado, BE_Usuario usuario, bool actualizarPassword)
         {
             try
             {
+                ValidarPuedeGestionarUsuario(usuarioLogueado, usuario.IdUsuario);
+
                 ValidarDniYEmailUnicos(usuario);
 
                 if (actualizarPassword)
@@ -249,20 +237,19 @@ namespace BLL
                     usuario.HashPassword = usuarioActual?.HashPassword;
                 }
 
-                usuario.DVH = HashHelper.GenerarHash(CadenaUsuario(usuario));
+                usuario.DVH = HashHelper.GenerarHash(CadenasIntegridad.CadenaUsuario(usuario));
 
                 dal_usuario.ModificarUsuario(usuario);
 
                 RefrescarDVVUsuario();
 
-
-                bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_MODIFICACION, "USUARIO", $"Se modifica al usuario: {usuario.Nombre}, ID: {usuario.IdUsuario}. Modificado por: {UsuarioLogueado.NombreApellido}");
+                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.USUARIO_MODIFICACION, "USUARIO", $"Se modifica al usuario: {usuario.Nombre}, ID: {usuario.IdUsuario}. Modificado por: {usuarioLogueado.NombreApellido}");
             }
             catch (InvalidOperationException)
             {
                 throw;
             }
-            catch (SqlException ex) when (EsClaveDuplicada(ex))
+            catch (SqlException ex) when (ErroresSql.EsClaveDuplicada(ex))
             {
                 throw new InvalidOperationException(TextoLocalizado.T("Ya existe un usuario con ese DNI o email."), ex);
             }
@@ -270,17 +257,18 @@ namespace BLL
             {
                 throw new Exception("Error al modificar usuario: " + ex.Message, ex);
             }
-
         }
 
-        public void EliminarUsuario(BE_Usuario UsuarioLogueado, int id)
+        public void EliminarUsuario(BE_Usuario usuarioLogueado, int id)
         {
             try
             {
-                if (UsuarioLogueado != null && UsuarioLogueado.IdUsuario == id)
+                if (usuarioLogueado != null && usuarioLogueado.IdUsuario == id)
                 {
                     throw new InvalidOperationException(TextoLocalizado.T("No podes eliminar tu propio usuario."));
                 }
+
+                ValidarPuedeGestionarUsuario(usuarioLogueado, id);
 
                 BE_Usuario eliminado = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == id);
 
@@ -289,8 +277,6 @@ namespace BLL
                     throw new InvalidOperationException(TextoLocalizado.T("El usuario seleccionado ya no existe."));
                 }
 
-                // Los turnos reservados del medico pasan a Cancelado: su DVH se arma
-                // aca porque la DAL no conoce el formato de la cadena.
                 if (!dal_usuario.EliminarUsuario(id, t => HashHelper.GenerarHash(BLL_Turno.CadenaTurno(t)),
                         out int turnosCancelados, out int turnosPacienteEliminados))
                 {
@@ -299,9 +285,7 @@ namespace BLL
 
                 RefrescarDVVUsuario();
 
-                // Las filas de bitacora del usuario se conservan con su IdUsuario: el
-                // evento de baja guarda nombre, DNI y email para poder identificarlo.
-                string detalle = $"El Usuario {UsuarioLogueado.NombreApellido}, da de baja al Usuario con ID: {id} ({eliminado.Apellido}, {eliminado.Nombre} - DNI {eliminado.DNI} - {eliminado.Email}).";
+                string detalle = $"El Usuario {usuarioLogueado.NombreApellido}, da de baja al Usuario con ID: {id} ({eliminado.Apellido}, {eliminado.Nombre} - DNI {eliminado.DNI} - {eliminado.Email}).";
 
                 if (turnosPacienteEliminados > 0)
                 {
@@ -313,7 +297,7 @@ namespace BLL
                     detalle += $" Se cancelaron {turnosCancelados} turno(s) reservado(s) con el medico.";
                 }
 
-                bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.USUARIO_BAJA, "USUARIO", detalle);
+                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.USUARIO_BAJA, "USUARIO", detalle);
             }
             catch (InvalidOperationException)
             {
@@ -322,27 +306,6 @@ namespace BLL
             catch (Exception ex)
             {
                 throw new Exception("Error al eliminar usuario: " + ex.Message, ex);
-            }
-        }
-
-        public void ResetearPassword(int id, string nuevoPass)
-        {
-            try
-            {
-                nuevoPass = HashHelper.GenerarHash(nuevoPass);
-
-                dal_usuario.ResetearContrasena(id, nuevoPass);
-
-                BE_Usuario usuario = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == id);
-                if (usuario != null)
-                {
-                    RefrescarDVH(usuario);
-                }
-
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error al resetear contraseña: {ex.Message}", ex);
             }
         }
 
@@ -358,9 +321,14 @@ namespace BLL
             }
         }
 
-        // DNI y Email tienen UNIQUE en la tabla Usuario: se valida antes de ir a la
-        // base para poder decirle al usuario cual de los dos esta repetido. Al
-        // modificar, se excluye al propio usuario (puede conservar sus datos).
+        private void ValidarPuedeGestionarUsuario(BE_Usuario usuarioLogueado, int idUsuarioDestino)
+        {
+            if (!bll_permiso.PuedeGestionarUsuario(usuarioLogueado, idUsuarioDestino))
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("No tiene permiso para realizar esta accion."));
+            }
+        }
+
         private void ValidarDniYEmailUnicos(BE_Usuario usuario)
         {
             usuario.DNI = usuario.DNI?.Trim();
@@ -379,37 +347,17 @@ namespace BLL
             }
         }
 
-        // Respaldo de la validacion de arriba: si otro usuario se carga con el mismo
-        // dato entre la validacion y el insert, la base lo rechaza (2627 = UNIQUE
-        // constraint, 2601 = indice unico).
-        private static bool EsClaveDuplicada(SqlException ex)
-        {
-            return ex.Number == 2627 || ex.Number == 2601;
-        }
-
         private void RefrescarDVH(BE_Usuario usuario)
         {
-            dal_usuario.ActualizarDVH(usuario.IdUsuario, HashHelper.GenerarHash(CadenaUsuario(usuario)));
+            dal_usuario.ActualizarDVH(usuario.IdUsuario, HashHelper.GenerarHash(CadenasIntegridad.CadenaUsuario(usuario)));
             RefrescarDVVUsuario();
         }
 
         private void RefrescarDVVUsuario()
         {
-            List<string> hashesFila = dal_usuario.Usuarios().Select(u => HashHelper.GenerarHash(CadenaUsuario(u))).ToList();
+            IEnumerable<string> firmas = dal_usuario.Usuarios().Select(u => HashHelper.GenerarHash(CadenasIntegridad.CadenaUsuario(u)));
 
-            StringBuilder concatenacion = new StringBuilder();
-            foreach (var hash in hashesFila)
-            {
-                concatenacion.Append(hash);
-            }
-
-            dal_dvv.ActualizarDVV(HashHelper.GenerarHash(concatenacion.ToString()), "Usuario");
-        }
-
-        private string CadenaUsuario(BE_Usuario usuario)
-        {
-            string activo = usuario.Activo ? "1" : "0";
-            return $"{usuario.Nombre}|{usuario.Apellido}|{usuario.Email}|{usuario.HashPassword}|{usuario.DNI}|{usuario.IntentosFallidos}|{activo}";
+            dal_dvv.ActualizarDVV(CadenasIntegridad.CalcularDVV(firmas), "Usuario");
         }
     }
 }

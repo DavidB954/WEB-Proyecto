@@ -8,15 +8,8 @@ namespace DAL
 {
     public class DAL_Turno
     {
-        // Errores de SQL Server por clave/indice unico duplicado.
-        private const int ErrorIndiceUnico = 2601;
-        private const int ErrorClaveUnica = 2627;
-
         DAL_Conexion conex = new DAL_Conexion();
 
-        // Misma consulta para las dos vistas: el paciente ve sus turnos y el
-        // medico los de su agenda; cambia solo el filtro. Left Join al medico:
-        // si se elimino su usuario, el turno sigue en el historial del paciente.
         private const string SelectTurnos = @"Select t.IdTurno, t.IdPaciente, t.IdMedico, t.FechaHora, t.IdEstadoTurno, t.DVH,
                                                    IsNull(um.Apellido + ', ' + um.Nombre, '(Medico eliminado)') As NombreMedico,
                                                    (Select STRING_AGG(e.NombreEspecialidad, ', ') WITHIN GROUP (ORDER BY e.NombreEspecialidad)
@@ -38,8 +31,6 @@ namespace DAL
             return LeerTurnos(cmd);
         }
 
-        // Turnos de un dia de la agenda del medico (incluye los cancelados, que
-        // la pantalla muestra igual para que el medico sepa que ese hueco se libero).
         public List<BE_Turno> ObtenerTurnosMedico(int idMedico, DateTime fecha)
         {
             SqlCommand cmd = new SqlCommand(SelectTurnos + @"Where t.IdMedico=@idMedico And t.FechaHora >= @desde And t.FechaHora < @hasta
@@ -51,8 +42,6 @@ namespace DAL
             return LeerTurnos(cmd);
         }
 
-        // Turnos reservados del medico posteriores a "desde": los que puede
-        // afectar un cambio de agenda (bloqueo o baja de franja).
         public List<BE_Turno> ObtenerTurnosReservadosMedico(int idMedico, DateTime desde)
         {
             SqlCommand cmd = new SqlCommand(SelectTurnos + @"Where t.IdMedico=@idMedico And t.IdEstadoTurno=@reservado And t.FechaHora > @desde
@@ -64,7 +53,6 @@ namespace DAL
             return LeerTurnos(cmd);
         }
 
-        // null si no existe.
         public BE_Turno ObtenerTurno(int idTurno)
         {
             SqlCommand cmd = new SqlCommand(SelectTurnos + "Where t.IdTurno=@idTurno");
@@ -83,31 +71,31 @@ namespace DAL
                 cn.Open();
                 cmd.Connection = cn;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(new BE_Turno
+                    while (lector.Read())
                     {
-                        IdTurno = lector.GetInt32(0),
-                        IdPaciente = lector.GetInt32(1),
-                        IdMedico = lector.GetInt32(2),
-                        FechaHora = lector.GetDateTime(3),
-                        Estado = (EstadoTurno)lector.GetInt32(4),
-                        DVH = lector.IsDBNull(5) ? null : lector.GetString(5),
-                        NombreMedico = lector.GetString(6),
-                        Especialidades = lector.IsDBNull(7) ? null : lector.GetString(7),
-                        NombrePaciente = lector.GetString(8),
-                        HistoriaClinica = lector.GetString(9),
-                        FechaNacimientoPaciente = lector.GetDateTime(10)
-                    });
+                        lista.Add(new BE_Turno
+                        {
+                            IdTurno = lector.GetInt32(0),
+                            IdPaciente = lector.GetInt32(1),
+                            IdMedico = lector.GetInt32(2),
+                            FechaHora = lector.GetDateTime(3),
+                            Estado = (EstadoTurno)lector.GetInt32(4),
+                            DVH = lector.IsDBNull(5) ? null : lector.GetString(5),
+                            NombreMedico = lector.GetString(6),
+                            Especialidades = lector.IsDBNull(7) ? null : lector.GetString(7),
+                            NombrePaciente = lector.GetString(8),
+                            HistoriaClinica = lector.GetString(9),
+                            FechaNacimientoPaciente = lector.GetDateTime(10)
+                        });
+                    }
                 }
             }
 
             return lista;
         }
 
-        // Horarios del medico ya tomados (no cancelados) entre dos fechas.
         public HashSet<DateTime> ObtenerHorariosOcupadosMedico(int idMedico, DateTime desde, DateTime hasta)
         {
             HashSet<DateTime> ocupados = new HashSet<DateTime>();
@@ -125,19 +113,18 @@ namespace DAL
                 cmd.Parameters.Add("@desde", SqlDbType.DateTime).Value = desde;
                 cmd.Parameters.Add("@hasta", SqlDbType.DateTime).Value = hasta;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    ocupados.Add(lector.GetDateTime(0));
+                    while (lector.Read())
+                    {
+                        ocupados.Add(lector.GetDateTime(0));
+                    }
                 }
             }
 
             return ocupados;
         }
 
-        // Devuelve false si el horario lo tomo otro paciente entre que se mostro
-        // y se confirmo (lo frenan los indices unicos filtrados de Turno).
         public bool AgregarTurno(BE_Turno turno)
         {
             try
@@ -159,7 +146,7 @@ namespace DAL
                     return true;
                 }
             }
-            catch (SqlException ex) when (ex.Number == ErrorIndiceUnico || ex.Number == ErrorClaveUnica)
+            catch (SqlException ex) when (ErroresSql.EsClaveDuplicada(ex))
             {
                 return false;
             }
@@ -180,8 +167,6 @@ namespace DAL
             }
         }
 
-        // Solo cambia el estado si sigue en el esperado: si dos postbacks cancelan
-        // el mismo turno a la vez, el segundo no pisa nada y devuelve false.
         public bool CambiarEstado(int idTurno, EstadoTurno estadoEsperado, EstadoTurno estadoNuevo, string dvh)
         {
             using (SqlConnection cn = conex.ObtenerConexion())

@@ -2,12 +2,7 @@ using BE;
 using DAL;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace BLL
 {
@@ -16,9 +11,6 @@ namespace BLL
         DAL_Idioma dal_idioma = new DAL_Idioma();
         DAL_Traduccion dal_traduccion = new DAL_Traduccion();
 
-        private const string ElementoRaizXml = "Traducciones";
-        private const string ElementoTraduccionXml = "Traduccion";
-        private const int LargoMaximoTraduccion = 300; // Traduccion.Texto es NVARCHAR(300).
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
         public List<BE_Idioma> ObtenerIdiomas()
@@ -63,12 +55,12 @@ namespace BLL
             {
                 if (string.IsNullOrWhiteSpace(idioma.Codigo) || string.IsNullOrWhiteSpace(idioma.Nombre))
                 {
-                    throw new Exception("Debe indicar codigo y nombre del idioma.");
+                    throw new InvalidOperationException(TextoLocalizado.T("Debe indicar codigo y nombre del idioma."));
                 }
 
                 if (dal_idioma.ExisteCodigo(idioma.Codigo))
                 {
-                    throw new Exception($"Ya existe un idioma con el codigo '{idioma.Codigo}'.");
+                    throw new InvalidOperationException(TextoLocalizado.T("Ya existe un idioma con el codigo '{0}'.", idioma.Codigo));
                 }
 
                 idioma.Activo = true;
@@ -77,9 +69,43 @@ namespace BLL
 
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.IDIOMA_ALTA, "IDIOMA", $"Se agrego el idioma {idioma.Nombre} ({idioma.Codigo})");
             }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 throw new Exception($"Error al agregar idioma: {ex.Message}", ex);
+            }
+        }
+
+        public void ModificarIdioma(BE_Usuario usuarioLogueado, BE_Idioma idioma)
+        {
+            try
+            {
+                List<BE_Idioma> idiomas = dal_idioma.ObtenerIdiomas();
+
+                if (!idiomas.Any(i => i.IdIdioma == idioma.IdIdioma))
+                {
+                    throw new InvalidOperationException(TextoLocalizado.T("El idioma seleccionado ya no existe."));
+                }
+
+                if (idiomas.Any(i => i.IdIdioma != idioma.IdIdioma && string.Equals(i.Codigo, idioma.Codigo, StringComparison.OrdinalIgnoreCase)))
+                {
+                    throw new InvalidOperationException(TextoLocalizado.T("Ya existe un idioma con el codigo '{0}'.", idioma.Codigo));
+                }
+
+                dal_idioma.ModificarIdioma(idioma);
+
+                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.IDIOMA_MODIFICACION, "IDIOMA", $"Se modifico el idioma ID {idioma.IdIdioma}: {idioma.Nombre} ({idioma.Codigo})");
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al modificar idioma: {ex.Message}", ex);
             }
         }
 
@@ -89,19 +115,35 @@ namespace BLL
             {
                 if (idIdioma == idIdiomaEnUso)
                 {
-                    throw new Exception("No se puede borrar un idioma en uso.");
+                    throw new InvalidOperationException(TextoLocalizado.T("No se puede borrar un idioma en uso."));
                 }
 
                 BE_Idioma idioma = dal_idioma.ObtenerIdiomaPorId(idIdioma);
 
                 if (idioma == null)
                 {
-                    throw new Exception("El idioma no existe.");
+                    throw new InvalidOperationException(TextoLocalizado.T("El idioma seleccionado ya no existe."));
+                }
+
+                if (idioma.PorDefecto)
+                {
+                    throw new InvalidOperationException(TextoLocalizado.T("No se puede borrar el idioma predeterminado del sistema."));
+                }
+
+                int usuariosConIdioma = dal_idioma.ContarUsuariosConIdiomaPreferido(idIdioma);
+
+                if (usuariosConIdioma > 0)
+                {
+                    throw new InvalidOperationException(TextoLocalizado.T("No se puede borrar el idioma porque es el preferido de {0} usuario(s).", usuariosConIdioma));
                 }
 
                 dal_idioma.EliminarIdioma(idIdioma);
 
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.IDIOMA_BAJA, "IDIOMA", $"Se elimino el idioma {idioma.Nombre} ({idioma.Codigo})");
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -173,168 +215,6 @@ namespace BLL
             {
                 throw new Exception($"Error al registrar la clave de traduccion: {ex.Message}", ex);
             }
-        }
-
-        // ---- Exportacion e importacion de traducciones en XML ----
-
-        public string GenerarXmlTraducciones(BE_Usuario usuarioLogueado, int idIdioma)
-        {
-            try
-            {
-                BE_Idioma idioma = dal_idioma.ObtenerIdiomaPorId(idIdioma);
-
-                if (idioma == null)
-                {
-                    throw new InvalidOperationException(TextoLocalizado.T("El idioma seleccionado ya no existe."));
-                }
-
-                List<BE_Traduccion> traducciones = dal_traduccion.ObtenerTraduccionesParaGrilla(idIdioma);
-
-                XDocument documento = new XDocument(
-                    new XDeclaration("1.0", "utf-8", null),
-                    new XElement(ElementoRaizXml,
-                        new XAttribute("codigoIdioma", idioma.Codigo),
-                        new XAttribute("nombreIdioma", idioma.Nombre),
-                        new XAttribute("fechaExportacion", DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")),
-                        traducciones.Select(t => new XElement(ElementoTraduccionXml,
-                            new XAttribute("pagina", t.Pagina),
-                            new XAttribute("control", t.ControlId),
-                            new XElement("TextoBase", t.TextoBase),
-                            new XElement("Texto", t.Texto ?? string.Empty)))));
-
-                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.TRADUCCION_EXPORTADA, "IDIOMA",
-                    $"{usuarioLogueado.NombreApellido} exporto {traducciones.Count} traducciones del idioma '{idioma.Codigo}' a XML.");
-
-                // XDocument.ToString() omite la declaracion <?xml ...?>: se agrega a mano.
-                return documento.Declaration + Environment.NewLine + documento;
-            }
-            catch (InvalidOperationException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error al exportar las traducciones: {ex.Message}", ex);
-            }
-        }
-
-        // Todo o nada: primero se valida el archivo completo y recien despues se
-        // guarda, en una sola transaccion. Solo actualiza claves que ya existen en
-        // el catalogo; las desconocidas y las vacias se omiten y se informan.
-        public BE_ResultadoImportacion ImportarXmlTraducciones(BE_Usuario usuarioLogueado, int idIdioma, Stream contenidoXml)
-        {
-            try
-            {
-                BE_Idioma idioma = dal_idioma.ObtenerIdiomaPorId(idIdioma);
-
-                if (idioma == null)
-                {
-                    throw new InvalidOperationException(TextoLocalizado.T("El idioma seleccionado ya no existe."));
-                }
-
-                XElement raiz = LeerXmlTraducciones(contenidoXml);
-
-                string codigoArchivo = (string)raiz.Attribute("codigoIdioma");
-
-                if (!string.Equals(codigoArchivo, idioma.Codigo, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidOperationException(TextoLocalizado.T(
-                        "El archivo corresponde al idioma '{0}' y no al idioma seleccionado ('{1}').", codigoArchivo, idioma.Codigo));
-                }
-
-                List<BE_Traduccion> catalogo = dal_traduccion.ObtenerTraduccionesParaGrilla(idIdioma);
-                Dictionary<string, BE_Traduccion> porClave = catalogo.ToDictionary(t => t.Pagina + "." + t.ControlId);
-
-                BE_ResultadoImportacion resultado = new BE_ResultadoImportacion();
-                Dictionary<int, string> aGuardar = new Dictionary<int, string>();
-                int numero = 0;
-
-                foreach (XElement elemento in raiz.Elements(ElementoTraduccionXml))
-                {
-                    numero++;
-
-                    string pagina = (string)elemento.Attribute("pagina");
-                    string control = (string)elemento.Attribute("control");
-                    string texto = ((string)elemento.Element("Texto"))?.Trim();
-
-                    if (string.IsNullOrWhiteSpace(pagina) || string.IsNullOrWhiteSpace(control))
-                    {
-                        throw new InvalidOperationException(TextoLocalizado.T("La traduccion numero {0} no indica pagina y control.", numero));
-                    }
-
-                    if (texto != null && texto.Length > LargoMaximoTraduccion)
-                    {
-                        throw new InvalidOperationException(TextoLocalizado.T(
-                            "La traduccion de {0}.{1} supera los {2} caracteres.", pagina, control, LargoMaximoTraduccion));
-                    }
-
-                    if (string.IsNullOrEmpty(texto) || !porClave.TryGetValue(pagina + "." + control, out BE_Traduccion existente))
-                    {
-                        resultado.Omitidas++;
-                    }
-                    else if (texto == existente.Texto)
-                    {
-                        resultado.SinCambios++;
-                    }
-                    else
-                    {
-                        aGuardar[existente.IdClave] = texto;
-                    }
-                }
-
-                if (numero == 0)
-                {
-                    throw new InvalidOperationException(TextoLocalizado.T("El archivo no contiene traducciones."));
-                }
-
-                dal_traduccion.GuardarTraducciones(idIdioma, aGuardar);
-                resultado.Actualizadas = aGuardar.Count;
-
-                bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.TRADUCCION_IMPORTADA, "IDIOMA",
-                    $"{usuarioLogueado.NombreApellido} importo traducciones del idioma '{idioma.Codigo}' desde XML: {resultado.Actualizadas} actualizadas, {resultado.SinCambios} sin cambios, {resultado.Omitidas} omitidas.");
-
-                return resultado;
-            }
-            catch (InvalidOperationException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error al importar las traducciones: {ex.Message}", ex);
-            }
-        }
-
-        // El archivo lo sube un usuario: se prohibe el DTD y no se resuelven
-        // referencias externas, para evitar ataques XXE y de expansion de entidades.
-        private XElement LeerXmlTraducciones(Stream contenidoXml)
-        {
-            XmlReaderSettings opciones = new XmlReaderSettings
-            {
-                DtdProcessing = DtdProcessing.Prohibit,
-                XmlResolver = null
-            };
-
-            XDocument documento;
-
-            try
-            {
-                using (XmlReader lector = XmlReader.Create(contenidoXml, opciones))
-                {
-                    documento = XDocument.Load(lector);
-                }
-            }
-            catch (XmlException ex)
-            {
-                throw new InvalidOperationException(TextoLocalizado.T("El archivo no es un XML valido."), ex);
-            }
-
-            if (documento.Root == null || documento.Root.Name != ElementoRaizXml)
-            {
-                throw new InvalidOperationException(TextoLocalizado.T("El archivo no tiene el formato de traducciones del sistema."));
-            }
-
-            return documento.Root;
         }
     }
 }

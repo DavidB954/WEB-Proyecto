@@ -1,12 +1,7 @@
 using BE;
-using BE.Seguridad;
 using BLL;
-using SERVICIOS;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Presentacion
@@ -17,8 +12,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
-
             if (!IsPostBack)
             {
                 try
@@ -28,8 +21,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("FormIdiomas.Page_Load", ex);
-                    lblMensaje.Text = T("No se pudieron cargar los idiomas. Intenta nuevamente mas tarde.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("No se pudieron cargar los idiomas. Intenta nuevamente mas tarde."), false);
                 }
             }
         }
@@ -40,27 +32,24 @@ namespace Presentacion
             gvIdiomas.DataBind();
         }
 
-        private void MostrarToast(string mensaje, bool exito)
-        {
-            string clase = exito ? "toast-exito" : "toast-error";
-            string texto = HttpUtility.JavaScriptStringEncode(mensaje, true);
-
-            string script =
-                "(function(){var t=document.createElement('div');t.className='toast " + clase + "';" +
-                "t.textContent=" + texto + ";document.body.appendChild(t);" +
-                "setTimeout(function(){t.className+=' toast-hide';},3000);" +
-                "setTimeout(function(){if(t.parentNode){t.parentNode.removeChild(t);}},3600);})();";
-
-            ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
-        }
-
         private void LimpiarFormulario()
         {
             txtCodigo.Text = string.Empty;
             txtNombre.Text = string.Empty;
             hiddenIdIdioma.Value = string.Empty;
+            gvIdiomas.SelectedIndex = -1;
+
+            MostrarBotonesDeEdicion(false);
 
             RefrescarGrilla();
+        }
+
+        private void MostrarBotonesDeEdicion(bool editando)
+        {
+            btnAgregar.Visible = !editando;
+            btnModificar.Visible = editando;
+            btnEliminar.Visible = editando;
+            btnLimpiar.Visible = editando;
         }
 
         protected void btnAgregar_Click(object sender, EventArgs e)
@@ -74,8 +63,7 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text))
                 {
-                    lblMensaje.Text = T("Debe completar el codigo y el nombre del idioma.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("Debe completar el codigo y el nombre del idioma."), false);
                     return;
                 }
 
@@ -85,20 +73,21 @@ namespace Presentacion
                     Nombre = txtNombre.Text.Trim()
                 };
 
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_idioma.AgregarIdioma(usuarioLogueado, idioma);
+                bll_idioma.AgregarIdioma(UsuarioLogueado, idioma);
 
                 LimpiarFormulario();
 
                 lblMensaje.Text = string.Empty;
                 MostrarToast(T("Idioma agregado correctamente."), true);
             }
+            catch (InvalidOperationException ex)
+            {
+                MostrarMensaje(lblMensaje, ex.Message, false);
+            }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("FormIdiomas.btnAgregar_Click", ex);
-                lblMensaje.Text = T("No se pudo agregar el idioma. Verifica los datos e intenta nuevamente.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, T("No se pudo agregar el idioma. Verifica los datos e intenta nuevamente."), false);
             }
         }
 
@@ -113,13 +102,80 @@ namespace Presentacion
                     return;
                 }
 
-                hiddenIdIdioma.Value = fila.Cells[1].Text;
+                hiddenIdIdioma.Value = HttpUtility.HtmlDecode(fila.Cells[1].Text);
+                txtCodigo.Text = HttpUtility.HtmlDecode(fila.Cells[2].Text);
+                txtNombre.Text = HttpUtility.HtmlDecode(fila.Cells[3].Text);
+
+                MostrarBotonesDeEdicion(true);
+
+                lblMensaje.Text = string.Empty;
+
+                DesplazarHacia(hGestionIdiomas);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("FormIdiomas.gvIdiomas_SelectedIndexChanged", ex);
-                lblMensaje.Text = T("No se pudo seleccionar el idioma.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, T("No se pudo seleccionar el idioma."), false);
+            }
+        }
+
+        protected void btnModificar_Click(object sender, EventArgs e)
+        {
+            if (!ExigirPermiso("IDIOMA_MODIFICACION"))
+            {
+                return;
+            }
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(hiddenIdIdioma.Value))
+                {
+                    MostrarMensaje(lblMensaje, T("Seleccione un idioma de la lista antes de modificar."), false);
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(txtCodigo.Text) || string.IsNullOrWhiteSpace(txtNombre.Text))
+                {
+                    MostrarMensaje(lblMensaje, T("Debe completar el codigo y el nombre del idioma."), false);
+                    return;
+                }
+
+                BE_Idioma idioma = new BE_Idioma
+                {
+                    IdIdioma = int.Parse(hiddenIdIdioma.Value),
+                    Codigo = txtCodigo.Text.Trim(),
+                    Nombre = txtNombre.Text.Trim()
+                };
+
+                bll_idioma.ModificarIdioma(UsuarioLogueado, idioma);
+
+                LimpiarFormulario();
+
+                lblMensaje.Text = string.Empty;
+                MostrarToast(T("Idioma modificado correctamente."), true);
+            }
+            catch (InvalidOperationException ex)
+            {
+                MostrarMensaje(lblMensaje, ex.Message, false);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("FormIdiomas.btnModificar_Click", ex);
+                MostrarMensaje(lblMensaje, T("No se pudo modificar el idioma. Intenta nuevamente mas tarde."), false);
+            }
+        }
+
+        protected void btnLimpiar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                LimpiarFormulario();
+                lblMensaje.Text = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("FormIdiomas.btnLimpiar_Click", ex);
+                MostrarMensaje(lblMensaje, T("No se pudieron cargar los idiomas. Intenta nuevamente mas tarde."), false);
             }
         }
 
@@ -134,43 +190,28 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdIdioma.Value))
                 {
-                    lblMensaje.Text = T("Seleccione un idioma de la lista antes de eliminar.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("Seleccione un idioma de la lista antes de eliminar."), false);
                     return;
                 }
 
                 int idIdioma = int.Parse(hiddenIdIdioma.Value);
                 int idIdiomaEnUso = GestorIdioma.ObtenerIdiomaActual();
 
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_idioma.EliminarIdioma(usuarioLogueado, idIdioma, idIdiomaEnUso);
+                bll_idioma.EliminarIdioma(UsuarioLogueado, idIdioma, idIdiomaEnUso);
 
                 LimpiarFormulario();
 
                 lblMensaje.Text = string.Empty;
                 MostrarToast(T("Idioma eliminado correctamente."), true);
             }
+            catch (InvalidOperationException ex)
+            {
+                MostrarMensaje(lblMensaje, ex.Message, false);
+            }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("FormIdiomas.btnEliminar_Click", ex);
-                lblMensaje.Text = T("No se pudo eliminar el idioma. Intenta nuevamente mas tarde.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
+                MostrarMensaje(lblMensaje, T("No se pudo eliminar el idioma. Intenta nuevamente mas tarde."), false);
             }
         }
     }

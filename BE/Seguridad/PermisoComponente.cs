@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace BE.Seguridad
 {
-    // Leaf del Composite: un permiso concreto (ej: ABM_USUARIO, ACCESO_MEDICOS).
-    // No tiene hijos, asi que no puede participar de un ciclo.
     public class PermisoComponente : IComponentePermiso
     {
         private readonly BE_Permiso permiso;

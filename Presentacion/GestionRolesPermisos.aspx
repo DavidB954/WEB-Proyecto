@@ -19,7 +19,8 @@
             <asp:HiddenField ID="hiddenIdRol" runat="server" />
             <asp:Button ID="btnGuardarRol" CssClass="btn-base btn-success" runat="server" Text="Guardar" data-i18n="1" OnClick="btnGuardarRol_Click" data-permiso="ROL_ALTA" />
             <asp:Button ID="btnModificarRol" CssClass="btn-base btn-primary" runat="server" Text="Modificar" data-i18n="1" OnClick="btnModificarRol_Click" data-permiso="ROL_MODIFICACION" />
-            <asp:Button ID="btnEliminarRol" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" data-i18n="1" OnClick="btnEliminarRol_Click" data-permiso="ROL_BAJA" />
+            <asp:Button ID="btnEliminarRol" CssClass="btn-base btn-danger" runat="server" Text="Eliminar" data-i18n="1" OnClick="btnEliminarRol_Click" data-permiso="ROL_BAJA"
+                OnClientClick="return confirmarAccion(this, 'Eliminar este rol? Tambien se quitan sus permisos y sub-roles. No se puede deshacer.');" />
             <asp:Button ID="btnLimpiarRol" CssClass="btn-base" runat="server" Text="Limpiar" data-i18n="1" OnClick="btnLimpiarRol_Click" CausesValidation="false" />
         </div>
         <asp:Label ID="lblMensajeRol" runat="server" CssClass="msg-form"></asp:Label>
@@ -102,7 +103,7 @@
             <asp:Label ID="lblMensajeComposicion" runat="server" CssClass="msg-form"></asp:Label>
 
             <h3 id="hArbolRol" runat="server" data-i18n="1">Arbol resultante (permisos efectivos)</h3>
-            <asp:TreeView ID="trvArbolRol" runat="server"></asp:TreeView>
+            <asp:TreeView ID="trvArbolRol" runat="server" SkipLinkText=""></asp:TreeView>
 
         </asp:Panel>
     </div>

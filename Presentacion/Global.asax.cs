@@ -1,6 +1,5 @@
 using BE;
 using System;
-using System.IO;
 using System.Web;
 
 namespace Presentacion
@@ -9,7 +8,6 @@ namespace Presentacion
     {
         protected void Application_Start(object sender, EventArgs e)
         {
-            // BE y BLL no conocen la capa web: traducen a traves de este puente.
             TextoLocalizado.Traductor = GestorIdioma.Traducir;
         }
 
@@ -17,17 +15,7 @@ namespace Presentacion
         {
             Exception ex = Server.GetLastError();
 
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                Directory.CreateDirectory(carpetaLogs);
-
-                string linea = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {Request?.Path} - {ex}{Environment.NewLine}";
-                File.AppendAllText(Path.Combine(carpetaLogs, "errores.log"), linea);
-            }
-            catch
-            {
-            }
+            RegistroErrores.Registrar(Request.Path, ex);
 
             Server.ClearError();
             Response.Redirect("~/ErrorGeneral.aspx");

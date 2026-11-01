@@ -4,9 +4,6 @@ using System.Linq;
 
 namespace BE.Seguridad
 {
-    // Raiz del arbol Composite para un usuario puntual: agrupa los Roles y/o
-    // Permisos que se le asignaron directamente. No es un IComponentePermiso
-    // (un usuario no puede "colgar" de otro nodo), solo consume la interfaz.
     public class UsuarioComponente
     {
         private readonly BE_Usuario usuario;
@@ -30,16 +27,6 @@ namespace BE.Seguridad
             return asignaciones.Any(a => a.TienePermiso(codigoPermiso));
         }
 
-        public IEnumerable<BE_Permiso> ObtenerPermisosEfectivos()
-        {
-            return asignaciones
-                .SelectMany(a => a.ObtenerPermisosEfectivos())
-                .GroupBy(p => p.Nombre)
-                .Select(g => g.First());
-        }
-
-        // Bloquea el caso del enunciado: si el permiso ya llega al usuario
-        // (directo o via cualquier rol), no se puede volver a asignar suelto.
         public void AsignarPermiso(PermisoComponente permiso)
         {
             if (permiso == null)
@@ -55,8 +42,6 @@ namespace BE.Seguridad
             asignaciones.Add(permiso);
         }
 
-        // Simetrico: si el rol otorga un permiso que el usuario ya tiene
-        // asignado suelto, tambien se rechaza para no duplicar el camino.
         public void AsignarRol(RolComponente rol)
         {
             if (rol == null)
@@ -74,8 +59,6 @@ namespace BE.Seguridad
             asignaciones.Add(rol);
         }
 
-        // Usado solo para reconstruir el arbol desde la base, igual que
-        // RolComponente.CargarHijo.
         public void CargarAsignacion(IComponentePermiso componente)
         {
             asignaciones.Add(componente ?? throw new ArgumentNullException(nameof(componente)));

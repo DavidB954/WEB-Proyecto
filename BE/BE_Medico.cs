@@ -1,8 +1,7 @@
+using System;
+
 namespace BE
 {
-    // Un medico es un Usuario con el rol MEDICO. La fila en la tabla Medico
-    // (matricula) recien existe cuando el administrativo la registra: hasta
-    // entonces Matricula es null y no se le pueden cargar horarios.
     public class BE_Medico
     {
         public int IdMedico { get; set; }
@@ -44,5 +43,7 @@ namespace BE
         public int FranjasActivas { get; set; }
 
         public string DVH { get; set; }
+
+        public DateTime? PrimerTurno { get; set; }
     }
 }

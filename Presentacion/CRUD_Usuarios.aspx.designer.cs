@@ -6,6 +6,8 @@ namespace Presentacion
     public partial class WebForm1
     {
 
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl hGestionUsuarios;
+
         protected global::System.Web.UI.WebControls.TextBox txtNombre;
 
         protected global::System.Web.UI.WebControls.RegularExpressionValidator valNombre;

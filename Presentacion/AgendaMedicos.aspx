@@ -7,7 +7,6 @@
 
     <div class="agenda-layout">
 
-        <%-- ===== Columna izquierda: buscador de medicos + catalogo de especialidades ===== --%>
         <div class="agenda-col">
 
             <div class="form-container">
@@ -66,7 +65,7 @@
                                 <ItemTemplate>
                                     <asp:LinkButton ID="lnkEliminarEspecialidad" runat="server" data-i18n="1" CommandName="Eliminar"
                                         CommandArgument='<%# Eval("IdEspecialidad") %>' Text="Eliminar" CausesValidation="false"
-                                        data-permiso="ESPECIALIDAD_ABM" OnClientClick="return confirm('Eliminar esta especialidad?');" />
+                                        data-permiso="ESPECIALIDAD_ABM" OnClientClick="return confirmarAccion(this, 'Eliminar esta especialidad?');" />
                                 </ItemTemplate>
                             </asp:TemplateField>
                         </Columns>
@@ -81,7 +80,6 @@
 
         </div>
 
-        <%-- ===== Columna derecha: agenda del medico seleccionado ===== --%>
         <div class="agenda-col">
 
             <asp:Panel ID="pnlSinMedico" runat="server" CssClass="form-container">
@@ -93,7 +91,6 @@
                 <asp:Label ID="lblMedicoSeleccionado" runat="server" CssClass="paciente-seleccionado"></asp:Label>
                 <asp:Label ID="lblMensaje" runat="server" CssClass="msg-form" EnableViewState="false"></asp:Label>
 
-                <%-- Datos del medico --%>
                 <div class="section-card">
                     <h3 id="hDatosMedico" runat="server" data-i18n="1">Matricula y especialidades</h3>
 
@@ -113,7 +110,6 @@
                     </div>
                 </div>
 
-                <%-- Franjas semanales --%>
                 <div class="section-card">
                     <h3 id="hHorarios" runat="server" data-i18n="1">Horarios de atencion semanales</h3>
                     <span id="spanAyudaHorarios" runat="server" class="ayuda-campo" data-i18n="1">Marca uno o varios dias para cargarles la misma franja. Los turnos se generan cada "Duracion" minutos dentro del rango.</span>
@@ -163,13 +159,13 @@
                                         <asp:LinkButton ID="lnkDesactivar" runat="server" data-i18n="1" CommandName="Desactivar"
                                             CommandArgument='<%# Eval("IdHorario") %>' Text="Desactivar" CausesValidation="false"
                                             Visible='<%# (bool)Eval("Activo") %>' data-permiso="AGENDA_HORARIO_EDITAR"
-                                            OnClientClick="return confirm('Desactivar esta franja horaria? Se cancelan los turnos reservados que caen en ella.');" />
+                                            OnClientClick="return confirmarAccion(this, 'Desactivar esta franja horaria? Se cancelan los turnos reservados que caen en ella.');" />
                                         <asp:LinkButton ID="lnkActivar" runat="server" data-i18n="1" CommandName="Activar"
                                             CommandArgument='<%# Eval("IdHorario") %>' Text="Activar" CausesValidation="false"
                                             Visible='<%# !(bool)Eval("Activo") %>' data-permiso="AGENDA_HORARIO_EDITAR" />
                                         <asp:LinkButton ID="lnkEliminarHorario" runat="server" data-i18n="1" CommandName="Eliminar"
                                             CommandArgument='<%# Eval("IdHorario") %>' Text="Eliminar" CausesValidation="false"
-                                            data-permiso="AGENDA_HORARIO_EDITAR" OnClientClick="return confirm('Eliminar esta franja horaria? Se cancelan los turnos reservados que caen en ella.');" />
+                                            data-permiso="AGENDA_HORARIO_EDITAR" OnClientClick="return confirmarAccion(this, 'Eliminar esta franja horaria? Se cancelan los turnos reservados que caen en ella.');" />
                                     </ItemTemplate>
                                 </asp:TemplateField>
                             </Columns>
@@ -180,7 +176,6 @@
                     </div>
                 </div>
 
-                <%-- Bloqueos puntuales --%>
                 <div class="section-card">
                     <h3 id="hBloqueos" runat="server" data-i18n="1">Dias y horarios no disponibles</h3>
                     <span id="spanAyudaBloqueos" runat="server" class="ayuda-campo" data-i18n="1">Para vacaciones, licencias o ausencias puntuales. Durante el bloqueo no se ofrecen turnos aunque caiga en una franja activa.</span>
@@ -210,7 +205,7 @@
                         <div class="abm-actions">
                             <asp:Button ID="btnAgregarBloqueo" runat="server" CssClass="btn-base btn-danger" Text="Bloquear" data-i18n="1"
                                 OnClick="btnAgregarBloqueo_Click" CausesValidation="false" data-permiso="AGENDA_BLOQUEO_EDITAR"
-                                OnClientClick="return confirm('Bloquear la agenda? Se cancelan los turnos reservados en ese horario.');" />
+                                OnClientClick="return confirmarAccion(this, 'Bloquear la agenda? Se cancelan los turnos reservados en ese horario.');" />
                         </div>
                     </div>
 
@@ -225,7 +220,7 @@
                                     <ItemTemplate>
                                         <asp:LinkButton ID="lnkQuitarBloqueo" runat="server" data-i18n="1" CommandName="Quitar"
                                             CommandArgument='<%# Eval("IdBloqueo") %>' Text="Quitar" CausesValidation="false"
-                                            data-permiso="AGENDA_BLOQUEO_EDITAR" OnClientClick="return confirm('Quitar este bloqueo?');" />
+                                            data-permiso="AGENDA_BLOQUEO_EDITAR" OnClientClick="return confirmarAccion(this, 'Quitar este bloqueo?');" />
                                     </ItemTemplate>
                                 </asp:TemplateField>
                             </Columns>

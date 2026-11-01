@@ -35,7 +35,6 @@ namespace BLL
                     throw new InvalidOperationException(TextoLocalizado.T("Ingresa el nombre de la especialidad."));
                 }
 
-                // Especialidad.NombreEspecialidad es VARCHAR(30).
                 if (nombre.Length > 30)
                 {
                     throw new InvalidOperationException(TextoLocalizado.T("El nombre de la especialidad no puede superar los 30 caracteres (tiene {0}).", nombre.Length));
@@ -73,9 +72,6 @@ namespace BLL
                     throw new InvalidOperationException(TextoLocalizado.T("La especialidad seleccionada ya no existe."));
                 }
 
-                // Se informa quienes la tienen para que se la quiten de a uno desde
-                // "Matricula y especialidades": borrarla del catalogo no debe
-                // desasignarsela a todos de golpe.
                 List<BE_Medico> medicos = dal_medico.BuscarMedicos(null, idEspecialidad);
 
                 if (medicos.Count > 0)

@@ -1,71 +1,31 @@
 using BE;
 using BLL;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    public partial class LoginWebmaster : PaginaBase
+    public partial class LoginWebmaster : PaginaLogin
     {
-        BLL_Usuario bll_Usu = new BLL_Usuario();
+        BLL_Usuario bll_usuario = new BLL_Usuario();
 
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
-                CargarSelectorIdioma();
+                CargarSelectorIdioma(ddlIdioma);
             }
         }
 
         protected void ddlIdioma_SelectedIndexChanged(object sender, EventArgs e)
         {
-            try
-            {
-                GestorIdioma.CambiarIdioma(int.Parse(ddlIdioma.SelectedValue));
-
-                // Se recarga para regenerar todo en el idioma elegido, igual que Site1.Master.
-                Response.Redirect(Request.RawUrl, false);
-                Context.ApplicationInstance.CompleteRequest();
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("LoginWebmaster.ddlIdioma_SelectedIndexChanged", ex);
-                lblMensaje.Text = T("No se pudo cambiar el idioma. Intenta nuevamente mas tarde.");
-            }
-        }
-
-        private void CargarSelectorIdioma()
-        {
-            try
-            {
-                GestorIdioma.CargarSelector(ddlIdioma);
-            }
-            catch (Exception ex)
-            {
-                RegistrarErrorInterno("LoginWebmaster.CargarSelectorIdioma", ex);
-                ddlIdioma.Visible = false;
-            }
+            CambiarIdioma(ddlIdioma, lblMensaje);
         }
 
         protected void btnLogin_Click(object sender, EventArgs e)
         {
             try
             {
-                BE_LoginResultado resultado = bll_Usu.ValidarWebmaster(txtEmail.Text, txtPassword.Text);
-
-                if (resultado.Usuario == null)
-                {
-                    BE_LoginResultado emergencia = bll_Usu.LoginEmergencia(txtEmail.Text, txtPassword.Text);
-
-                    if (emergencia.Usuario != null)
-                    {
-                        resultado = emergencia;
-                    }
-                }
+                BE_LoginResultado resultado = ProbarLoginEmergencia(bll_usuario, bll_usuario.ValidarWebmaster(txtEmail.Text, txtPassword.Text), txtEmail.Text, txtPassword.Text);
 
                 if (resultado.Usuario == null)
                 {
@@ -73,47 +33,18 @@ namespace Presentacion
                     return;
                 }
 
-                if (resultado.Usuario.NombreRol != "WEBMASTER")
+                if (resultado.Usuario.NombreRol != RolesSistema.Webmaster)
                 {
                     lblMensaje.Text = T("La base de datos tiene un problema de integridad. Solo Webmaster puede ingresar en este momento.");
                     return;
                 }
 
-                Session["Usuario"] = resultado.Usuario;
-
-                if (resultado.Usuario.IdUsuario > 0)
-                {
-                    Session["Permisos"] = new BLL_Permiso().ConstruirArbolUsuario(resultado.Usuario);
-                }
-
-                if (resultado.Usuario.IdIdiomaPreferido.HasValue)
-                {
-                    GestorIdioma.CambiarIdioma(resultado.Usuario.IdIdiomaPreferido.Value);
-                }
-
-                // Sin ThreadAbortException: ver Login.btnLogin_Click.
-                Response.Redirect("Seguridad.aspx", false);
-                Context.ApplicationInstance.CompleteRequest();
+                AbrirSesion(resultado.Usuario, "Seguridad.aspx");
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("LoginWebmaster.btnLogin_Click", ex);
                 lblMensaje.Text = T("No se pudo iniciar sesion. Intenta nuevamente mas tarde.");
-            }
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
             }
         }
     }

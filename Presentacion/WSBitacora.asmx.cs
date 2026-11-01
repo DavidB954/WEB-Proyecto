@@ -9,11 +9,6 @@ using System.Web.Services;
 
 namespace Presentacion
 {
-    
-    /// WSDL: WSBitacora.asmx?WSDL. Usa la sesion del sitio (EnableSession) para
-    /// exigir un usuario logueado con permisos sobre la bitacora: sin eso,
-    /// cualquiera podria leer la auditoria del sistema desde afuera.
-    ///
     [WebService(Namespace = "http://gestionmedica.local/ws/", Description = "Consulta y exportacion de la bitacora de eventos.")]
     [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
     [System.ComponentModel.ToolboxItem(false)]
@@ -25,20 +20,15 @@ namespace Presentacion
         private readonly BLL_Usuario bll_usuario = new BLL_Usuario();
         private readonly BLL_DVV bll_dvv = new BLL_DVV();
 
-        // Para clientes externos (ver el proyecto ClienteBitacoraWS): abre la sesion que
-        // exigen los demas metodos. El cliente tiene que conservar la cookie de sesion.
-        // Pasa por las mismas reglas del login del sitio (intentos, bloqueo, bitacora).
         [WebMethod(EnableSession = true, Description = "Inicia sesion en el servicio. El cliente debe conservar la cookie de sesion para los demas metodos.")]
         public void IniciarSesion(string email, string password)
         {
-            // Mismo corte que Login.aspx: con la base alterada solo entra el Webmaster,
-            // y ese ingreso no se hace por el servicio.
             if (!bll_dvv.EstaIntegra("Usuario") || !bll_dvv.EstaIntegra("Rol"))
             {
                 throw new UnauthorizedAccessException("El sistema detecto un problema de integridad en la base de datos.");
             }
 
-            BE_LoginResultado resultado = bll_usuario.ObtenerUsuarioPorEmail(email, password);
+            BE_LoginResultado resultado = bll_usuario.IniciarSesion(email, password);
 
             if (resultado.Usuario == null)
             {
@@ -66,11 +56,11 @@ namespace Presentacion
         [WebMethod(EnableSession = true, Description = "Devuelve los eventos de la bitacora que cumplen los filtros (vacio = sin filtro).")]
         public List<BE_Bitacora> ConsultarBitacora(string desde, string hasta, string idUsuario, string modulo, string ip, string criticidad)
         {
-            ExigirAccesoBitacora();
+            BE_Usuario usuario = ExigirAccesoBitacora();
 
             Filtros filtros = new Filtros(desde, hasta, idUsuario, modulo, ip, criticidad);
 
-            return bll_bitacora.ConsultarBitacora(filtros.Desde, filtros.HastaFinDelDia, filtros.IdUsuario, filtros.Modulo, filtros.Ip, filtros.Criticidad);
+            return bll_bitacora.ConsultarBitacora(usuario, filtros.Desde, filtros.HastaFinDelDia, filtros.IdUsuario, filtros.Modulo, filtros.Ip, filtros.Criticidad);
         }
 
         [WebMethod(EnableSession = true, Description = "Devuelve un documento XML con los eventos que cumplen los filtros. Requiere el permiso BITACORA_EXPORTAR.")]
@@ -86,7 +76,7 @@ namespace Presentacion
             Filtros filtros = new Filtros(desde, hasta, idUsuario, modulo, ip, criticidad);
 
             List<BE_Bitacora> eventos = bll_bitacora.ConsultarBitacora(
-                filtros.Desde, filtros.HastaFinDelDia, filtros.IdUsuario, filtros.Modulo, filtros.Ip, filtros.Criticidad);
+                usuario, filtros.Desde, filtros.HastaFinDelDia, filtros.IdUsuario, filtros.Modulo, filtros.Ip, filtros.Criticidad);
 
             string xml = bll_bitacora.GenerarXml(
                 eventos, filtros.Desde, filtros.Hasta, filtros.IdUsuario, filtros.Modulo, filtros.Ip, filtros.Criticidad, usuario.NombreApellido);
@@ -129,7 +119,6 @@ namespace Presentacion
             public string Ip { get; }
             public string Criticidad { get; }
 
-            // "hasta" es un dia completo: incluye los eventos hasta las 23:59:59.
             public DateTime? HastaFinDelDia => Hasta?.AddDays(1).AddSeconds(-1);
 
             public string Descripcion()

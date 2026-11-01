@@ -17,19 +17,84 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
 
-    <link href="Styles/StyleSheet.css?v=3" rel="stylesheet" />
+    <link href="Styles/StyleSheet.css?v=8" rel="stylesheet" />
 
     <asp:ContentPlaceHolder ID="head" runat="server">
     </asp:ContentPlaceHolder>
 
     <script type="text/javascript">
-    // Tiempo de sesion en minutos (coincidir con Web.config)
-    var timeout = 20 * 60 * 1000; // 20 minutos en milisegundos
+    var timeout = 20 * 60 * 1000;
 
     setTimeout(function () {
-        alert(<%= MensajeSesionExpirada %>);
-        window.location.href = 'Login.aspx';
+        mostrarAviso(<%= MensajeSesionExpirada %>, function () {
+            window.location.href = 'Login.aspx';
+        });
     }, timeout);
+
+    (function () {
+        var accionPendiente = null;
+        var soloAviso = false;
+
+        function abrir(mensaje, conCancelar, accion) {
+            var dialogo = document.getElementById('dlgWeb');
+
+            document.getElementById('dlgWebTexto').textContent = mensaje;
+            document.getElementById('dlgWebCancelar').style.display = conCancelar ? '' : 'none';
+            dialogo.classList.toggle('dialogo-web-aviso', !conCancelar);
+            accionPendiente = accion || null;
+            soloAviso = !conCancelar;
+
+            if (!dialogo.open) {
+                dialogo.showModal();
+            }
+
+            document.getElementById('dlgWebAceptar').focus();
+        }
+
+        function cerrar(ejecutar) {
+            var accion = accionPendiente;
+
+            accionPendiente = null;
+            document.getElementById('dlgWeb').close();
+
+            if (ejecutar && accion) {
+                accion();
+            }
+        }
+
+        window.confirmarAccion = function (control, mensaje) {
+            if (control.getAttribute('data-confirmado')) {
+                control.removeAttribute('data-confirmado');
+                return true;
+            }
+
+            abrir(mensaje, true, function () {
+                control.setAttribute('data-confirmado', '1');
+                control.click();
+            });
+
+            return false;
+        };
+
+        window.mostrarAviso = function (mensaje, alCerrar) {
+            abrir(mensaje, false, alCerrar);
+        };
+
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('#dlgWebAceptar')) {
+                cerrar(true);
+            } else if (e.target.closest('#dlgWebCancelar')) {
+                cerrar(false);
+            }
+        });
+
+        document.addEventListener('cancel', function (e) {
+            if (e.target.id === 'dlgWeb') {
+                e.preventDefault();
+                cerrar(soloAviso);
+            }
+        }, true);
+    })();
 </script>
 
 </head>
@@ -128,6 +193,14 @@
             </asp:ContentPlaceHolder>
 
         </main>
+
+        <dialog id="dlgWeb" class="dialogo-web" aria-labelledby="dlgWebTexto">
+            <p id="dlgWebTexto"></p>
+            <div class="dialogo-web-acciones">
+                <button type="button" id="dlgWebCancelar" class="btn-base btn-warning"><span id="spanDialogoVolver" runat="server" data-i18n="1">Volver</span></button>
+                <button type="button" id="dlgWebAceptar" class="btn-base btn-success"><span id="spanDialogoConfirmar" runat="server" class="dialogo-web-confirmar" data-i18n="1">Confirmar</span><span id="spanDialogoAceptar" runat="server" class="dialogo-web-aceptar" data-i18n="1">Aceptar</span></button>
+            </div>
+        </dialog>
 
     </form>
 

@@ -23,15 +23,6 @@ namespace SERVICIOS
         public string Descripcion { get; }
     }
 
-    // Unico lugar donde se declaran los permisos que existen en el sistema
-    //
-    // PAGINA: entra a la pagina y ve todos sus controles.
-    // ACCION: entra a la pagina y ve solo ese control.
-    //
-    // Para una pagina nueva:
-    //   1. Agregar aca su permiso PAGINA y uno ACCION por cada boton a proteger.
-    //   2. En el .aspx, poner data-permiso="CODIGO" en cada boton protegido.
-    //   3. En el OnClick de cada boton protegido, llamar a ExigirPermiso("CODIGO").
     public static class CatalogoPermisos
     {
         public const string TipoPagina = "PAGINA";
@@ -69,12 +60,11 @@ namespace SERVICIOS
 
             new PermisoDefinicion("GESTION_IDIOMAS",        TipoPagina, "FormIdiomas.aspx",          "Ver idiomas"),
             new PermisoDefinicion("IDIOMA_ALTA",            TipoAccion, "FormIdiomas.aspx",          "Agregar idiomas"),
+            new PermisoDefinicion("IDIOMA_MODIFICACION",    TipoAccion, "FormIdiomas.aspx",          "Modificar idiomas"),
             new PermisoDefinicion("IDIOMA_BAJA",            TipoAccion, "FormIdiomas.aspx",          "Eliminar idiomas"),
 
             new PermisoDefinicion("GESTION_TRADUCCIONES",   TipoPagina, "FormTraducciones.aspx",     "Ver traducciones"),
             new PermisoDefinicion("TRADUCCION_EDITAR",      TipoAccion, "FormTraducciones.aspx",     "Guardar traducciones"),
-            new PermisoDefinicion("TRADUCCION_EXPORTAR",    TipoAccion, "FormTraducciones.aspx",     "Exportar traducciones a XML"),
-            new PermisoDefinicion("TRADUCCION_IMPORTAR",    TipoAccion, "FormTraducciones.aspx",     "Importar traducciones desde XML"),
 
             new PermisoDefinicion("GESTION_ROLES_PERMISOS", TipoPagina, "GestionRolesPermisos.aspx", "Ver roles"),
             new PermisoDefinicion("ROL_ALTA",               TipoAccion, "GestionRolesPermisos.aspx", "Crear roles"),

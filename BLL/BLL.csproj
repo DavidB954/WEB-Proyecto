@@ -46,6 +46,7 @@
     <Compile Include="BLL_Especialidad.cs" />
     <Compile Include="BLL_Medico.cs" />
     <Compile Include="BLL_DVV.cs" />
+    <Compile Include="CadenasIntegridad.cs" />
     <Compile Include="BLL_Idioma.cs" />
     <Compile Include="BLL_Permiso.cs" />
     <Compile Include="BLL_Rol.cs" />

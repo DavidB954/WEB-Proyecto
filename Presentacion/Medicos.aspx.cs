@@ -3,14 +3,10 @@ using BLL;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    // Pantalla del medico: ve los turnos de un dia de su agenda, atiende a los
-    // pacientes (motivo, diagnostico, receta), marca ausentes y consulta la
-    // historia clinica del paciente que esta atendiendo.
     public partial class WebForm2 : PaginaBase
     {
         BLL_AtencionMedica bll_atencion = new BLL_AtencionMedica();
@@ -23,7 +19,6 @@ namespace Presentacion
             set { ViewState["IdTurnoSeleccionado"] = value; }
         }
 
-        // Medicamentos agregados en pantalla que todavia no se guardaron.
         private List<BE_Receta> RecetaPendiente
         {
             get
@@ -54,8 +49,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
-
             if (!IsPostBack)
             {
                 try
@@ -69,6 +62,7 @@ namespace Presentacion
 
                     FechaSeleccionada = DateTime.Today;
                     BindTurnos();
+                    BindPacientes();
                 }
                 catch (Exception ex)
                 {
@@ -78,14 +72,11 @@ namespace Presentacion
             }
         }
 
-        // ---- Turnos del dia ----
-
         private void BindTurnos()
         {
             gvTurnosMedicos.DataSource = bll_atencion.ObtenerTurnosDelDia(UsuarioLogueado, FechaSeleccionada);
             gvTurnosMedicos.DataBind();
 
-            // Despues de rebindear se vuelve a marcar la fila que se esta atendiendo.
             gvTurnosMedicos.SelectedIndex = -1;
             for (int i = 0; i < gvTurnosMedicos.DataKeys.Count; i++)
             {
@@ -156,6 +147,28 @@ namespace Presentacion
             }
         }
 
+        protected void btnProximoTurno_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BE_Turno proximoTurno = bll_atencion.ObtenerProximoTurno(UsuarioLogueado, FechaSeleccionada);
+
+                if (proximoTurno == null)
+                {
+                    MostrarMensaje(lblMensajeTurnos, T("No tenes turnos reservados a partir de esta fecha."), false);
+                    return;
+                }
+
+                CambiarDia(proximoTurno.FechaHora);
+                MostrarMensaje(lblMensajeTurnos, T("Proximo turno: {0} a las {1} hs.", proximoTurno.FechaTexto, proximoTurno.HoraTexto), true);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Medicos.btnProximoTurno_Click", ex);
+                MostrarMensaje(lblMensajeTurnos, T("No se pudieron cargar los turnos de ese dia. Intenta nuevamente mas tarde."), false);
+            }
+        }
+
         protected void gvTurnosMedicos_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (!ExigirPermiso("MEDICO_ATENDER"))
@@ -189,7 +202,12 @@ namespace Presentacion
 
         protected void gvTurnosMedicos_RowCommand(object sender, GridViewCommandEventArgs e)
         {
-            // "Select" lo resuelve gvTurnosMedicos_SelectedIndexChanged.
+            if (e.CommandName == "VerHistoria")
+            {
+                VerHistoria(e.CommandArgument);
+                return;
+            }
+
             if (e.CommandName != "Ausente")
             {
                 return;
@@ -231,7 +249,66 @@ namespace Presentacion
             }
         }
 
-        // ---- Atencion ----
+        private void BindPacientes()
+        {
+            gvPacientes.DataSource = bll_atencion.BuscarPacientes(UsuarioLogueado, txtBuscarPaciente.Text);
+            gvPacientes.DataBind();
+        }
+
+        protected void btnBuscarPaciente_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                BindPacientes();
+                pnlHistoriaConsultada.Visible = false;
+            }
+            catch (InvalidOperationException ex)
+            {
+                MostrarMensaje(lblMensajeConsulta, ex.Message, false);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Medicos.btnBuscarPaciente_Click", ex);
+                MostrarMensaje(lblMensajeConsulta, T("No se pudo realizar la busqueda. Intenta nuevamente mas tarde."), false);
+            }
+        }
+
+        protected void gvPacientes_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (e.CommandName == "VerHistoria")
+            {
+                VerHistoria(e.CommandArgument);
+            }
+        }
+
+        private void VerHistoria(object argumento)
+        {
+            try
+            {
+                int idPaciente = int.Parse(Convert.ToString(argumento));
+
+                gvHistoriaConsultada.DataSource = bll_atencion.ConsultarHistoriaClinica(UsuarioLogueado, idPaciente);
+                gvHistoriaConsultada.DataBind();
+
+                BE_PacienteResumen paciente =bll_atencion.BuscarPacientes(UsuarioLogueado, null).Find(p => p.IdPaciente == idPaciente);
+
+                lblPacienteConsultado.Text = System.Web.HttpUtility.HtmlEncode(T("Historia clinica de {0} ({1})", paciente?.NombrePaciente, paciente?.HistoriaClinica));
+                pnlHistoriaConsultada.Visible = true;
+
+                DesplazarHacia(pnlHistoriaConsultada);
+            }
+            catch (InvalidOperationException ex)
+            {
+                pnlHistoriaConsultada.Visible = false;
+                MostrarMensaje(lblMensajeConsulta, ex.Message, false);
+            }
+            catch (Exception ex)
+            {
+                RegistrarErrorInterno("Medicos.VerHistoria", ex);
+                pnlHistoriaConsultada.Visible = false;
+                MostrarMensaje(lblMensajeConsulta, T("No se pudo consultar la historia clinica. Intenta nuevamente mas tarde."), false);
+            }
+        }
 
         private void AbrirAtencion(BE_Turno turno)
         {
@@ -341,8 +418,6 @@ namespace Presentacion
                     return;
                 }
 
-                // Si quedo un medicamento escrito sin presionar "Agregar", se avisa
-                // en lugar de perderlo en silencio.
                 if (!string.IsNullOrWhiteSpace(txtMedicamento.Text))
                 {
                     MostrarMensaje(lblMensajeAtencion, T("Quedo un medicamento sin agregar a la receta: presiona \"Agregar\" o borralo."), false);
@@ -383,10 +458,6 @@ namespace Presentacion
             }
         }
 
-        // ---- Auxiliares ----
-
-        // Refresco despues de un error de negocio: si falla, se registra y se
-        // deja el mensaje original en pantalla.
         private void BindTurnosSinFallar()
         {
             try
@@ -396,42 +467,6 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Medicos.BindTurnosSinFallar", ex);
-            }
-        }
-
-        private void MostrarMensaje(Label label, string texto, bool exito)
-        {
-            // Los mensajes pueden traer nombres cargados por usuarios.
-            label.Text = System.Web.HttpUtility.HtmlEncode(texto);
-            label.CssClass = exito ? "msg-form msg-exito" : "msg-form msg-error";
-        }
-
-        private void MostrarToast(string mensaje, bool exito)
-        {
-            string clase = exito ? "toast-exito" : "toast-error";
-            string texto = System.Web.HttpUtility.JavaScriptStringEncode(mensaje, true);
-
-            string script =
-                "(function(){var t=document.createElement('div');t.className='toast " + clase + "';" +
-                "t.textContent=" + texto + ";document.body.appendChild(t);" +
-                "setTimeout(function(){t.className+=' toast-hide';},3000);" +
-                "setTimeout(function(){if(t.parentNode){t.parentNode.removeChild(t);}},3600);})();";
-
-            ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
             }
         }
     }

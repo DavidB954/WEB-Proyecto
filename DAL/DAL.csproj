@@ -47,6 +47,7 @@
     <Compile Include="DAL_Medico.cs" />
     <Compile Include="DAL_Conexion.cs" />
     <Compile Include="DAL_DVV.cs" />
+    <Compile Include="ErroresSql.cs" />
     <Compile Include="DAL_Idioma.cs" />
     <Compile Include="DAL_Permiso.cs" />
     <Compile Include="DAL_Rol.cs" />

@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL
 {
@@ -13,40 +10,40 @@ namespace DAL
     {
         DAL_Conexion conex = new DAL_Conexion();
 
-
         public List<BE_Usuario> Usuarios()
         {
-            List<BE_Usuario> ListaUsuarios = new List<BE_Usuario>();
+            List<BE_Usuario> listaUsuarios = new List<BE_Usuario>();
 
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
                 conexion.Open();
 
-                SqlCommand cmdUsuarios = new SqlCommand("Select * from Usuario", conexion);
+                SqlCommand cmdUsuarios = new SqlCommand("Select IdUsuario, Nombre, Apellido, DNI, Email, DVH, HashPassword, IntentosFallidos, Activo From Usuario", conexion);
 
-                SqlDataReader Lector = cmdUsuarios.ExecuteReader();
-
-                while (Lector.Read())
+                using (SqlDataReader lector = cmdUsuarios.ExecuteReader())
                 {
-                    BE_Usuario Usuario = new BE_Usuario();
-                    Usuario.IdUsuario = Convert.ToInt32(Lector["IdUsuario"]);
-                    Usuario.Nombre = Lector["Nombre"].ToString();
-                    Usuario.Apellido = Lector["Apellido"].ToString();
-                    Usuario.DNI = Lector["DNI"].ToString();
-                    Usuario.Email = Lector["Email"].ToString();
-                    Usuario.DVH = Lector["DVH"].ToString();
-                    Usuario.HashPassword = Lector["HashPassword"].ToString();
-                    Usuario.IntentosFallidos = Convert.ToInt32(Lector["IntentosFallidos"]);
-                    Usuario.Activo = Convert.ToBoolean(Lector["Activo"]);
-                    ListaUsuarios.Add(Usuario);
+                    while (lector.Read())
+                    {
+                        BE_Usuario usuario = new BE_Usuario();
+                        usuario.IdUsuario = Convert.ToInt32(lector["IdUsuario"]);
+                        usuario.Nombre = lector["Nombre"].ToString();
+                        usuario.Apellido = lector["Apellido"].ToString();
+                        usuario.DNI = lector["DNI"].ToString();
+                        usuario.Email = lector["Email"].ToString();
+                        usuario.DVH = lector["DVH"].ToString();
+                        usuario.HashPassword = lector["HashPassword"].ToString();
+                        usuario.IntentosFallidos = Convert.ToInt32(lector["IntentosFallidos"]);
+                        usuario.Activo = Convert.ToBoolean(lector["Activo"]);
+                        listaUsuarios.Add(usuario);
+                    }
                 }
             }
-            return ListaUsuarios;
+            return listaUsuarios;
         }
 
         public List<BE_Usuario> UsuariosConRol()
         {
-            List<BE_Usuario> ListaUsuarios = new List<BE_Usuario>();
+            List<BE_Usuario> listaUsuarios = new List<BE_Usuario>();
 
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
@@ -59,33 +56,33 @@ namespace DAL
                                                 Left Join Rol r On r.IdRol = ur.IdRol
                                                 Group By u.IdUsuario, u.Nombre, u.Apellido, u.DNI, u.Email, u.IntentosFallidos, u.Activo", conexion);
 
-                SqlDataReader Lector = cmd.ExecuteReader();
-
-                while (Lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    BE_Usuario Usuario = new BE_Usuario();
-                    Usuario.IdUsuario = Convert.ToInt32(Lector["IdUsuario"]);
-                    Usuario.Nombre = Lector["Nombre"].ToString();
-                    Usuario.Apellido = Lector["Apellido"].ToString();
-                    Usuario.DNI = Lector["DNI"].ToString();
-                    Usuario.Email = Lector["Email"].ToString();
-                    Usuario.IntentosFallidos = Convert.ToInt32(Lector["IntentosFallidos"]);
-                    Usuario.Activo = Convert.ToBoolean(Lector["Activo"]);
-                    Usuario.NombreRol = Lector["NombreRol"] == DBNull.Value ? "(sin rol)" : Lector["NombreRol"].ToString();
-                    ListaUsuarios.Add(Usuario);
+                    while (lector.Read())
+                    {
+                        BE_Usuario usuario = new BE_Usuario();
+                        usuario.IdUsuario = Convert.ToInt32(lector["IdUsuario"]);
+                        usuario.Nombre = lector["Nombre"].ToString();
+                        usuario.Apellido = lector["Apellido"].ToString();
+                        usuario.DNI = lector["DNI"].ToString();
+                        usuario.Email = lector["Email"].ToString();
+                        usuario.IntentosFallidos = Convert.ToInt32(lector["IntentosFallidos"]);
+                        usuario.Activo = Convert.ToBoolean(lector["Activo"]);
+                        usuario.NombreRol = lector["NombreRol"] == DBNull.Value ? "(sin rol)" : lector["NombreRol"].ToString();
+                        listaUsuarios.Add(usuario);
+                    }
                 }
             }
-            return ListaUsuarios;
+            return listaUsuarios;
         }
 
         public BE_Usuario ObtenerUsuarioPorEmail(string email)
         {
-
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
                 conexion.Open();
 
-                SqlCommand cmdUsuEmail = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.Email, u.HashPassword, u.DNI, u.DVH, u.IntentosFallidos, u.Activo, r.IdRol, r.Nombre As NombreRol, u.IdIdiomaPreferido
+                SqlCommand cmdUsuEmail = new SqlCommand(@"Select u.IdUsuario, u.Nombre, u.Apellido, u.Email, u.HashPassword, u.DNI, u.DVH, u.IntentosFallidos, u.Activo, r.Nombre As NombreRol, u.IdIdiomaPreferido
                                                         From Usuario u
                                                         Left Join UsuarioRol ur On ur.IdUsuario = u.IdUsuario
                                                         Left Join Rol r On r.IdRol = ur.IdRol
@@ -93,34 +90,33 @@ namespace DAL
 
                 cmdUsuEmail.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = email;
 
-                SqlDataReader Lector = cmdUsuEmail.ExecuteReader();
-
-
-                if (!Lector.Read())
+                using (SqlDataReader lector = cmdUsuEmail.ExecuteReader())
                 {
-                    return null;
-                }
-
-                else
-                    return new BE_Usuario
+                    if (!lector.Read())
                     {
-                        IdUsuario = Lector.GetInt32(0),
-                        Nombre = Lector.GetString(1),
-                        Apellido = Lector.GetString(2),
-                        Email = Lector.GetString(3),
-                        HashPassword = Lector.GetString(4),
-                        DNI = Lector.GetString(5),
-                        DVH = Lector.GetString(6),
-                        IntentosFallidos = Lector.GetInt32(7),
-                        Activo = Lector.GetBoolean(8),
-                        IdRol = Lector.IsDBNull(9) ? 0 : Lector.GetInt32(9),
-                        NombreRol = Lector.IsDBNull(10) ? null : Lector.GetString(10),
-                        IdIdiomaPreferido = Lector.IsDBNull(11) ? (int?)null : Lector.GetInt32(11)
-                    };
+                        return null;
+                    }
+
+                    else
+                        return new BE_Usuario
+                        {
+                            IdUsuario = lector.GetInt32(0),
+                            Nombre = lector.GetString(1),
+                            Apellido = lector.GetString(2),
+                            Email = lector.GetString(3),
+                            HashPassword = lector.GetString(4),
+                            DNI = lector.GetString(5),
+                            DVH = lector.GetString(6),
+                            IntentosFallidos = lector.GetInt32(7),
+                            Activo = lector.GetBoolean(8),
+                            NombreRol = lector.IsDBNull(9) ? null : lector.GetString(9),
+                            IdIdiomaPreferido = lector.IsDBNull(10) ? (int?)null : lector.GetInt32(10)
+                        };
+                }
             }
         }
 
-        public void ActualizarIntentosFallidos(int intentos, int IdUsuario)
+        public void ActualizarIntentosFallidos(int intentos, int idUsuario)
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
@@ -129,12 +125,13 @@ namespace DAL
                 SqlCommand cmdActualizarIntentos = new SqlCommand("Update Usuario Set IntentosFallidos = @intentos Where IdUsuario=@id", conexion);
 
                 cmdActualizarIntentos.Parameters.Add("@intentos", SqlDbType.Int).Value = intentos;
-                cmdActualizarIntentos.Parameters.Add("@id", SqlDbType.Int).Value = IdUsuario;
+                cmdActualizarIntentos.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
 
                 cmdActualizarIntentos.ExecuteNonQuery();
             }
         }
-        public void BloquearUsuario(int IdUsuario)
+
+        public void BloquearUsuario(int idUsuario)
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
@@ -142,13 +139,13 @@ namespace DAL
 
                 SqlCommand cmdBloquearUsuario = new SqlCommand("Update Usuario SET Activo=0 Where IdUsuario = @id", conexion);
 
-                cmdBloquearUsuario.Parameters.Add("@id", SqlDbType.Int).Value = IdUsuario;
+                cmdBloquearUsuario.Parameters.Add("@id", SqlDbType.Int).Value = idUsuario;
 
                 cmdBloquearUsuario.ExecuteNonQuery();
             }
         }
 
-        public void AgregarUsuario(BE_Usuario Usuario)
+        public void AgregarUsuario(BE_Usuario usuario)
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
@@ -158,21 +155,20 @@ namespace DAL
                                                     VALUES (@nombre, @apellido, @email, @password, @dni, @dvh, @intentos, @activo);
                                                     SELECT CAST(SCOPE_IDENTITY() AS INT);", conexion);
 
-                cmdUsuario.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = Usuario.Nombre;
-                cmdUsuario.Parameters.Add("@apellido", SqlDbType.VarChar, 50).Value = Usuario.Apellido;
-                cmdUsuario.Parameters.Add("@dni", SqlDbType.VarChar, 8).Value = Usuario.DNI;
-                cmdUsuario.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = Usuario.Email;
-                cmdUsuario.Parameters.Add("@password", SqlDbType.VarChar, 255).Value = Usuario.HashPassword;
-                cmdUsuario.Parameters.Add("@dvh", SqlDbType.VarChar, 255).Value = Usuario.DVH;
-                cmdUsuario.Parameters.Add("@intentos", SqlDbType.Int).Value = Usuario.IntentosFallidos;
-                cmdUsuario.Parameters.Add("@activo", SqlDbType.Bit).Value = Usuario.Activo;
+                cmdUsuario.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = usuario.Nombre;
+                cmdUsuario.Parameters.Add("@apellido", SqlDbType.VarChar, 50).Value = usuario.Apellido;
+                cmdUsuario.Parameters.Add("@dni", SqlDbType.VarChar, 8).Value = usuario.DNI;
+                cmdUsuario.Parameters.Add("@email", SqlDbType.VarChar, 50).Value = usuario.Email;
+                cmdUsuario.Parameters.Add("@password", SqlDbType.VarChar, 255).Value = usuario.HashPassword;
+                cmdUsuario.Parameters.Add("@dvh", SqlDbType.VarChar, 255).Value = usuario.DVH;
+                cmdUsuario.Parameters.Add("@intentos", SqlDbType.Int).Value = usuario.IntentosFallidos;
+                cmdUsuario.Parameters.Add("@activo", SqlDbType.Bit).Value = usuario.Activo;
 
-                Usuario.IdUsuario = (int)cmdUsuario.ExecuteScalar();
+                usuario.IdUsuario = (int)cmdUsuario.ExecuteScalar();
             }
         }
 
-
-        public void ModificarUsuario(BE_Usuario Usuario)
+        public void ModificarUsuario(BE_Usuario usuario)
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
@@ -180,31 +176,20 @@ namespace DAL
 
                 SqlCommand comando = new SqlCommand("Update Usuario SET Nombre=@nombre, Apellido=@apellido, Email=@email, HashPassword=@password, DNI=@dni, DVH=@dvh, IntentosFallidos=@intentos, Activo=@activo WHERE IdUsuario=@id", conexion);
 
-                comando.Parameters.AddWithValue("@id", Usuario.IdUsuario);
-                comando.Parameters.AddWithValue("@nombre", Usuario.Nombre);
-                comando.Parameters.AddWithValue("@apellido", Usuario.Apellido);
-                comando.Parameters.AddWithValue("@email", Usuario.Email);
-                comando.Parameters.AddWithValue("@password", Usuario.HashPassword);
-                comando.Parameters.AddWithValue("@dni", Usuario.DNI);
-                comando.Parameters.AddWithValue("@dvh", Usuario.DVH);
-                comando.Parameters.AddWithValue("@intentos", Usuario.IntentosFallidos);
-                comando.Parameters.AddWithValue("@activo", Usuario.Activo);
+                comando.Parameters.AddWithValue("@id", usuario.IdUsuario);
+                comando.Parameters.AddWithValue("@nombre", usuario.Nombre);
+                comando.Parameters.AddWithValue("@apellido", usuario.Apellido);
+                comando.Parameters.AddWithValue("@email", usuario.Email);
+                comando.Parameters.AddWithValue("@password", usuario.HashPassword);
+                comando.Parameters.AddWithValue("@dni", usuario.DNI);
+                comando.Parameters.AddWithValue("@dvh", usuario.DVH);
+                comando.Parameters.AddWithValue("@intentos", usuario.IntentosFallidos);
+                comando.Parameters.AddWithValue("@activo", usuario.Activo);
 
                 comando.ExecuteNonQuery();
             }
         }
 
-        // Error de SQL Server cuando un DELETE choca con una clave foranea.
-        private const int ErrorClaveForanea = 547;
-
-        // Borra el usuario junto con lo que depende de el, todo en una transaccion:
-        // - Como paciente: sus turnos, atenciones y recetas.
-        // - Como medico: su agenda (franjas, bloqueos, especialidades). Sus turnos
-        //   reservados pasan a Cancelado (el DVH lo arma la BLL con dvhTurnoCancelado)
-        //   y los atendidos se conservan porque son la historia clinica de otros
-        //   pacientes; quedan con el IdMedico del usuario borrado.
-        // La Bitacora no se toca: sus filas conservan el IdUsuario del eliminado.
-        // Devuelve false (sin borrar nada) si alguna otra tabla todavia lo referencia.
         public bool EliminarUsuario(int id, Func<BE_Turno, string> dvhTurnoCancelado, out int turnosCancelados, out int turnosPacienteEliminados)
         {
             turnosCancelados = 0;
@@ -218,7 +203,6 @@ namespace DAL
 
                     using (SqlTransaction tx = conexion.BeginTransaction())
                     {
-                        // ---- Datos como paciente ----
                         SqlCommand comandoRecetas = new SqlCommand(@"Delete r From Receta r
                                                                    Join AtencionMedica a On a.IdAtencion = r.IdAtencion
                                                                    Where a.IdPaciente = @id", conexion, tx);
@@ -237,9 +221,6 @@ namespace DAL
                         comandoPaciente.Parameters.AddWithValue("@id", id);
                         comandoPaciente.ExecuteNonQuery();
 
-                        // ---- Datos como medico ----
-                        // UPDLOCK/HOLDLOCK: nadie puede reservarle un turno nuevo
-                        // mientras se cancelan los que tiene.
                         List<BE_Turno> reservados = new List<BE_Turno>();
 
                         SqlCommand comandoReservados = new SqlCommand(@"Select IdTurno, IdPaciente, IdMedico, FechaHora From Turno With (UPDLOCK, HOLDLOCK)
@@ -280,7 +261,6 @@ namespace DAL
                             comandoMedico.ExecuteNonQuery();
                         }
 
-                        // ---- Seguridad y usuario ----
                         SqlCommand comandoPermiso = new SqlCommand("Delete from UsuarioPermiso WHERE IdUsuario = @id", conexion, tx);
                         comandoPermiso.Parameters.AddWithValue("@id", id);
                         comandoPermiso.ExecuteNonQuery();
@@ -300,9 +280,8 @@ namespace DAL
                     }
                 }
             }
-            catch (SqlException ex) when (ex.Number == ErrorClaveForanea)
+            catch (SqlException ex) when (ErroresSql.EsClaveForanea(ex))
             {
-                // La transaccion se deshace sola al cerrar la conexion sin Commit.
                 turnosCancelados = 0;
                 turnosPacienteEliminados = 0;
                 return false;
@@ -338,20 +317,5 @@ namespace DAL
                 comando.ExecuteNonQuery();
             }
         }
-
-        public void ResetearContrasena(int id, string nuevaPass)
-        {
-            using (SqlConnection conexion = conex.ObtenerConexion())
-            {
-                conexion.Open();
-                SqlCommand comando = new SqlCommand("Update Usuario SET HashPassword=@nuevoHash, IntentosFallidos = 0, Activo=1 WHERE IdUsuario=@id", conexion);
-
-                comando.Parameters.AddWithValue("@id", id);
-                comando.Parameters.AddWithValue("@nuevoHash", nuevaPass);
-
-                comando.ExecuteNonQuery();
-            }
-        }
-
     }
 }

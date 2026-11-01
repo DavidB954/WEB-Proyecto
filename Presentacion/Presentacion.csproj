@@ -144,6 +144,13 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="GestorIdioma.cs" />
+    <Compile Include="PaginaLogin.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="PaginaSeguridadBase.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="RegistroErrores.cs" />
     <Compile Include="PaginaBase.cs">
       <SubType>ASPXCodeBehind</SubType>
     </Compile>

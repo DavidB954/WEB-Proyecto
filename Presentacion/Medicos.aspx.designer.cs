@@ -22,6 +22,8 @@ namespace Presentacion
 
         protected global::System.Web.UI.WebControls.Button btnHoy;
 
+        protected global::System.Web.UI.WebControls.Button btnProximoTurno;
+
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl spanAyudaAtender;
 
         protected global::System.Web.UI.WebControls.GridView gvTurnosMedicos;
@@ -61,5 +63,17 @@ namespace Presentacion
         protected global::System.Web.UI.HtmlControls.HtmlGenericControl hHistoriaClinica;
 
         protected global::System.Web.UI.WebControls.GridView gvHistoria;
+
+        protected global::System.Web.UI.WebControls.TextBox txtBuscarPaciente;
+
+        protected global::System.Web.UI.WebControls.GridView gvPacientes;
+
+        protected global::System.Web.UI.WebControls.Label lblMensajeConsulta;
+
+        protected global::System.Web.UI.WebControls.Panel pnlHistoriaConsultada;
+
+        protected global::System.Web.UI.WebControls.Label lblPacienteConsultado;
+
+        protected global::System.Web.UI.WebControls.GridView gvHistoriaConsultada;
     }
 }

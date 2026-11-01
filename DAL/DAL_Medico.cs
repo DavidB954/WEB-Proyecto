@@ -8,14 +8,10 @@ namespace DAL
 {
     public class DAL_Medico
     {
-        // Nombre del rol (tabla Rol) que identifica a un usuario como medico.
-        private const string RolMedico = "MEDICO";
+        private const string RolMedico = RolesSistema.Medico;
 
         DAL_Conexion conex = new DAL_Conexion();
 
-        // Busca entre los usuarios con rol MEDICO. Los dos filtros son opcionales
-        // (null = sin filtrar): es la misma busqueda que va a usar el paciente
-        // para elegir medico por nombre o por especialidad.
         public List<BE_Medico> BuscarMedicos(string nombre, int? idEspecialidad)
         {
             List<BE_Medico> lista = new List<BE_Medico>();
@@ -49,21 +45,22 @@ namespace DAL
                     string.IsNullOrWhiteSpace(nombre) ? (object)DBNull.Value : "%" + EscaparLike(nombre.Trim()) + "%";
                 cmd.Parameters.Add("@idEspecialidad", SqlDbType.Int).Value = (object)idEspecialidad ?? DBNull.Value;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(new BE_Medico
+                    while (lector.Read())
                     {
-                        IdMedico = lector.GetInt32(0),
-                        Nombre = lector.GetString(1),
-                        Apellido = lector.GetString(2),
-                        UsuarioActivo = lector.GetBoolean(3),
-                        Matricula = lector.IsDBNull(4) ? (int?)null : lector.GetInt32(4),
-                        DVH = lector.IsDBNull(5) ? null : lector.GetString(5),
-                        Especialidades = lector.IsDBNull(6) ? null : lector.GetString(6),
-                        FranjasActivas = lector.GetInt32(7)
-                    });
+                        lista.Add(new BE_Medico
+                        {
+                            IdMedico = lector.GetInt32(0),
+                            Nombre = lector.GetString(1),
+                            Apellido = lector.GetString(2),
+                            UsuarioActivo = lector.GetBoolean(3),
+                            Matricula = lector.IsDBNull(4) ? (int?)null : lector.GetInt32(4),
+                            DVH = lector.IsDBNull(5) ? null : lector.GetString(5),
+                            Especialidades = lector.IsDBNull(6) ? null : lector.GetString(6),
+                            FranjasActivas = lector.GetInt32(7)
+                        });
+                    }
                 }
             }
 
@@ -125,20 +122,18 @@ namespace DAL
                 SqlCommand cmd = new SqlCommand("Select IdEspecialidad From MedicoEspecialidad Where IdMedico=@id", cn);
                 cmd.Parameters.Add("@id", SqlDbType.Int).Value = idMedico;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(lector.GetInt32(0));
+                    while (lector.Read())
+                    {
+                        lista.Add(lector.GetInt32(0));
+                    }
                 }
             }
 
             return lista;
         }
 
-        // Alta o modificacion de la matricula y reemplazo completo de las
-        // especialidades, todo en una transaccion: o queda el medico con todos
-        // sus datos nuevos o no cambia nada.
         public void GuardarMedico(int idMedico, int matricula, string dvh, List<int> idsEspecialidad)
         {
             using (SqlConnection cn = conex.ObtenerConexion())
@@ -147,8 +142,6 @@ namespace DAL
 
                 using (SqlTransaction tx = cn.BeginTransaction())
                 {
-                    // HorarioDesde/HorarioHasta son NOT NULL: arrancan en 00:00 y
-                    // ActualizarRangoHorario los pone en el rango de sus franjas.
                     SqlCommand cmdMedico = new SqlCommand(@"If Exists (Select 1 From Medico Where IdMedico=@id)
                                                               Update Medico Set Matricula=@matricula, DVH=@dvh Where IdMedico=@id
                                                           Else
@@ -177,9 +170,6 @@ namespace DAL
             }
         }
 
-        // Mantiene Medico.HorarioDesde/HorarioHasta como resumen (primer y ultimo
-        // horario de atencion entre sus franjas activas). La agenda real esta en
-        // MedicoHorario.
         public void ActualizarRangoHorario(int idMedico)
         {
             using (SqlConnection cn = conex.ObtenerConexion())
@@ -197,7 +187,6 @@ namespace DAL
             }
         }
 
-        // Para que un nombre con % o _ se busque literal y no como comodin.
         private static string EscaparLike(string texto)
         {
             return texto.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");

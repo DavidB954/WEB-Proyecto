@@ -1,11 +1,6 @@
 ﻿using BE;
 using BLL;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
@@ -15,29 +10,9 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-
-            BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-            if (usuarioLogueado != null)
+            if (UsuarioLogueado != null)
             {
-                try
-                {
-                    bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.LOGOUT, "LOGIN", $"Cierre de sesion del usuario: {usuarioLogueado.NombreApellido}, ID: {usuarioLogueado.IdUsuario}");
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        string carpetaLogs = Server.MapPath("~/App_Data");
-                        System.IO.Directory.CreateDirectory(carpetaLogs);
-                        System.IO.File.AppendAllText(
-                            System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                            $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - CerrarSesion - Fallo al registrar bitacora: {ex}{Environment.NewLine}");
-                    }
-                    catch
-                    {
-                    }
-                }
+                bll_bitacora.RegistrarEvento(UsuarioLogueado.IdUsuario, AccionBitacora.LOGOUT, "LOGIN", $"Cierre de sesion del usuario: {UsuarioLogueado.NombreApellido}, ID: {UsuarioLogueado.IdUsuario}");
             }
 
             Session.Clear();

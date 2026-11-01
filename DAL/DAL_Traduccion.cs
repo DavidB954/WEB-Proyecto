@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL
 {
@@ -69,64 +66,6 @@ namespace DAL
             }
         }
 
-        // Guarda un lote de traducciones (IdClave -> texto) en una sola transaccion.
-        public void GuardarTraducciones(int idIdioma, Dictionary<int, string> textos)
-        {
-            using (SqlConnection cn = conex.ObtenerConexion())
-            {
-                cn.Open();
-
-                using (SqlTransaction transaccion = cn.BeginTransaction())
-                {
-                    SqlCommand cmd = new SqlCommand(
-                        @"If Exists (Select 1 From Traduccion Where IdIdioma = @idIdioma And IdClave = @idClave)
-                            Update Traduccion Set Texto = @texto Where IdIdioma = @idIdioma And IdClave = @idClave
-                          Else
-                            Insert Into Traduccion (IdIdioma, IdClave, Texto) Values (@idIdioma, @idClave, @texto)", cn, transaccion);
-
-                    cmd.Parameters.Add("@idIdioma", SqlDbType.Int).Value = idIdioma;
-                    SqlParameter idClave = cmd.Parameters.Add("@idClave", SqlDbType.Int);
-                    SqlParameter texto = cmd.Parameters.Add("@texto", SqlDbType.NVarChar, 300);
-
-                    foreach (KeyValuePair<int, string> par in textos)
-                    {
-                        idClave.Value = par.Key;
-                        texto.Value = par.Value;
-                        cmd.ExecuteNonQuery();
-                    }
-
-                    transaccion.Commit();
-                }
-            }
-        }
-
-        public List<BE_Traduccion> ObtenerCatalogo()
-        {
-            List<BE_Traduccion> lista = new List<BE_Traduccion>();
-
-            using (SqlConnection cn = conex.ObtenerConexion())
-            {
-                cn.Open();
-
-                SqlCommand cmd = new SqlCommand("Select IdClave, Pagina, ControlId, TextoBase From ClaveTexto Order By Pagina, ControlId", cn);
-
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
-                {
-                    lista.Add(new BE_Traduccion
-                    {
-                        IdClave = lector.GetInt32(0),
-                        Pagina = lector.GetString(1),
-                        ControlId = lector.GetString(2),
-                        TextoBase = lector.GetString(3)
-                    });
-                }
-            }
-
-            return lista;
-        }
-
         public List<BE_Traduccion> ObtenerTraduccionesParaGrilla(int idIdioma)
         {
             List<BE_Traduccion> lista = new List<BE_Traduccion>();
@@ -143,18 +82,19 @@ namespace DAL
 
                 cmd.Parameters.Add("@idIdioma", SqlDbType.Int).Value = idIdioma;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(new BE_Traduccion
+                    while (lector.Read())
                     {
-                        IdClave = lector.GetInt32(0),
-                        Pagina = lector.GetString(1),
-                        ControlId = lector.GetString(2),
-                        TextoBase = lector.GetString(3),
-                        Texto = lector.IsDBNull(4) ? null : lector.GetString(4)
-                    });
+                        lista.Add(new BE_Traduccion
+                        {
+                            IdClave = lector.GetInt32(0),
+                            Pagina = lector.GetString(1),
+                            ControlId = lector.GetString(2),
+                            TextoBase = lector.GetString(3),
+                            Texto = lector.IsDBNull(4) ? null : lector.GetString(4)
+                        });
+                    }
                 }
             }
 
@@ -176,12 +116,13 @@ namespace DAL
 
                 cmd.Parameters.Add("@idIdioma", SqlDbType.Int).Value = idIdioma;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    string clave = lector.GetString(0) + "." + lector.GetString(1);
-                    diccionario[clave] = lector.GetString(2);
+                    while (lector.Read())
+                    {
+                        string clave = lector.GetString(0) + "." + lector.GetString(1);
+                        diccionario[clave] = lector.GetString(2);
+                    }
                 }
             }
 

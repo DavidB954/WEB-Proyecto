@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL
 {
@@ -14,7 +9,7 @@ namespace DAL
     {
         DAL_Conexion conex = new DAL_Conexion();
 
-        public string ObtenerDVV(string NombreTabla)
+        public string ObtenerDVV(string nombreTabla)
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
@@ -22,7 +17,7 @@ namespace DAL
 
                 SqlCommand cmdObtenerDVV = new SqlCommand("Select DVV from DigitoVerificadorVertical Where NombreTabla=@tabla", conexion);
 
-                cmdObtenerDVV.Parameters.Add("@tabla", SqlDbType.VarChar, 50).Value = NombreTabla;
+                cmdObtenerDVV.Parameters.Add("@tabla", SqlDbType.VarChar, 50).Value = nombreTabla;
 
                 object result = cmdObtenerDVV.ExecuteScalar();
 
@@ -30,7 +25,7 @@ namespace DAL
             }
         }
 
-        public void ActualizarDVV(string DVV, string NombreTabla)
+        public void ActualizarDVV(string dVV, string nombreTabla)
         {
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
@@ -38,8 +33,8 @@ namespace DAL
 
                 SqlCommand cmdDVV = new SqlCommand("UPDATE DigitoVerificadorVertical SET DVV=@DVV, FechaActualizacion=GETDATE() WHERE NombreTabla=@tabla", conexion);
 
-                cmdDVV.Parameters.Add("@DVV", SqlDbType.VarChar, 255).Value = DVV;
-                cmdDVV.Parameters.Add("@tabla", SqlDbType.VarChar, 50).Value = NombreTabla;
+                cmdDVV.Parameters.Add("@DVV", SqlDbType.VarChar, 255).Value = dVV;
+                cmdDVV.Parameters.Add("@tabla", SqlDbType.VarChar, 50).Value = nombreTabla;
                 cmdDVV.ExecuteNonQuery();
             }
         }
@@ -117,7 +112,6 @@ namespace DAL
 
         public void GenerarBackUp(string rutaBackup)
         {
-
             using (SqlConnection conexion = conex.ObtenerConexion())
             {
                 conexion.Open();
@@ -134,9 +128,7 @@ namespace DAL
         {
             SqlConnection.ClearAllPools();
 
-            string masterConnectionString = "Data Source=.;Initial Catalog=master;Integrated Security=True";
-
-            using (SqlConnection conexion = new SqlConnection(masterConnectionString))
+            using (SqlConnection conexion = conex.ObtenerConexionMaster())
             {
                 conexion.Open();
 

@@ -5,8 +5,6 @@ using SERVICIOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BLL
 {
@@ -30,9 +28,6 @@ namespace BLL
             }
         }
 
-        // Da de alta en la tabla Permiso todo lo que esta en CatalogoPermisos y
-        // todavia no existe (y corrige el Tipo si no coincide). Los permisos no se
-        // crean a mano: Rol_Permiso y UsuarioPermiso necesitan su IdPermiso.
         public void SincronizarCatalogo(BE_Usuario usuarioLogueado)
         {
             try
@@ -74,7 +69,100 @@ namespace BLL
 
         private string CadenaPermiso(BE_Permiso permiso) => $"{permiso.IdPermiso}|{permiso.Nombre}|{permiso.Tipo}";
 
-        // ---- Arbol Composite completo de un usuario (raiz): sus Roles + sus permisos directos ----
+        public string ObtenerMotivoSoloLectura(BE_Usuario usuarioLogueado, int idUsuarioDestino)
+        {
+            try
+            {
+                return MotivoSoloLectura(usuarioLogueado, idUsuarioDestino);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al verificar si se puede modificar el usuario: {ex.Message}", ex);
+            }
+        }
+
+        public List<BE_Rol> ObtenerRolesAsignables(BE_Usuario usuarioLogueado)
+        {
+            try
+            {
+                List<BE_Rol> roles = dal_rol.ObtenerRoles();
+
+                return EsWebmaster(usuarioLogueado) ? roles : roles.Where(r => !OtorgaWebmaster(r.IdRol)).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al obtener los roles asignables: {ex.Message}", ex);
+            }
+        }
+
+        public HashSet<int> ObtenerIdsUsuariosWebmaster()
+        {
+            HashSet<int> ids = new HashSet<int>();
+
+            foreach (BE_Rol rol in dal_rol.ObtenerRoles().Where(r => OtorgaWebmaster(r.IdRol)))
+            {
+                ids.UnionWith(dal_rol.ObtenerIdsUsuariosConRol(rol.IdRol));
+            }
+
+            return ids;
+        }
+
+        public bool PuedeGestionarUsuario(BE_Usuario usuarioLogueado, int idUsuarioDestino)
+        {
+            return EsWebmaster(usuarioLogueado) || !dal_rol.ObtenerRolesDeUsuario(idUsuarioDestino).Any(r => OtorgaWebmaster(r.IdRol));
+        }
+
+        private string MotivoSoloLectura(BE_Usuario usuarioLogueado, int idUsuarioDestino)
+        {
+            if (usuarioLogueado.IdUsuario == idUsuarioDestino)
+            {
+                return TextoLocalizado.T("No podes modificar tus propios roles ni permisos.");
+            }
+
+            if (!PuedeGestionarUsuario(usuarioLogueado, idUsuarioDestino))
+            {
+                return TextoLocalizado.T("No tiene permiso para realizar esta accion.");
+            }
+
+            return null;
+        }
+
+        private void ValidarUsuarioModificable(BE_Usuario usuarioLogueado, int idUsuarioDestino)
+        {
+            string motivo = MotivoSoloLectura(usuarioLogueado, idUsuarioDestino);
+
+            if (motivo != null)
+            {
+                throw new InvalidOperationException(motivo);
+            }
+        }
+
+        private void ValidarCambioDeRol(BE_Usuario usuarioLogueado, int idUsuarioDestino, int idRol)
+        {
+            ValidarUsuarioModificable(usuarioLogueado, idUsuarioDestino);
+
+            if (OtorgaWebmaster(idRol) && !EsWebmaster(usuarioLogueado))
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("Solo un Webmaster puede asignar o quitar ese rol."));
+            }
+        }
+
+        private bool OtorgaWebmaster(int idRol)
+        {
+            BE_Rol webmaster = dal_rol.ObtenerRoles().FirstOrDefault(r => string.Equals(r.Nombre, RolesSistema.Webmaster, StringComparison.OrdinalIgnoreCase));
+
+            return webmaster != null && bll_rol.ConstruirArbolRol(idRol).ContieneRol(webmaster.IdRol);
+        }
+
+        public bool EsWebmaster(BE_Usuario usuario)
+        {
+            if (usuario.EsEmergencia)
+            {
+                return usuario.NombreRol == RolesSistema.Webmaster;
+            }
+
+            return dal_rol.ObtenerRolesDeUsuario(usuario.IdUsuario).Any(r => OtorgaWebmaster(r.IdRol));
+        }
 
         public UsuarioComponente ConstruirArbolUsuario(BE_Usuario usuario)
         {
@@ -104,6 +192,8 @@ namespace BLL
         {
             try
             {
+                ValidarCambioDeRol(usuarioLogueado, idUsuarioDestino, idRol);
+
                 BE_Usuario usuarioDestino = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == idUsuarioDestino);
 
                 if (usuarioDestino == null)
@@ -120,8 +210,6 @@ namespace BLL
 
                 RolComponente rol = bll_rol.ConstruirArbolRol(idRol);
 
-                // Valida el caso del enunciado: si el usuario ya tiene, suelto, un
-                // permiso que este rol tambien otorga, se rechaza.
                 arbolUsuario.AsignarRol(rol);
 
                 dal_rol.AgregarRolAUsuario(idUsuarioDestino, idRol);
@@ -143,6 +231,8 @@ namespace BLL
         {
             try
             {
+                ValidarCambioDeRol(usuarioLogueado, idUsuarioDestino, idRol);
+
                 BE_Usuario usuarioDestino = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == idUsuarioDestino);
                 BE_Rol rol = dal_rol.ObtenerRoles().FirstOrDefault(r => r.IdRol == idRol);
 
@@ -150,6 +240,10 @@ namespace BLL
 
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.ROL_QUITADO_USUARIO, "ROL",
                     $"Se quita el rol '{rol?.Nombre}' al usuario {usuarioDestino?.NombreApellido}. Realizado por {usuarioLogueado.NombreApellido}.");
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -161,6 +255,8 @@ namespace BLL
         {
             try
             {
+                ValidarUsuarioModificable(usuarioLogueado, idUsuarioDestino);
+
                 BE_Usuario usuarioDestino = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == idUsuarioDestino);
 
                 if (usuarioDestino == null)
@@ -177,8 +273,6 @@ namespace BLL
 
                 UsuarioComponente arbolUsuario = ConstruirArbolUsuario(usuarioDestino);
 
-                // Valida el caso del enunciado: si el permiso ya llega al usuario
-                // (directo o via cualquier rol), se rechaza la asignacion duplicada.
                 arbolUsuario.AsignarPermiso(new PermisoComponente(permiso));
 
                 dal_permiso.AgregarPermisoAUsuario(idUsuarioDestino, idPermiso);
@@ -200,6 +294,8 @@ namespace BLL
         {
             try
             {
+                ValidarUsuarioModificable(usuarioLogueado, idUsuarioDestino);
+
                 BE_Usuario usuarioDestino = dal_usuario.Usuarios().FirstOrDefault(u => u.IdUsuario == idUsuarioDestino);
                 BE_Permiso permiso = dal_permiso.ObtenerPermisos().FirstOrDefault(p => p.IdPermiso == idPermiso);
 
@@ -207,6 +303,10 @@ namespace BLL
 
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.PERMISO_QUITADO_USUARIO, "PERMISO",
                     $"Se quita el permiso '{permiso?.Nombre}' al usuario {usuarioDestino?.NombreApellido}. Realizado por {usuarioLogueado.NombreApellido}.");
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

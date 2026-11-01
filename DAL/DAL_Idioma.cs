@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL
 {
@@ -23,11 +20,12 @@ namespace DAL
 
                 SqlCommand cmd = new SqlCommand("Select IdIdioma, Codigo, Nombre, Activo, PorDefecto From Idioma Order By Nombre", cn);
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(MapearIdioma(lector));
+                    while (lector.Read())
+                    {
+                        lista.Add(MapearIdioma(lector));
+                    }
                 }
             }
 
@@ -44,11 +42,12 @@ namespace DAL
 
                 SqlCommand cmd = new SqlCommand("Select IdIdioma, Codigo, Nombre, Activo, PorDefecto From Idioma Where Activo = 1 Order By Nombre", cn);
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(MapearIdioma(lector));
+                    while (lector.Read())
+                    {
+                        lista.Add(MapearIdioma(lector));
+                    }
                 }
             }
 
@@ -64,14 +63,15 @@ namespace DAL
                 SqlCommand cmd = new SqlCommand("Select IdIdioma, Codigo, Nombre, Activo, PorDefecto From Idioma Where IdIdioma = @idIdioma", cn);
                 cmd.Parameters.Add("@idIdioma", SqlDbType.Int).Value = idIdioma;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                if (!lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    return null;
-                }
+                    if (!lector.Read())
+                    {
+                        return null;
+                    }
 
-                return MapearIdioma(lector);
+                    return MapearIdioma(lector);
+                }
             }
         }
 
@@ -83,15 +83,15 @@ namespace DAL
 
                 SqlCommand cmd = new SqlCommand("Select Top 1 IdIdioma, Codigo, Nombre, Activo, PorDefecto From Idioma Where PorDefecto = 1", cn);
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                if (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    return MapearIdioma(lector);
+                    if (lector.Read())
+                    {
+                        return MapearIdioma(lector);
+                    }
                 }
             }
 
-            
             using (SqlConnection cn = conex.ObtenerConexion())
             {
                 cn.Open();
@@ -102,9 +102,10 @@ namespace DAL
 
                       Select Top 1 IdIdioma, Codigo, Nombre, Activo, PorDefecto From Idioma Where PorDefecto = 1;", cn);
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                return lector.Read() ? MapearIdioma(lector) : null;
+                using (SqlDataReader lector = cmd.ExecuteReader())
+                {
+                    return lector.Read() ? MapearIdioma(lector) : null;
+                }
             }
         }
 
@@ -118,6 +119,19 @@ namespace DAL
                 cmd.Parameters.Add("@codigo", SqlDbType.VarChar, 10).Value = codigo;
 
                 return (int)cmd.ExecuteScalar() > 0;
+            }
+        }
+
+        public int ContarUsuariosConIdiomaPreferido(int idIdioma)
+        {
+            using (SqlConnection cn = conex.ObtenerConexion())
+            {
+                cn.Open();
+
+                SqlCommand cmd = new SqlCommand("Select Count(*) From Usuario Where IdIdiomaPreferido = @idIdioma", cn);
+                cmd.Parameters.Add("@idIdioma", SqlDbType.Int).Value = idIdioma;
+
+                return (int)cmd.ExecuteScalar();
             }
         }
 
@@ -135,6 +149,22 @@ namespace DAL
                 cmd.Parameters.Add("@activo", SqlDbType.Bit).Value = idioma.Activo;
 
                 idioma.IdIdioma = Convert.ToInt32(cmd.ExecuteScalar());
+            }
+        }
+
+        public void ModificarIdioma(BE_Idioma idioma)
+        {
+            using (SqlConnection cn = conex.ObtenerConexion())
+            {
+                cn.Open();
+
+                SqlCommand cmd = new SqlCommand("Update Idioma Set Codigo = @codigo, Nombre = @nombre Where IdIdioma = @idIdioma", cn);
+
+                cmd.Parameters.Add("@codigo", SqlDbType.VarChar, 10).Value = idioma.Codigo;
+                cmd.Parameters.Add("@nombre", SqlDbType.VarChar, 50).Value = idioma.Nombre;
+                cmd.Parameters.Add("@idIdioma", SqlDbType.Int).Value = idioma.IdIdioma;
+
+                cmd.ExecuteNonQuery();
             }
         }
 

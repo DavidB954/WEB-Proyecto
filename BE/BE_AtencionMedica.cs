@@ -4,8 +4,6 @@ using System.Linq;
 
 namespace BE
 {
-    // Lo que el medico registra al atender un turno. El conjunto de atenciones
-    // de un paciente es su historia clinica.
     public class BE_AtencionMedica
     {
         public int IdAtencion { get; set; }
@@ -26,7 +24,6 @@ namespace BE
 
         public string DVH { get; set; }
 
-        // Solo para mostrar.
         public string NombreMedico { get; set; }
 
         public List<BE_Receta> Recetas { get; set; } = new List<BE_Receta>();

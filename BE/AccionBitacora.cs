@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BE
+﻿namespace BE
 {
     public enum AccionBitacora
     {
-
         LOGIN_INTENTO,
         LOGIN_INCORRECTO,
         LOGIN_BLOQUEADO,
@@ -60,6 +53,10 @@ namespace BE
         TURNO_AUSENTE,
         ATENCION_REGISTRADA,
 
-        ACCION_INVALIDA
+        ACCION_INVALIDA,
+
+        IDIOMA_MODIFICACION,
+
+        HISTORIA_CLINICA_CONSULTADA
     }
 }

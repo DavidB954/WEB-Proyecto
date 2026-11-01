@@ -1,13 +1,8 @@
-﻿using BE;
-using BE.Seguridad;
-using BLL;
-using SERVICIOS;
+﻿using BLL;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Presentacion
@@ -18,8 +13,6 @@ namespace Presentacion
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
-
             if (!IsPostBack)
             {
                 try
@@ -31,8 +24,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("Seguridad.Page_Load", ex);
-                    lblMensaje.Text = T("No se pudo cargar la pantalla de seguridad. Intenta nuevamente mas tarde.");
-                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensaje, T("No se pudo cargar la pantalla de seguridad. Intenta nuevamente mas tarde."), false);
                 }
             }
         }
@@ -117,8 +109,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnRecalcular_Click", ex);
-                lblMensaje.Text = T("No se pudieron recalcular los digitos verificadores. Intenta nuevamente mas tarde.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, T("No se pudieron recalcular los digitos verificadores. Intenta nuevamente mas tarde."), false);
             }
         }
 
@@ -131,20 +122,16 @@ namespace Presentacion
 
             try
             {
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
+                string rutaGenerada = bll_dvv.GenerarBackUp(UsuarioLogueado);
 
-                string rutaGenerada = bll_dvv.GenerarBackUp(usuarioLogueado);
-
-                lblMensaje.Text = T("Backup generado en: {0}", rutaGenerada);
-                lblMensaje.ForeColor = System.Drawing.Color.Green;
+                MostrarMensaje(lblMensaje, T("Backup generado en: {0}", rutaGenerada), true);
 
                 CargarBackupsDisponibles();
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnBackUp_Click", ex);
-                lblMensaje.Text = T("No se pudo generar el backup. Intenta nuevamente mas tarde.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, T("No se pudo generar el backup. Intenta nuevamente mas tarde."), false);
             }
         }
 
@@ -157,46 +144,28 @@ namespace Presentacion
 
             try
             {
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_dvv.RestaurarBackup(usuarioLogueado, ddlBackups.SelectedValue);
+                bll_dvv.RestaurarBackup(UsuarioLogueado, ddlBackups.SelectedValue);
 
                 CerrarSesionYVolverALogin(T("Se restauro la base de datos correctamente. Tenes que volver a iniciar sesion."));
+            }
+            catch (InvalidOperationException ex)
+            {
+                MostrarMensaje(lblMensaje, ex.Message, false);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("Seguridad.btnRestore_Click", ex);
-                lblMensaje.Text = T("No se pudo restaurar el backup. Intenta nuevamente mas tarde.");
-                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensaje, T("No se pudo restaurar el backup. Intenta nuevamente mas tarde."), false);
             }
         }
-
 
         private void CerrarSesionYVolverALogin(string mensaje)
         {
             Session.Clear();
             Session["MensajeLogout"] = mensaje;
 
-            // Se llama dentro de un try/catch: con Redirect(url) a secas, la
-            // ThreadAbortException caia en el catch y una restauracion o recalculo
-            // exitoso quedaba registrado como error.
             Response.Redirect("Login.aspx", false);
             Context.ApplicationInstance.CompleteRequest();
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
-            }
         }
     }
 }

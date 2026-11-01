@@ -9,20 +9,6 @@ using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    /// <summary>
-    /// Base de la que heredan todas las paginas que usan Site1.Master. Se
-    /// suscribe como Observer ante GestorIdioma: al suscribirse recibe una
-    /// sincronizacion inmediata (idioma actual de la sesion) y, si el combo de
-    /// idioma de la Master dispara un cambio durante este mismo postback,
-    /// vuelve a recibir la notificacion y reaplica las traducciones.
-    ///
-    /// Tambien centraliza la seguridad por permisos (ver CatalogoPermisos):
-    ///   - Si la pagina tiene permisos en el catalogo, solo entra quien tenga
-    ///     alguno de ellos (el de PAGINA o alguna ACCION).
-    ///   - Todo control con data-permiso="CODIGO" se oculta si el usuario no
-    ///     tiene ese permiso ni el permiso PAGINA de esa pagina.
-    ///   - ExigirPermiso("CODIGO") se llama al inicio de cada OnClick protegido.
-    /// </summary>
     public class PaginaBase : Page, IIdiomaObservador
     {
         private const string AtributoPermiso = "data-permiso";
@@ -33,7 +19,6 @@ namespace Presentacion
 
         protected string NombrePagina => Path.GetFileName(Request.AppRelativeCurrentExecutionFilePath);
 
-        // Texto escrito en C# traducido al idioma activo. El texto en español es la clave.
         protected string T(string textoBase, params object[] argumentos)
         {
             return GestorIdioma.Traducir(textoBase, argumentos);
@@ -43,40 +28,24 @@ namespace Presentacion
         {
             base.OnInit(e);
 
-            // Fuera del try/catch de abajo: el Response.Redirect corta la pagina
-            // con ThreadAbortException y no tiene que confundirse con un error.
             ValidarAccesoPagina();
 
-            try
-            {
-                GestorIdioma.Suscribir(this);
-            }
-            catch
-            {
-                // OnInit corre antes que cualquier try/catch propio de la pagina en
-                // Page_Load: una falla aca no puede tirar abajo la pagina entera.
-            }
+            GestorIdioma.Suscribir(this);
         }
 
         protected override void OnPreRender(EventArgs e)
         {
             base.OnPreRender(e);
 
-            // Las filas de las grillas recien existen despues del DataBind: se
-            // traducen aca y no en OnInit como el resto de la pagina.
             GestorIdioma.AplicarTraduccionesGrillas(this);
             GestorIdioma.AplicarTituloPagina(this);
 
-            // En PreRender (y no en Load) para cubrir tambien las filas que las
-            // grillas generan al hacer DataBind dentro de los eventos.
             try
             {
                 OcultarControlesSinPermiso(this);
             }
             catch
             {
-                // Si falla el recorrido no se puede dejar visible lo protegido:
-                // ExigirPermiso en cada OnClick sigue bloqueando la accion.
             }
         }
 
@@ -90,10 +59,6 @@ namespace Presentacion
             return SeguridadHelper.TieneAccesoAccion(UsuarioLogueado, PermisosUsuario, codigoPermiso);
         }
 
-        // Ocultar un boton no alcanza: un postback se puede forzar a mano. Cada
-        // OnClick protegido arranca con: if (!ExigirPermiso("CODIGO")) return;
-        // No redirige: un Response.Redirect dentro del try/catch del OnClick
-        // terminaria registrado como error.
         protected bool ExigirPermiso(string codigoPermiso)
         {
             if (TienePermiso(codigoPermiso))
@@ -102,24 +67,67 @@ namespace Presentacion
             }
 
             string mensaje = System.Web.HttpUtility.JavaScriptStringEncode(T("No tiene permiso para realizar esta accion."), true);
-            ScriptManager.RegisterStartupScript(this, GetType(), "sinPermiso_" + Guid.NewGuid().ToString("N"), $"alert({mensaje});", true);
+            ScriptManager.RegisterStartupScript(this, GetType(), "sinPermiso_" + Guid.NewGuid().ToString("N"), $"mostrarAviso({mensaje});", true);
 
             return false;
         }
 
-        // Reemplaza la respuesta de la pagina por el archivo. Se evita Response.End()
-        // (corta con ThreadAbortException); SuppressContent descarta el HTML que la
-        // pagina igual va a generar despues de este evento.
-        protected void DescargarXml(string xml, string nombreArchivo)
+        protected void RegistrarErrorInterno(string origen, Exception ex)
+        {
+            RegistroErrores.Registrar(origen, ex);
+        }
+
+        protected void MostrarMensaje(Label label, string texto, bool exito)
+        {
+            label.Text = System.Web.HttpUtility.HtmlEncode(texto);
+            label.CssClass = exito ? "msg-form msg-exito" : "msg-form msg-error";
+        }
+
+        protected void MostrarToast(string mensaje, bool exito, int duracionMs = 3000)
+        {
+            string clase = exito ? "toast-exito" : "toast-error";
+            string texto = System.Web.HttpUtility.JavaScriptStringEncode(mensaje, true);
+
+            string script =
+                "(function(){var t=document.createElement('div');t.className='toast " + clase + "';" +
+                "t.textContent=" + texto + ";document.body.appendChild(t);" +
+                "setTimeout(function(){t.className+=' toast-hide';}," + duracionMs + ");" +
+                "setTimeout(function(){if(t.parentNode){t.parentNode.removeChild(t);}}," + (duracionMs + 600) + ");})();";
+
+            ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
+        }
+
+        // MaintainScrollPositionOnPostback restaura la posicion en el load: el setTimeout hace que este desplazamiento ocurra despues.
+        protected void DesplazarHacia(Control destino)
+        {
+            string script = "window.addEventListener('load',function(){setTimeout(function(){document.getElementById('" + destino.ClientID + "').scrollIntoView({behavior:'smooth'});},0);});";
+
+            ScriptManager.RegisterStartupScript(this, GetType(), "desplazarHacia", script, true);
+        }
+
+        private void DescargarArchivo(string tipoContenido, string nombreArchivo, Action escribirContenido)
         {
             Response.Clear();
-            Response.ContentType = "application/xml";
-            Response.ContentEncoding = System.Text.Encoding.UTF8;
+            Response.ContentType = tipoContenido;
             Response.AddHeader("Content-Disposition", $"attachment; filename={nombreArchivo}");
-            Response.Write(xml);
+            escribirContenido();
             Response.Flush();
             Response.SuppressContent = true;
             Context.ApplicationInstance.CompleteRequest();
+        }
+
+        protected void DescargarXml(string xml, string nombreArchivo)
+        {
+            DescargarArchivo("application/xml", nombreArchivo, () =>
+            {
+                Response.ContentEncoding = System.Text.Encoding.UTF8;
+                Response.Write(xml);
+            });
+        }
+
+        protected void DescargarPdf(byte[] pdf, string nombreArchivo)
+        {
+            DescargarArchivo("application/pdf", nombreArchivo, () => Response.BinaryWrite(pdf));
         }
 
         private void ValidarAccesoPagina()

@@ -9,15 +9,12 @@ namespace BLL
 {
     public class BLL_AgendaMedico
     {
-        // Duraciones de turno que se ofrecen en pantalla (minutos).
         public static readonly int[] DuracionesPermitidas = { 10, 15, 20, 30, 40, 45, 60 };
 
         DAL_AgendaMedico dal_agenda = new DAL_AgendaMedico();
         DAL_Medico dal_medico = new DAL_Medico();
         DAL_Turno dal_turno = new DAL_Turno();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
-
-        // ---- Franjas semanales ----
 
         public List<BE_MedicoHorario> ObtenerHorarios(int idMedico)
         {
@@ -31,9 +28,6 @@ namespace BLL
             }
         }
 
-        // Agrega la misma franja (desde/hasta/duracion) en cada uno de los dias
-        // indicados. Se valida todo antes de insertar: si algun dia choca con una
-        // franja existente no se agrega ninguno.
         public void AgregarHorarios(BE_Usuario usuarioLogueado, int idMedico, List<int> dias, TimeSpan desde, TimeSpan hasta, int duracionTurno)
         {
             try
@@ -67,8 +61,6 @@ namespace BLL
 
                 int minutosFranja = (int)(hasta - desde).TotalMinutes;
 
-                // Si el rango no es multiplo de la duracion, el ultimo turno quedaria
-                // cortado: se pide ajustar el horario en lugar de perder minutos en silencio.
                 if (minutosFranja % duracionTurno != 0)
                 {
                     throw new InvalidOperationException(TextoLocalizado.T("El rango {0:hh\\:mm} - {1:hh\\:mm} ({2} min) no se puede dividir en turnos de {3} min. Ajusta el horario o la duracion.", desde, hasta, minutosFranja, duracionTurno));
@@ -128,8 +120,6 @@ namespace BLL
             }
         }
 
-        // Al desactivar una franja se cancelan los turnos reservados que caen en
-        // ella. Devuelve cuantos turnos se cancelaron.
         public int CambiarEstadoHorario(BE_Usuario usuarioLogueado, int idMedico, int idHorario, bool activo)
         {
             try
@@ -172,8 +162,6 @@ namespace BLL
             }
         }
 
-        // Cancela los turnos reservados que caian en la franja eliminada.
-        // Devuelve cuantos turnos se cancelaron.
         public int EliminarHorario(BE_Usuario usuarioLogueado, int idMedico, int idHorario)
         {
             try
@@ -203,8 +191,6 @@ namespace BLL
             }
         }
 
-        // Las franjas de un medico no se superponen (lo valida AgregarHorarios),
-        // asi que todo turno que empieza dentro de esta franja salio de ella.
         private int CancelarTurnosDeFranja(BE_Usuario usuarioLogueado, BE_MedicoHorario horario, string motivo)
         {
             List<BE_Turno> afectados = dal_turno.ObtenerTurnosReservadosMedico(horario.IdMedico, DateTime.Now)
@@ -216,8 +202,6 @@ namespace BLL
             return CancelarTurnos(usuarioLogueado, afectados, motivo);
         }
 
-        // Pasa los turnos a Cancelado y deja un evento por turno en la bitacora
-        // (el paciente lo ve cancelado en "Mis turnos").
         private int CancelarTurnos(BE_Usuario usuarioLogueado, List<BE_Turno> turnos, string motivo)
         {
             int cancelados = 0;
@@ -227,7 +211,6 @@ namespace BLL
                 turno.Estado = EstadoTurno.Cancelado;
                 turno.DVH = HashHelper.GenerarHash(BLL_Turno.CadenaTurno(turno));
 
-                // false: el paciente lo cancelo o el medico lo atendio en el medio.
                 if (!dal_turno.CambiarEstado(turno.IdTurno, EstadoTurno.Reservado, EstadoTurno.Cancelado, turno.DVH))
                 {
                     continue;
@@ -248,9 +231,6 @@ namespace BLL
             return $"{h.IdHorario}|{h.IdMedico}|{h.DiaSemana}|{h.HoraDesde:hh\\:mm}|{h.HoraHasta:hh\\:mm}|{h.DuracionTurno}|{activo}";
         }
 
-        // ---- Bloqueos puntuales ----
-
-        // Solo los bloqueos de hoy en adelante: los pasados ya no afectan la agenda.
         public List<BE_MedicoBloqueo> ObtenerBloqueosVigentes(int idMedico)
         {
             try
@@ -263,8 +243,6 @@ namespace BLL
             }
         }
 
-        // desde/hasta null = se bloquea el dia completo. Cancela los turnos
-        // reservados que se superponen con el bloqueo y devuelve cuantos fueron.
         public int AgregarBloqueo(BE_Usuario usuarioLogueado, int idMedico, DateTime fecha, TimeSpan? desde, TimeSpan? hasta, string motivo)
         {
             try
@@ -323,8 +301,6 @@ namespace BLL
                 bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.BLOQUEO_AGENDA_ALTA, "AGENDA",
                     $"Se bloquea la agenda del medico ID {idMedico}: {nuevo.FechaTexto} ({nuevo.HorarioTexto}){(motivo == null ? "" : " - " + motivo)}. Realizado por {usuarioLogueado.NombreApellido}.");
 
-                // Misma regla que BLL_Turno al ofrecer turnos: un turno queda
-                // bloqueado si su rango (inicio + duracion de su franja) se superpone.
                 List<BE_MedicoHorario> franjas = dal_agenda.ObtenerHorarios(idMedico);
 
                 List<BE_Turno> afectados = dal_turno.ObtenerTurnosReservadosMedico(idMedico, DateTime.Now)

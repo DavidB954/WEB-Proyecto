@@ -16,22 +16,18 @@ namespace BE
 
         public string DVH { get; set; }
 
-        // Datos del medico, solo para mostrar.
         public string NombreMedico { get; set; }
 
         public string Especialidades { get; set; }
 
-        // Datos del paciente, solo para mostrar.
         public string NombrePaciente { get; set; }
 
         public string HistoriaClinica { get; set; }
 
         public DateTime FechaNacimientoPaciente { get; set; }
 
-        // Lo calcula BLL_Turno segun la anticipacion minima para cancelar.
         public bool PuedeCancelar { get; set; }
 
-        // Los calcula BLL_AtencionMedica para la grilla del medico.
         public bool PuedeAtender { get; set; }
 
         public bool PuedeMarcarAusente { get; set; }
@@ -77,7 +73,6 @@ namespace BE
             }
         }
 
-        // Clase CSS del badge: no depende del idioma, a diferencia de EstadoTexto.
         public string EstadoCss
         {
             get

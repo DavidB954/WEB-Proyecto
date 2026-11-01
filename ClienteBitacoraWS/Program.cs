@@ -7,11 +7,6 @@ using System.Web.Services.Protocols;
 
 namespace ClienteBitacoraWS
 {
-    // Consume WSBitacora.asmx por SOAP real desde otro proceso, con sesion propia.
-    //
-    // Uso: ClienteBitacoraWS <url del .asmx> <email> [archivo.xml]
-    // La contraseña se pide por consola (o se toma de WS_PASSWORD) para que no quede
-    // en el historial. Con archivo.xml, ademas exporta la bitacora a ese archivo.
     internal static class Program
     {
         private const int EventosAMostrar = 10;
@@ -70,8 +65,6 @@ namespace ClienteBitacoraWS
             }
         }
 
-        // ex.Message trae "...SoapException: ... ---> Tipo: motivo" seguido de la traza
-        // del servidor: al usuario solo le sirve el motivo.
         private static string MotivoDelRechazo(SoapException ex)
         {
             Match motivo = Regex.Match(ex.Message, @"--->\s*[\w.]+Exception:\s*(.+)");

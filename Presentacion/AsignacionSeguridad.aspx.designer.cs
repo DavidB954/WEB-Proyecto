@@ -16,11 +16,19 @@ namespace Presentacion
 
         protected global::System.Web.UI.WebControls.TextBox txtUsuarioSeleccionado;
 
+        protected global::System.Web.UI.WebControls.Label lblSoloLectura;
+
+        protected global::System.Web.UI.WebControls.Panel pnlAsignarRol;
+
+        protected global::System.Web.UI.WebControls.Panel pnlAgregarPermiso;
+
         protected global::System.Web.UI.WebControls.DropDownList ddlRolAAsignar;
 
         protected global::System.Web.UI.WebControls.Button btnAsignarRol;
 
         protected global::System.Web.UI.WebControls.GridView gvRolesDelUsuario;
+
+        protected global::System.Web.UI.WebControls.DropDownList ddlPaginaAAsignar;
 
         protected global::System.Web.UI.WebControls.DropDownList ddlPermisoAAsignar;
 

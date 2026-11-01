@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace BE
 {
     public static class CriticidadBitacora
@@ -46,6 +40,7 @@ namespace BE
                 case AccionBitacora.ROL_SUBROL_QUITADO:
                 case AccionBitacora.BACKUP_GENERADO:
                 case AccionBitacora.IDIOMA_ALTA:
+                case AccionBitacora.IDIOMA_MODIFICACION:
                 case AccionBitacora.TRADUCCION_MODIFICACION:
                 case AccionBitacora.TRADUCCION_EXPORTADA:
                 case AccionBitacora.TRADUCCION_IMPORTADA:
@@ -60,6 +55,7 @@ namespace BE
                 case AccionBitacora.BLOQUEO_AGENDA_BAJA:
                 case AccionBitacora.PACIENTE_DATOS_MODIFICACION:
                 case AccionBitacora.ATENCION_REGISTRADA:
+                case AccionBitacora.HISTORIA_CLINICA_CONSULTADA:
                     return MEDIA;
 
                 default:

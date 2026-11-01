@@ -1,21 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data.SqlClient;
 
 namespace DAL
 {
     public class DAL_Conexion
     {
-        private static string connetionString = "Data Source=localhost\\SQLEXPRESS;Initial Catalog=GestionWEB ;Integrated Security= True;";
-
-
+        private const string cadenaConexion = "Data Source=localhost\\SQLEXPRESS;Initial Catalog=GestionWEB;Integrated Security=True;";
 
         public SqlConnection ObtenerConexion()
         {
-            return new SqlConnection(connetionString);
+            return new SqlConnection(cadenaConexion);
+        }
+
+        public SqlConnection ObtenerConexionMaster()
+        {
+            SqlConnectionStringBuilder cadena = new SqlConnectionStringBuilder(cadenaConexion) { InitialCatalog = "master" };
+
+            return new SqlConnection(cadena.ConnectionString);
         }
     }
 }

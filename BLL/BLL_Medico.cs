@@ -13,7 +13,6 @@ namespace BLL
         DAL_Especialidad dal_especialidad = new DAL_Especialidad();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
-        // nombre e idEspecialidad son opcionales (null o vacio = sin filtrar).
         public List<BE_Medico> BuscarMedicos(string nombre, int? idEspecialidad)
         {
             try

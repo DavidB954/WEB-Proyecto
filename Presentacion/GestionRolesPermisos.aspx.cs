@@ -5,26 +5,21 @@ using SERVICIOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
-    public partial class GestionRolesPermisos : PaginaBase
+    public partial class GestionRolesPermisos : PaginaSeguridadBase
     {
         BLL_Permiso bll_permiso = new BLL_Permiso();
         BLL_Rol bll_rol = new BLL_Rol();
 
         protected void Page_Load(object sender, EventArgs e)
         {
-            // El acceso a la pagina lo valida PaginaBase segun CatalogoPermisos.
-
             if (!IsPostBack)
             {
                 try
                 {
-                    // Los permisos no se crean a mano: se dan de alta desde
-                    // CatalogoPermisos para que se puedan agregar a los roles.
                     bll_permiso.SincronizarCatalogo(UsuarioLogueado);
 
                     CargarGrillas();
@@ -32,8 +27,7 @@ namespace Presentacion
                 catch (Exception ex)
                 {
                     RegistrarErrorInterno("GestionRolesPermisos.Page_Load", ex);
-                    lblMensajeRol.Text = T("No se pudieron cargar los datos. Intenta nuevamente mas tarde.");
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensajeRol, T("No se pudieron cargar los datos. Intenta nuevamente mas tarde."), false);
                 }
             }
         }
@@ -43,22 +37,6 @@ namespace Presentacion
             gvRoles.DataSource = bll_rol.ObtenerRoles();
             gvRoles.DataBind();
         }
-
-        private void MostrarToast(string mensaje, bool exito)
-        {
-            string clase = exito ? "toast-exito" : "toast-error";
-            string texto = System.Web.HttpUtility.JavaScriptStringEncode(mensaje, true);
-
-            string script =
-                "(function(){var t=document.createElement('div');t.className='toast " + clase + "';" +
-                "t.textContent=" + texto + ";document.body.appendChild(t);" +
-                "setTimeout(function(){t.className+=' toast-hide';},3000);" +
-                "setTimeout(function(){if(t.parentNode){t.parentNode.removeChild(t);}},3600);})();";
-
-            ScriptManager.RegisterStartupScript(this, GetType(), "toast_" + Guid.NewGuid().ToString("N"), script, true);
-        }
-
-        // ==================== ABM Rol ====================
 
         private void LimpiarFormularioRol()
         {
@@ -82,16 +60,13 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(txtNombreRol.Text))
                 {
-                    lblMensajeRol.Text = T("Debe ingresar un nombre para el rol.");
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensajeRol, T("Debe ingresar un nombre para el rol."), false);
                     return;
                 }
 
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
                 BE_Rol rol = new BE_Rol { Nombre = txtNombreRol.Text.Trim() };
 
-                bll_rol.AgregarRol(usuarioLogueado, rol);
+                bll_rol.AgregarRol(UsuarioLogueado, rol);
 
                 LimpiarFormularioRol();
 
@@ -100,14 +75,12 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
-                lblMensajeRol.Text = ex.Message;
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeRol, ex.Message, false);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.btnGuardarRol_Click", ex);
-                lblMensajeRol.Text = T("No se pudo guardar el rol. Intenta nuevamente mas tarde.");
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeRol, T("No se pudo guardar el rol. Intenta nuevamente mas tarde."), false);
             }
         }
 
@@ -121,12 +94,13 @@ namespace Presentacion
                 txtNombreRol.Text = fila.Cells[2].Text;
 
                 CargarComposicion(int.Parse(hiddenIdRol.Value));
+
+                DesplazarHacia(pnlComposicion);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.gvRoles_SelectedIndexChanged", ex);
-                lblMensajeRol.Text = T("No se pudo cargar el rol seleccionado.");
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeRol, T("No se pudo cargar el rol seleccionado."), false);
             }
         }
 
@@ -141,19 +115,15 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdRol.Value))
                 {
-                    lblMensajeRol.Text = T("Seleccione un rol de la lista antes de modificar.");
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensajeRol, T("Seleccione un rol de la lista antes de modificar."), false);
                     return;
                 }
 
                 if (string.IsNullOrWhiteSpace(txtNombreRol.Text))
                 {
-                    lblMensajeRol.Text = T("Debe ingresar un nombre para el rol.");
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensajeRol, T("Debe ingresar un nombre para el rol."), false);
                     return;
                 }
-
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
                 BE_Rol rol = new BE_Rol
                 {
@@ -161,7 +131,7 @@ namespace Presentacion
                     Nombre = txtNombreRol.Text.Trim()
                 };
 
-                bll_rol.ModificarRol(usuarioLogueado, rol);
+                bll_rol.ModificarRol(UsuarioLogueado, rol);
 
                 LimpiarFormularioRol();
 
@@ -170,14 +140,12 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
-                lblMensajeRol.Text = ex.Message;
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeRol, ex.Message, false);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.btnModificarRol_Click", ex);
-                lblMensajeRol.Text = T("No se pudo modificar el rol. Intenta nuevamente mas tarde.");
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeRol, T("No se pudo modificar el rol. Intenta nuevamente mas tarde."), false);
             }
         }
 
@@ -192,25 +160,25 @@ namespace Presentacion
             {
                 if (string.IsNullOrWhiteSpace(hiddenIdRol.Value))
                 {
-                    lblMensajeRol.Text = T("Seleccione un rol de la lista antes de eliminar.");
-                    lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                    MostrarMensaje(lblMensajeRol, T("Seleccione un rol de la lista antes de eliminar."), false);
                     return;
                 }
 
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
-
-                bll_rol.EliminarRol(usuarioLogueado, int.Parse(hiddenIdRol.Value));
+                bll_rol.EliminarRol(UsuarioLogueado, int.Parse(hiddenIdRol.Value));
 
                 LimpiarFormularioRol();
 
                 lblMensajeRol.Text = string.Empty;
                 MostrarToast(T("Rol eliminado correctamente."), true);
             }
+            catch (InvalidOperationException ex)
+            {
+                MostrarMensaje(lblMensajeRol, ex.Message, false);
+            }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.btnEliminarRol_Click", ex);
-                lblMensajeRol.Text = T("No se pudo eliminar el rol. Verifique que no este en uso por ningun usuario u otro rol.");
-                lblMensajeRol.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeRol, T("No se pudo eliminar el rol. Intenta nuevamente mas tarde."), false);
             }
         }
 
@@ -218,8 +186,6 @@ namespace Presentacion
         {
             LimpiarFormularioRol();
         }
-
-        // ==================== Composicion del Rol (Composite) ====================
 
         private void CargarComposicion(int idRol)
         {
@@ -244,7 +210,7 @@ namespace Presentacion
             gvSubRolesDelRol.DataSource = arbol.SubRoles.Select(r => r.Rol).ToList();
             gvSubRolesDelRol.DataBind();
 
-            CargarPaginas();
+            CargarComboPaginas(ddlPaginaAAgregar);
             CargarPermisosDePagina(arbol);
 
             HashSet<int> idsSubRolesDirectos = new HashSet<int>(arbol.SubRoles.Select(r => r.Rol.IdRol));
@@ -253,58 +219,14 @@ namespace Presentacion
             ddlSubRolAAgregar.DataTextField = "Nombre";
             ddlSubRolAAgregar.DataValueField = "IdRol";
             ddlSubRolAAgregar.DataBind();
+            IndicarSiNoHayOpciones(ddlSubRolAAgregar, btnAgregarSubRol, T("(no quedan roles para agregar)"));
 
             CargarArbolVisual(arbol);
         }
 
-        // Conserva la pagina elegida entre recargas (ej: despues de agregar un
-        // permiso se sigue viendo la misma pagina).
-        private void CargarPaginas()
-        {
-            string paginaSeleccionada = ddlPaginaAAgregar.SelectedValue;
-
-            ddlPaginaAAgregar.Items.Clear();
-
-            foreach (string pagina in CatalogoPermisos.Todos.Select(p => p.Pagina).Distinct())
-            {
-                ddlPaginaAAgregar.Items.Add(new ListItem(pagina, pagina));
-            }
-
-            if (ddlPaginaAAgregar.Items.FindByValue(paginaSeleccionada) != null)
-            {
-                ddlPaginaAAgregar.SelectedValue = paginaSeleccionada;
-            }
-        }
-
-        // Permisos de la pagina elegida: primero "toda la pagina" (PAGINA) y despues
-        // cada ACCION por separado. Se omiten los que el rol ya tiene directos.
         private void CargarPermisosDePagina(RolComponente arbol)
         {
-            HashSet<string> nombresDirectos = new HashSet<string>(
-                arbol.PermisosDirectos.Select(p => p.Codigo), StringComparer.OrdinalIgnoreCase);
-
-            Dictionary<string, int> idsPorNombre = bll_permiso.ObtenerPermisos()
-                .GroupBy(p => p.Nombre, StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(g => g.Key, g => g.First().IdPermiso, StringComparer.OrdinalIgnoreCase);
-
-            IEnumerable<PermisoDefinicion> definiciones = CatalogoPermisos.DePagina(ddlPaginaAAgregar.SelectedValue)
-                .OrderBy(p => p.Tipo == CatalogoPermisos.TipoPagina ? 0 : 1);
-
-            ddlPermisoAAgregar.Items.Clear();
-
-            foreach (PermisoDefinicion definicion in definiciones)
-            {
-                if (nombresDirectos.Contains(definicion.Codigo) || !idsPorNombre.TryGetValue(definicion.Codigo, out int idPermiso))
-                {
-                    continue;
-                }
-
-                string texto = definicion.Tipo == CatalogoPermisos.TipoPagina
-                    ? T("Toda la pagina ({0})", definicion.Codigo)
-                    : T("Solo: {0} ({1})", T(definicion.Descripcion), definicion.Codigo);
-
-                ddlPermisoAAgregar.Items.Add(new ListItem(texto, idPermiso.ToString()));
-            }
+            CargarPermisosDisponibles(ddlPermisoAAgregar, btnAgregarPermisoARol, bll_permiso.ObtenerPermisos(), ddlPaginaAAgregar.SelectedValue, arbol.TienePermiso);
         }
 
         protected void ddlPaginaAAgregar_SelectedIndexChanged(object sender, EventArgs e)
@@ -321,8 +243,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.ddlPaginaAAgregar_SelectedIndexChanged", ex);
-                lblMensajeComposicion.Text = T("No se pudieron cargar los permisos de la pagina.");
-                lblMensajeComposicion.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeComposicion, T("No se pudieron cargar los permisos de la pagina."), false);
             }
         }
 
@@ -330,28 +251,11 @@ namespace Presentacion
         {
             trvArbolRol.Nodes.Clear();
 
-            TreeNode nodoRaiz = new TreeNode("Rol: " + arbol.Codigo);
-            AgregarNodosHijos(nodoRaiz, arbol);
+            TreeNode nodoRaiz = CrearNodo("Rol: " + arbol.Codigo);
+            AgregarNodosHijos(nodoRaiz, arbol.Hijos, DescribirPermiso);
             trvArbolRol.Nodes.Add(nodoRaiz);
 
             trvArbolRol.ExpandAll();
-        }
-
-        private void AgregarNodosHijos(TreeNode nodoPadre, RolComponente rol)
-        {
-            foreach (IComponentePermiso hijo in rol.Hijos)
-            {
-                if (hijo is PermisoComponente permisoHijo)
-                {
-                    nodoPadre.ChildNodes.Add(new TreeNode(DescribirPermiso(permisoHijo.Codigo)));
-                }
-                else if (hijo is RolComponente rolHijo)
-                {
-                    TreeNode nodoRolHijo = new TreeNode("Rol: " + rolHijo.Codigo);
-                    AgregarNodosHijos(nodoRolHijo, rolHijo);
-                    nodoPadre.ChildNodes.Add(nodoRolHijo);
-                }
-            }
         }
 
         private string DescribirPermiso(string codigo)
@@ -382,11 +286,10 @@ namespace Presentacion
                     return;
                 }
 
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
                 int idRol = int.Parse(hiddenIdRol.Value);
                 int idPermiso = int.Parse(ddlPermisoAAgregar.SelectedValue);
 
-                bll_rol.AgregarPermisoARol(usuarioLogueado, idRol, idPermiso);
+                bll_rol.AgregarPermisoARol(UsuarioLogueado, idRol, idPermiso);
 
                 CargarComposicion(idRol);
 
@@ -395,14 +298,12 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
-                lblMensajeComposicion.Text = ex.Message;
-                lblMensajeComposicion.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeComposicion, ex.Message, false);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.btnAgregarPermisoARol_Click", ex);
-                lblMensajeComposicion.Text = T("No se pudo agregar el permiso al rol.");
-                lblMensajeComposicion.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeComposicion, T("No se pudo agregar el permiso al rol."), false);
             }
         }
 
@@ -420,11 +321,10 @@ namespace Presentacion
 
             try
             {
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
                 int idRol = int.Parse(hiddenIdRol.Value);
                 int idPermiso = int.Parse(e.CommandArgument.ToString());
 
-                bll_rol.QuitarPermisoDeRol(usuarioLogueado, idRol, idPermiso);
+                bll_rol.QuitarPermisoDeRol(UsuarioLogueado, idRol, idPermiso);
 
                 CargarComposicion(idRol);
 
@@ -434,8 +334,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.gvPermisosDelRol_RowCommand", ex);
-                lblMensajeComposicion.Text = T("No se pudo quitar el permiso del rol.");
-                lblMensajeComposicion.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeComposicion, T("No se pudo quitar el permiso del rol."), false);
             }
         }
 
@@ -453,11 +352,10 @@ namespace Presentacion
                     return;
                 }
 
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
                 int idRolPadre = int.Parse(hiddenIdRol.Value);
                 int idRolHijo = int.Parse(ddlSubRolAAgregar.SelectedValue);
 
-                bll_rol.AgregarSubRol(usuarioLogueado, idRolPadre, idRolHijo);
+                bll_rol.AgregarSubRol(UsuarioLogueado, idRolPadre, idRolHijo);
 
                 CargarComposicion(idRolPadre);
 
@@ -466,14 +364,12 @@ namespace Presentacion
             }
             catch (InvalidOperationException ex)
             {
-                lblMensajeComposicion.Text = ex.Message;
-                lblMensajeComposicion.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeComposicion, ex.Message, false);
             }
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.btnAgregarSubRol_Click", ex);
-                lblMensajeComposicion.Text = T("No se pudo agregar el sub-rol.");
-                lblMensajeComposicion.ForeColor = System.Drawing.Color.Red;
+                MostrarMensaje(lblMensajeComposicion, T("No se pudo agregar el sub-rol."), false);
             }
         }
 
@@ -491,11 +387,10 @@ namespace Presentacion
 
             try
             {
-                BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
                 int idRolPadre = int.Parse(hiddenIdRol.Value);
                 int idRolHijo = int.Parse(e.CommandArgument.ToString());
 
-                bll_rol.QuitarSubRol(usuarioLogueado, idRolPadre, idRolHijo);
+                bll_rol.QuitarSubRol(UsuarioLogueado, idRolPadre, idRolHijo);
 
                 CargarComposicion(idRolPadre);
 
@@ -505,23 +400,7 @@ namespace Presentacion
             catch (Exception ex)
             {
                 RegistrarErrorInterno("GestionRolesPermisos.gvSubRolesDelRol_RowCommand", ex);
-                lblMensajeComposicion.Text = T("No se pudo quitar el sub-rol.");
-                lblMensajeComposicion.ForeColor = System.Drawing.Color.Red;
-            }
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
+                MostrarMensaje(lblMensajeComposicion, T("No se pudo quitar el sub-rol."), false);
             }
         }
     }

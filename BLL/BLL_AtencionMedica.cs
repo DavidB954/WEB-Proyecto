@@ -9,16 +9,14 @@ namespace BLL
 {
     public class BLL_AtencionMedica
     {
-        // Medicamentos que se pueden recetar en una misma atencion.
         public const int MaximoMedicamentos = 10;
 
         DAL_AtencionMedica dal_atencion = new DAL_AtencionMedica();
         DAL_Turno dal_turno = new DAL_Turno();
         DAL_Medico dal_medico = new DAL_Medico();
+        DAL_Paciente dal_paciente = new DAL_Paciente();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
-        // Solo atiende quien tiene fila en Medico (matricula cargada desde
-        // AgendaMedicos.aspx): Turno.IdMedico y AtencionMedica.IdMedico la referencian.
         public bool EsMedicoRegistrado(int idUsuario)
         {
             try
@@ -51,7 +49,22 @@ namespace BLL
             }
         }
 
-        // El turno que el medico eligio para atender, ya validado.
+        public BE_Turno ObtenerProximoTurno(BE_Usuario usuarioLogueado, DateTime fechaSeleccionada)
+        {
+            try
+            {
+                DateTime desde = fechaSeleccionada.Date >= DateTime.Today
+                    ? fechaSeleccionada.Date.AddDays(1).AddSeconds(-1)
+                    : DateTime.Now;
+
+                return dal_turno.ObtenerTurnosReservadosMedico(usuarioLogueado.IdUsuario, desde).FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al obtener el proximo turno: {ex.Message}", ex);
+            }
+        }
+
         public BE_Turno ObtenerTurnoParaAtender(BE_Usuario usuarioLogueado, int idTurno)
         {
             try
@@ -68,15 +81,15 @@ namespace BLL
             }
         }
 
-        // El medico solo ve la historia clinica de pacientes que tienen o
-        // tuvieron turno con el.
         public List<BE_AtencionMedica> ObtenerHistoriaClinica(BE_Usuario usuarioLogueado, int idPaciente)
         {
             try
             {
-                if (!dal_turno.ObtenerTurnosPaciente(idPaciente).Any(t => t.IdMedico == usuarioLogueado.IdUsuario))
+                ValidarMedicoRegistrado(usuarioLogueado);
+
+                if (dal_paciente.ObtenerPaciente(idPaciente) == null)
                 {
-                    throw new InvalidOperationException(TextoLocalizado.T("Solo podes ver la historia clinica de tus pacientes."));
+                    throw new InvalidOperationException(TextoLocalizado.T("El paciente seleccionado ya no existe."));
                 }
 
                 return dal_atencion.ObtenerAtencionesPaciente(idPaciente);
@@ -91,8 +104,34 @@ namespace BLL
             }
         }
 
-        // Valida un medicamento antes de sumarlo a la receta en pantalla; se
-        // vuelve a validar todo al guardar la atencion.
+        public List<BE_PacienteResumen> BuscarPacientes(BE_Usuario usuarioLogueado, string texto)
+        {
+            try
+            {
+                ValidarMedicoRegistrado(usuarioLogueado);
+
+                return dal_paciente.BuscarPacientes((texto ?? string.Empty).Trim());
+            }
+            catch (InvalidOperationException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al buscar pacientes: {ex.Message}", ex);
+            }
+        }
+
+        public List<BE_AtencionMedica> ConsultarHistoriaClinica(BE_Usuario usuarioLogueado, int idPaciente)
+        {
+            List<BE_AtencionMedica> historia = ObtenerHistoriaClinica(usuarioLogueado, idPaciente);
+
+            bll_bitacora.RegistrarEvento(usuarioLogueado.IdUsuario, AccionBitacora.HISTORIA_CLINICA_CONSULTADA, "MEDICO",
+                $"{usuarioLogueado.NombreApellido} consulta la historia clinica del paciente ID {idPaciente}.");
+
+            return historia;
+        }
+
         public BE_Receta ArmarMedicamento(string medicamento, string indicaciones)
         {
             medicamento = (medicamento ?? string.Empty).Trim();
@@ -103,7 +142,6 @@ namespace BLL
                 throw new InvalidOperationException(TextoLocalizado.T("Ingresa el nombre del medicamento."));
             }
 
-            // Receta.Medicamento es VARCHAR(30) y Receta.Observaciones VARCHAR(255).
             if (medicamento.Length > 30)
             {
                 throw new InvalidOperationException(TextoLocalizado.T("El medicamento no puede superar los 30 caracteres (tiene {0}).", medicamento.Length));
@@ -132,7 +170,6 @@ namespace BLL
                     throw new InvalidOperationException(TextoLocalizado.T("Completa al menos el motivo de la consulta y el diagnostico."));
                 }
 
-                // Largos de AtencionMedica: Motivo 255, Diagnostico 500, Observaciones 1000.
                 ValidarLargo("El motivo de la consulta", motivo, 255);
                 ValidarLargo("El diagnostico", diagnostico, 500);
                 ValidarLargo("Las observaciones", observaciones, 1000);
@@ -144,8 +181,6 @@ namespace BLL
                     throw new InvalidOperationException(TextoLocalizado.T("Una receta puede tener hasta {0} medicamentos.", MaximoMedicamentos));
                 }
 
-                // Sin milisegundos: el datetime de SQL los redondea y la firma
-                // (DVH) dejaria de coincidir con lo guardado.
                 DateTime ahora = DateTime.Now;
 
                 BE_AtencionMedica atencion = new BE_AtencionMedica
@@ -223,14 +258,9 @@ namespace BLL
             }
         }
 
-        // Se busca el turno por Id y se exige que sea de este medico: asi no se
-        // puede atender un turno ajeno forzando el IdTurno en el postback.
         private BE_Turno ValidarTurnoDelMedico(BE_Usuario usuarioLogueado, int idTurno, bool paraAtender)
         {
-            if (!dal_medico.ExisteMedico(usuarioLogueado.IdUsuario))
-            {
-                throw new InvalidOperationException(TextoLocalizado.T("Tu usuario no esta registrado como medico (falta la matricula)."));
-            }
+            ValidarMedicoRegistrado(usuarioLogueado);
 
             BE_Turno turno = dal_turno.ObtenerTurno(idTurno);
 
@@ -252,8 +282,14 @@ namespace BLL
             return turno;
         }
 
-        // Se puede atender durante el dia del turno (aunque el paciente llegue
-        // antes de hora) o despues, para cargar una atencion atrasada.
+        private void ValidarMedicoRegistrado(BE_Usuario usuarioLogueado)
+        {
+            if (!dal_medico.ExisteMedico(usuarioLogueado.IdUsuario))
+            {
+                throw new InvalidOperationException(TextoLocalizado.T("Tu usuario no esta registrado como medico (falta la matricula)."));
+            }
+        }
+
         private bool SePuedeAtender(BE_Turno turno)
         {
             return turno.Estado == EstadoTurno.Reservado && turno.FechaHora.Date <= DateTime.Today;

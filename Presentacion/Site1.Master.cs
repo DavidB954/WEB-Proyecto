@@ -3,17 +3,13 @@ using BE.Seguridad;
 using BLL;
 using SERVICIOS;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace Presentacion
 {
     public partial class Site1 : System.Web.UI.MasterPage
     {
-        BLL_Idioma bll_idioma = new BLL_Idioma();
         BLL_Usuario bll_usuario = new BLL_Usuario();
 
         protected string MensajeSesionExpirada => HttpUtility.JavaScriptStringEncode(
@@ -47,10 +43,7 @@ namespace Presentacion
                 }
                 catch (Exception ex)
                 {
-                    // Site1.Master se renderiza en casi todas las paginas del sitio:
-                    // si esto falla, que se pierda el menu de navegacion es preferible
-                    // a que se caiga toda la pagina.
-                    RegistrarErrorInterno("Site1.Master.Page_Load (menu)", ex);
+                    RegistroErrores.Registrar("Site1.Master.Page_Load (menu)", ex);
                 }
 
                 CargarIdiomas();
@@ -65,7 +58,7 @@ namespace Presentacion
             }
             catch (Exception ex)
             {
-                RegistrarErrorInterno("Site1.Master.CargarIdiomas", ex);
+                RegistroErrores.Registrar("Site1.Master.CargarIdiomas", ex);
                 ddlIdioma.Visible = false;
             }
         }
@@ -78,43 +71,23 @@ namespace Presentacion
 
                 GestorIdioma.CambiarIdioma(idIdioma);
 
-                // Se persiste en el usuario (no solo en Session) para que la eleccion
-                // sobreviva a un cierre de sesion: CerrarSesion.aspx hace Session.Abandon()
-                // y con eso se perderia si solo quedara en GestorIdioma/Session.
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
-                if (usuarioLogueado != null && usuarioLogueado.IdUsuario > 0)
+                if (usuarioLogueado != null && !usuarioLogueado.EsEmergencia)
                 {
                     bll_usuario.ActualizarIdiomaPreferido(usuarioLogueado.IdUsuario, idIdioma);
                     usuarioLogueado.IdIdiomaPreferido = idIdioma;
                 }
 
-                // Se recarga la pagina: los combos y mensajes ya cargados en ViewState
-                // estan en el idioma anterior y solo se regeneran en un GET.
                 Response.Redirect(Request.RawUrl, false);
                 Context.ApplicationInstance.CompleteRequest();
             }
             catch (Exception ex)
             {
-                RegistrarErrorInterno("Site1.Master.ddlIdioma_SelectedIndexChanged", ex);
+                RegistroErrores.Registrar("Site1.Master.ddlIdioma_SelectedIndexChanged", ex);
 
                 string mensaje = System.Web.HttpUtility.JavaScriptStringEncode(GestorIdioma.Traducir("No se pudo cambiar el idioma. Intenta nuevamente mas tarde."));
-                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "errorIdioma_" + Guid.NewGuid().ToString("N"), $"alert('{mensaje}');", true);
-            }
-        }
-
-        private void RegistrarErrorInterno(string origen, Exception ex)
-        {
-            try
-            {
-                string carpetaLogs = Server.MapPath("~/App_Data");
-                System.IO.Directory.CreateDirectory(carpetaLogs);
-                System.IO.File.AppendAllText(
-                    System.IO.Path.Combine(carpetaLogs, "errores.log"),
-                    $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {origen} - {ex}{Environment.NewLine}");
-            }
-            catch
-            {
+                ScriptManager.RegisterStartupScript(Page, Page.GetType(), "errorIdioma_" + Guid.NewGuid().ToString("N"), $"mostrarAviso('{mensaje}');", true);
             }
         }
     }

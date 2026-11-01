@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL
 {
@@ -23,17 +20,18 @@ namespace DAL
 
                 SqlCommand cmd = new SqlCommand("Select IdPermiso, Nombre, Tipo, DVH From Permiso", cn);
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(new BE_Permiso
+                    while (lector.Read())
                     {
-                        IdPermiso = lector.GetInt32(0),
-                        Nombre = lector.GetString(1),
-                        Tipo = lector.GetString(2),
-                        DVH = lector.IsDBNull(3) ? null : lector.GetString(3)
-                    });
+                        lista.Add(new BE_Permiso
+                        {
+                            IdPermiso = lector.GetInt32(0),
+                            Nombre = lector.GetString(1),
+                            Tipo = lector.GetString(2),
+                            DVH = lector.IsDBNull(3) ? null : lector.GetString(3)
+                        });
+                    }
                 }
             }
 
@@ -90,22 +88,6 @@ namespace DAL
             }
         }
 
-        public void EliminarPermiso(int idPermiso)
-        {
-            using (SqlConnection cn = conex.ObtenerConexion())
-            {
-                cn.Open();
-
-                SqlCommand cmd = new SqlCommand("Delete From Permiso Where IdPermiso=@id", cn);
-
-                cmd.Parameters.Add("@id", SqlDbType.Int).Value = idPermiso;
-
-                cmd.ExecuteNonQuery();
-            }
-        }
-
-        // ---- Rol_Permiso: permisos que un Rol otorga directamente ----
-
         public List<int> ObtenerIdsPermisoDeRol(int idRol)
         {
             List<int> lista = new List<int>();
@@ -117,11 +99,12 @@ namespace DAL
                 SqlCommand cmd = new SqlCommand("Select IdPermiso From Rol_Permiso Where IdRol=@idRol", cn);
                 cmd.Parameters.Add("@idRol", SqlDbType.Int).Value = idRol;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(lector.GetInt32(0));
+                    while (lector.Read())
+                    {
+                        lista.Add(lector.GetInt32(0));
+                    }
                 }
             }
 
@@ -156,8 +139,6 @@ namespace DAL
             }
         }
 
-        // ---- UsuarioPermiso: permisos asignados directo a un usuario ----
-
         public List<int> ObtenerIdsPermisoDeUsuario(int idUsuario)
         {
             List<int> lista = new List<int>();
@@ -169,11 +150,12 @@ namespace DAL
                 SqlCommand cmd = new SqlCommand("Select IdPermiso From UsuarioPermiso Where IdUsuario=@idUsuario", cn);
                 cmd.Parameters.Add("@idUsuario", SqlDbType.Int).Value = idUsuario;
 
-                SqlDataReader lector = cmd.ExecuteReader();
-
-                while (lector.Read())
+                using (SqlDataReader lector = cmd.ExecuteReader())
                 {
-                    lista.Add(lector.GetInt32(0));
+                    while (lector.Read())
+                    {
+                        lista.Add(lector.GetInt32(0));
+                    }
                 }
             }
 

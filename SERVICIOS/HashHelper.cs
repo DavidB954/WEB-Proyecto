@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SERVICIOS
 {
     public class HashHelper
     {
-        public static string GenerarHash(string Password)
+        public static string GenerarHash(string texto)
         {
             using (SHA256 sha256 = SHA256.Create())
             {
-
-                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(Password));
+                byte[] bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(texto));
 
                 StringBuilder constructor = new StringBuilder();
 
@@ -22,7 +17,6 @@ namespace SERVICIOS
                 {
                     constructor.Append(b.ToString("x2"));
                 }
-
 
                 return constructor.ToString();
             }

@@ -9,13 +9,10 @@ namespace BLL
 {
     public class BLL_Turno
     {
-        // Hasta cuantos dias hacia adelante se ofrecen turnos.
         public const int DiasAnticipacionMaxima = 60;
 
-        // Un turno se puede cancelar hasta esta cantidad de horas antes.
         public const int HorasMinimasCancelacion = 2;
 
-        // Turnos reservados a futuro que puede tener un paciente al mismo tiempo.
         public const int MaximoTurnosReservados = 5;
 
         DAL_Turno dal_turno = new DAL_Turno();
@@ -24,9 +21,6 @@ namespace BLL
         DAL_AgendaMedico dal_agenda = new DAL_AgendaMedico();
         BLL_Bitacora bll_bitacora = new BLL_Bitacora();
 
-        // Solo medicos que el paciente puede elegir: usuario activo, con matricula
-        // y al menos una franja activa. Se excluye al propio usuario (un medico
-        // que tambien es paciente no se saca turno a si mismo).
         public List<BE_Medico> BuscarMedicosConAgenda(BE_Usuario usuarioLogueado, string nombre, int? idEspecialidad)
         {
             try
@@ -41,9 +35,48 @@ namespace BLL
             }
         }
 
-        // Todos los horarios libres del medico desde ahora hasta
-        // DiasAnticipacionMaxima, ya descontados los que no le sirven a este
-        // paciente (ver CalcularTurnosLibres).
+        public List<BE_Medico> BuscarMedicosParaTurno(BE_Usuario usuarioLogueado, string nombre, int? idEspecialidad)
+        {
+            List<BE_Medico> medicos = BuscarMedicosConAgenda(usuarioLogueado, nombre, idEspecialidad);
+
+            try
+            {
+                foreach (BE_Medico medico in medicos)
+                {
+                    List<DateTime> libres = ObtenerTurnosLibres(usuarioLogueado, medico.IdMedico);
+
+                    medico.PrimerTurno = libres.Count > 0 ? libres[0] : (DateTime?)null;
+                }
+
+                return medicos.OrderBy(m => m.PrimerTurno ?? DateTime.MaxValue).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al buscar los turnos de los medicos: {ex.Message}", ex);
+            }
+        }
+
+        public BE_AgendaDisponible ObtenerAgendaDisponible(BE_Usuario usuarioLogueado, int idMedico)
+        {
+            List<DateTime> libres = ObtenerTurnosLibres(usuarioLogueado, idMedico);
+
+            try
+            {
+                HashSet<int> diasDeLaSemana = new HashSet<int>(dal_agenda.ObtenerHorarios(idMedico).Where(h => h.Activo).Select(h => h.DiaSemana));
+
+                HashSet<DateTime> diasDeAtencion = new HashSet<DateTime>(
+                    Enumerable.Range(0, DiasAnticipacionMaxima + 1)
+                        .Select(dias => DateTime.Today.AddDays(dias))
+                        .Where(fecha => diasDeLaSemana.Contains(BE_MedicoHorario.DiaSemanaDe(fecha))));
+
+                return new BE_AgendaDisponible { TurnosLibres = libres, DiasDeAtencion = diasDeAtencion };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al obtener la agenda del medico: {ex.Message}", ex);
+            }
+        }
+
         public List<DateTime> ObtenerTurnosLibres(BE_Usuario usuarioLogueado, int idMedico)
         {
             try
@@ -107,9 +140,6 @@ namespace BLL
                     throw new InvalidOperationException(TextoLocalizado.T("Ya tenes {0} turnos reservados, que es el maximo permitido. Cancela alguno para pedir otro.", reservados));
                 }
 
-                // Vuelve a calcular la agenda de ese dia: entre que se mostro el
-                // horario y se confirmo, el medico pudo bloquearlo o lo pudo tomar
-                // otro paciente.
                 if (!CalcularTurnosLibres(idPaciente, idMedico, fechaHora.Date, fechaHora.Date).Contains(fechaHora))
                 {
                     throw new InvalidOperationException(TextoLocalizado.T("Ese horario ya no esta disponible. Elegi otro."));
@@ -148,8 +178,6 @@ namespace BLL
         {
             try
             {
-                // Se busca entre los turnos del paciente logueado: asi no puede
-                // cancelar uno ajeno aunque fuerce el IdTurno en el postback.
                 BE_Turno turno = dal_turno.ObtenerTurnosPaciente(usuarioLogueado.IdUsuario).FirstOrDefault(t => t.IdTurno == idTurno);
 
                 if (turno == null)
@@ -188,10 +216,6 @@ namespace BLL
             }
         }
 
-        // Arma los turnos a partir de las franjas activas del medico y descuenta:
-        // horarios ya pasados, bloqueos, turnos tomados por otros pacientes,
-        // horarios en los que el paciente ya tiene turno con otro medico y dias
-        // en los que ya tiene turno con este mismo medico.
         private List<DateTime> CalcularTurnosLibres(int idPaciente, int idMedico, DateTime desdeFecha, DateTime hastaFecha)
         {
             List<DateTime> libres = new List<DateTime>();
@@ -261,7 +285,6 @@ namespace BLL
             return turno.Estado == EstadoTurno.Reservado && turno.FechaHora >= DateTime.Now.AddHours(HorasMinimasCancelacion);
         }
 
-        // Tambien la usa BLL_AtencionMedica al pasar el turno a Atendido o Ausente.
         internal static string CadenaTurno(BE_Turno t)
         {
             return $"{t.IdTurno}|{t.IdPaciente}|{t.IdMedico}|{t.FechaHora:yyyy-MM-dd HH:mm}|{(int)t.Estado}";
