@@ -452,6 +452,7 @@ INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (3, 12);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (3, 13);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 4);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 31);
+INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 32);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 33);
 INSERT INTO dbo.[Rol_Permiso] ([IdRol], [IdPermiso]) VALUES (4, 34);
 GO
