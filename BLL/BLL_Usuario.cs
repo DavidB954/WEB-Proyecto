@@ -123,39 +123,6 @@ namespace BLL
             }
         }
 
-        private const string EMAIL_EMERGENCIA_WEBMASTER = "REMOVIDO";
-        private const string EMAIL_EMERGENCIA_ADMIN = "REMOVIDO";
-        private const string HASH_PASSWORD_EMERGENCIA = "";
-
-        public BE_LoginResultado LoginEmergencia(string email, string password)
-        {
-            string rol;
-
-            if (email == EMAIL_EMERGENCIA_WEBMASTER)
-            {
-                rol = RolesSistema.Webmaster;
-            }
-            else if (email == EMAIL_EMERGENCIA_ADMIN)
-            {
-                rol = RolesSistema.Administrador;
-            }
-            else
-            {
-                return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
-            }
-
-            if (string.IsNullOrEmpty(password) || HashHelper.GenerarHash(password) != HASH_PASSWORD_EMERGENCIA)
-            {
-                return new BE_LoginResultado { Mensaje = TextoLocalizado.T("Usuario o Contraseña Incorrecto") };
-            }
-
-            BE_Usuario usuarioEmergencia = BE_Usuario.CrearEmergencia(rol == RolesSistema.Webmaster ? "Webmaster" : "Administrador", email, rol);
-
-            bll_bitacora.RegistrarEvento(null, AccionBitacora.LOGIN_OK, "LOGIN", $"Login de EMERGENCIA con rol {rol} usando el email: {email}");
-
-            return new BE_LoginResultado { Usuario = usuarioEmergencia, Mensaje = TextoLocalizado.T("Login de emergencia exitoso") };
-        }
-
         public List<BE_Usuario> Usuarios()
         {
             try

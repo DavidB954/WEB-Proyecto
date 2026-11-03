@@ -76,7 +76,7 @@ namespace Presentacion
 
             try
             {
-                BE_LoginResultado resultado = ProbarLoginEmergencia(bll_usuario, bll_usuario.IniciarSesion(txtEmail.Text, txtPassword.Text), txtEmail.Text, txtPassword.Text);
+                BE_LoginResultado resultado = bll_usuario.IniciarSesion(txtEmail.Text, txtPassword.Text);
 
                 if (resultado.Usuario == null)
                 {

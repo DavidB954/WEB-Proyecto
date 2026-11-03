@@ -39,18 +39,6 @@ namespace Presentacion
             }
         }
 
-        protected BE_LoginResultado ProbarLoginEmergencia(BLL_Usuario bllUsuario, BE_LoginResultado resultado, string email, string password)
-        {
-            if (resultado.Usuario != null)
-            {
-                return resultado;
-            }
-
-            BE_LoginResultado emergencia = bllUsuario.LoginEmergencia(email, password);
-
-            return emergencia.Usuario != null ? emergencia : resultado;
-        }
-
         protected void AbrirSesion(BE_Usuario usuario, string paginaDestino)
         {
             Session["Usuario"] = usuario;
