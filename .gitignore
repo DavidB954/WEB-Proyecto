@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Documentacion de entregas (no subir: contiene capturas con IP/equipo)
+Documentacion/
+Diagramas/
+*.pdf
+*.docx
+*.ldb
+*.qea
+*.qea.backup
