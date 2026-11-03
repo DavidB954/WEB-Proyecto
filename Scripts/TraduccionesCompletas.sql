@@ -286,7 +286,6 @@ INSERT INTO #Catalogo (Pagina, ControlId, TextoBase, TextoEn) VALUES
 ('Mensajes', 'm_16434c0b6242c728', N'Reservado', N'Booked'),
 ('Mensajes', 'm_172339f0554cf3b0', N'La base de datos tiene un problema de integridad. Solo Webmaster puede ingresar en este momento.', N'The database has an integrity problem. Only the Webmaster can log in right now.'),
 ('Mensajes', 'm_1740609d58d7bcc3', N'Datos guardados.', N'Details saved.'),
-('Mensajes', 'm_175b50334cb2d7a9', N'Login de emergencia exitoso', N'Emergency login successful'),
 ('Mensajes', 'm_18dead3ec3207e38', N'Turno reservado con {0} el {1:dd/MM/yyyy} a las {2:HH:mm} hs.', N'Appointment booked with {0} on {1:dd/MM/yyyy} at {2:HH:mm}.'),
 ('Mensajes', 'm_198f2b0c74475764', N'Ver backup e integridad', N'View backup and integrity'),
 ('Mensajes', 'm_19ae8610d43f6cf7', N'Un rol no puede contenerse a si mismo.', N'A role cannot contain itself.'),

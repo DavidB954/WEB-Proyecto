@@ -13,11 +13,6 @@ namespace SERVICIOS
                 return false;
             }
 
-            if (usuario.EsEmergencia)
-            {
-                return true;
-            }
-
             return permisos != null && codigosPermiso.Any(permisos.TienePermiso);
         }
 

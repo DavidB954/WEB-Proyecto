@@ -43,10 +43,7 @@ namespace Presentacion
         {
             Session["Usuario"] = usuario;
 
-            if (!usuario.EsEmergencia)
-            {
-                Session["Permisos"] = new BLL_Permiso().ConstruirArbolUsuario(usuario);
-            }
+            Session["Permisos"] = new BLL_Permiso().ConstruirArbolUsuario(usuario);
 
             AplicarIdiomaDelUsuario(usuario);
 
@@ -66,11 +63,6 @@ namespace Presentacion
                     GestorIdioma.CambiarIdioma(usuario.IdIdiomaPreferido.Value);
                 }
 
-                return;
-            }
-
-            if (usuario.EsEmergencia)
-            {
                 return;
             }
 

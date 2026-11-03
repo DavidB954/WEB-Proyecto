@@ -73,7 +73,7 @@ namespace Presentacion
 
                 BE_Usuario usuarioLogueado = Session["Usuario"] as BE_Usuario;
 
-                if (usuarioLogueado != null && !usuarioLogueado.EsEmergencia)
+                if (usuarioLogueado != null)
                 {
                     bll_usuario.ActualizarIdiomaPreferido(usuarioLogueado.IdUsuario, idIdioma);
                     usuarioLogueado.IdIdiomaPreferido = idIdioma;

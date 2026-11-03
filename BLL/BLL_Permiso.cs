@@ -156,11 +156,6 @@ namespace BLL
 
         public bool EsWebmaster(BE_Usuario usuario)
         {
-            if (usuario.EsEmergencia)
-            {
-                return usuario.NombreRol == RolesSistema.Webmaster;
-            }
-
             return dal_rol.ObtenerRolesDeUsuario(usuario.IdUsuario).Any(r => OtorgaWebmaster(r.IdRol));
         }
 
